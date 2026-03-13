@@ -6,6 +6,12 @@
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
   };
   outputs = { self, nixpkgs, flake-utils, nixos-raspberrypi }@inputs: 
+  {
+      # Load nixOS configurations from the "systems" directory.
+      nixosConfigurations = {
+        ace = import ./systems/ace.nix {inherit inputs;};
+      };
+  } //
   flake-utils.lib.eachDefaultSystem (system:
     let 
       pkgs = import nixpkgs {
@@ -13,8 +19,7 @@
       };
     in 
     {
-      # Load nixOS configurations from the "systems" directory.
-      nixosConfigurations = pkgs.callPackage ./systems/ace.nix {inherit inputs;};
+      
     }
   );
 }
