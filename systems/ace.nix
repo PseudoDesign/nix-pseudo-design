@@ -6,7 +6,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem {
   specialArgs = inputs;
   modules = [
     ({...}: {
-      imports = with nixos-raspberrypi.nixosModules; [
+      imports = with inputs.nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
         raspberry-pi-5.bluetooth
         kaiba_network_modules.homeserver
@@ -24,7 +24,15 @@ inputs.nixos-raspberrypi.lib.nixosSystem {
       networking.hostName = "ace";
       networking.firewall.enable = true;
       networking.firewall.allowedTCPPorts = [ 80 443 ];
-      
+                    users.users.adam = {
+                isNormalUser = true;
+                extraGroups = [
+                  "wheel"
+                ];
+                openssh.authorizedKeys.keys = [
+                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJMjtOqSWLDq79t/9XljmBrfBVm8deQJdOQmTV7c45Ni adam" # content of authorized_keys file
+                ];
+              };
       security.sudo.wheelNeedsPassword = false;
       services.openssh.enable = true;
       services.avahi = {
@@ -52,6 +60,5 @@ inputs.nixos-raspberrypi.lib.nixosSystem {
         };
       };
     })
-    ./../configurations/users/adam.nix
   ];
 }
