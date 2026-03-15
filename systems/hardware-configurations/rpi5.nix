@@ -1,5 +1,6 @@
 { ... }: {
   fileSystems = {
+    # Do not change these once devices have been deployed!
     "/boot/firmware" = {
       device = "/dev/disk/by-uuid/FIRMWARE";
       fsType = "vfat";
