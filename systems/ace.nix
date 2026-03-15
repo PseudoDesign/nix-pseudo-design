@@ -44,7 +44,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem {
     ({ ... }: {
       fileSystems = {
         "/boot/firmware" = {
-          device = "/dev/disk/by-uuid/2175-794E";
+          device = "/dev/disk/by-uuid/FIRMWARE";
           fsType = "vfat";
           options = [
             "noatime"
@@ -54,7 +54,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem {
           ];
         };
         "/" = {
-          device = "/dev/disk/by-uuid/44444444-4444-4444-8888-888888888888";
+          device = "/dev/disk/by-uuid/NIX_OS";
           fsType = "ext4";
           options = [ "noatime" ];
         };
