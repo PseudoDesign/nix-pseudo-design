@@ -44,33 +44,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem
     })
     ({ ... }: {
       disko.devices = {
-        disk = {
-          nvme0n1 = {
-            device = "/dev/nvme0n1";
-            type = "disk";
-            content = {
-              type = "gpt";
-              partitions = {
-                luks = {
-                  size = "100%";
-                  content = {
-                    type = "luks";
-                    name = "cryptroot";
-                    passwordFile = "/tmp/secret.key";
-                    content = {
-                      type = "btrfs";
-                      extraArgs = ["-L" "nixos" "-f"];
-                      subvolumes = {
-                        "/data" = { mountpoint = "/data"; mountOptions = ["subvol=data" "compress=zstd" "noatime"]; };
-                        "/swap" = { mountpoint = "/swap"; swap.swapfile.size = "16G"; };
-                      };
-                    };
-                  };
-                };
-              };
-            };
-          };
-        };
+        
       };
       fileSystems = {
         "/boot/firmware" = {
