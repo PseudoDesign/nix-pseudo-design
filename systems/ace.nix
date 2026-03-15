@@ -5,13 +5,6 @@
 inputs.nixos-raspberrypi.lib.nixosSystem {
   specialArgs = inputs;
   modules = [
-    ({...}: {
-      imports = with inputs.nixos-raspberrypi.nixosModules; [
-        raspberry-pi-5.base
-        raspberry-pi-5.bluetooth
-      ];
-      boot.loader.raspberry-pi.bootloader = "kernel";
-    })
     ({ ... }: {
       nix = {
         settings = {

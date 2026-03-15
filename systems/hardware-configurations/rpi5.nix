@@ -1,4 +1,9 @@
-{ ... }: {
+{ inputs, ... }: {
+  imports = with inputs.nixos-raspberrypi.nixosModules; [
+    raspberry-pi-5.base
+    raspberry-pi-5.bluetooth
+  ];
+  boot.loader.raspberry-pi.bootloader = "kernel";
   fileSystems = {
     # Do not change these once devices have been deployed!
     "/boot/firmware" = {
