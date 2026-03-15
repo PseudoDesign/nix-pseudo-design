@@ -7,7 +7,7 @@
   fileSystems = {
     # Do not change these once devices have been deployed!
     "/boot/firmware" = {
-      device = "/dev/disk/by-uuid/FIRMWARE";
+      label = "FIRMWARE";
       fsType = "vfat";
       options = [
         "noatime"
@@ -17,7 +17,7 @@
       ];
     };
     "/" = {
-      device = "/dev/disk/by-uuid/NIX_OS";
+      label = "NIX_OS";
       fsType = "ext4";
       options = [ "noatime" ];
     };
