@@ -7,7 +7,11 @@ inputs.nixos-raspberrypi.lib.nixosSystem
   specialArgs = inputs;
   modules = [
     inputs.disko.nixosModules.disko
-    ({...}: {
+    ({ pkgs, ...}: {
+      environment.systemPackages = [
+        pkgs.raspberrypi-eeprom
+        # Add other packages here
+      ];
       imports = with inputs.nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
         raspberry-pi-5.bluetooth

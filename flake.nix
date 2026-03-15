@@ -3,7 +3,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
-    nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
+    nixos-raspberrypi.url = "github:ams-tech/nixos-raspberrypi/rpi-otp-private-key";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
