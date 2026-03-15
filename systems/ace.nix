@@ -44,7 +44,12 @@ inputs.nixos-raspberrypi.lib.nixosSystem
     })
     ({ ... }: {
       disko.devices = {
-        
+        disk = {
+          nvme0n1 = {
+            type = "disk";
+            device = "/dev/nvme0n1";
+          };
+        };
       };
       fileSystems = {
         "/boot/firmware" = {
