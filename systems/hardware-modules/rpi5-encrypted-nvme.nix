@@ -56,8 +56,8 @@ in
       home = cfg.working-directory;
       createHome = true;
       isSystemUser = true;
-      group = cfg.service-name;
+      group = "messagebus";
     };
-    users.groups.${cfg.service-name} = { };
+    # users.groups.${cfg.service-name} = { };
   };
 }
