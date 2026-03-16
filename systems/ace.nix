@@ -6,6 +6,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem
 {
   specialArgs = inputs;
   modules = [
+    ./hardware-modules/rpi5-encrypted-nvme.nix
     inputs.disko.nixosModules.disko
     ({ pkgs, ...}: {
       environment.systemPackages = [
@@ -29,15 +30,15 @@ inputs.nixos-raspberrypi.lib.nixosSystem
       networking.hostName = "ace";
       networking.firewall.enable = true;
       networking.firewall.allowedTCPPorts = [ 80 443 ];
-                    users.users.adam = {
-                isNormalUser = true;
-                extraGroups = [
-                  "wheel"
-                ];
-                openssh.authorizedKeys.keys = [
-                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJMjtOqSWLDq79t/9XljmBrfBVm8deQJdOQmTV7c45Ni adam" # content of authorized_keys file
-                ];
-              };
+      users.users.adam = {
+        isNormalUser = true;
+        extraGroups = [
+          "wheel"
+        ];
+        openssh.authorizedKeys.keys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJMjtOqSWLDq79t/9XljmBrfBVm8deQJdOQmTV7c45Ni adam" # content of authorized_keys file
+        ];
+      };
       security.sudo.wheelNeedsPassword = false;
       services.openssh.enable = true;
       services.avahi = {
