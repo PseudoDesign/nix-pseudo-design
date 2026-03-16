@@ -42,12 +42,12 @@ in
         Group = cfg.service-name;
         WorkingDirectory = cfg.working-directory;
         RemainAfterExit = true;
+        # This command will fail if the OTP private key hasn't been set (e.g. is all 0s)
         ExecStartPre = ''
-          # This command will fail if the OTP private key hasn't been set (e.g. is all 0s)
           /bin/sh -c "${pkgs.raspberrypi-eeprom}/bin/rpi-otp-private-key -c > /dev/null"
         '';
+        # Generate our LUKS key file without exposing our device unique private key by generating a sha256sum of the private key.
         ExecStart = ''
-          # Generate our LUKS key file without exposing our device unique private key by generating a sha256sum of the private key.
           /bin/sh -c "${pkgs.raspberrypi-eeprom}/bin/rpi-otp-private-key | sha256sum | tr -d ' -' > '${cfg.key-file-name}' && chmod 600 '${cfg.key-file-name}'"
         '';
       };
