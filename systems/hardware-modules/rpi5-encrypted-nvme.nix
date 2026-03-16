@@ -19,7 +19,13 @@ in
     working-directory = lib.mkOption {
       type = lib.types.str;
       default = "/run/rpi-luks-key";
-      description = "The name of the user & group used by this module";
+      description = "The working directory of this service.  Ideally, it should not persist through a reboot.";
+      internal = true;
+    };
+    key-file-name = lib.mkOption {
+      type = lib.types.str;
+      default = "rpi-private-key.sha256";
+      description = "Name of the luks key file.";
       internal = true;
     };
   };
@@ -28,22 +34,22 @@ in
     # The LUKS key is a sha256sum of this device's OTP private key.
     systemd.services."$(cfg.service-name)" = {
       unitConfig = {
-        RequiresMountsFor = cfg.WorkingDirectory;
+        RequiresMountsFor = cfg.working-directory;
       };
       serviceConfig = {
         Type = "oneshot";
         User = cfg.service-name;
         Group = cfg.service-name;
-        WorkingDirectory = cfg.WorkingDirectory;
+        WorkingDirectory = cfg.working-directory;
         RemainAfterExit = true;
         ExecStartPre = ''
           # This command will fail if the OTP private key hasn't been set (e.g. is all 0s)
-          /bin/sh -c "${pkgs.raspberrypi-eeprom}/bin/rpi-otp-private-key -c"
+          /bin/sh -c "${pkgs.raspberrypi-eeprom}/bin/rpi-otp-private-key -c > /dev/null"
         '';
         ExecStart = ''
           # Generate our LUKS key file without exposing our device unique private key by generating a sha256sum of the private key.
-          /bin/sh -c "rpi-otp-private-key | sha256sum | tr -d ' -'"
-          '';
+          /bin/sh -c "${pkgs.raspberrypi-eeprom}/bin/rpi-otp-private-key | sha256sum | tr -d ' -' > '${cfg.key-file-name}' && chmod 600 '${cfg.key-file-name}'"
+        '';
       };
     };
   };

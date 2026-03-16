@@ -9,15 +9,12 @@ inputs.nixos-raspberrypi.lib.nixosSystem
     ./hardware-modules/rpi5-encrypted-nvme.nix
     inputs.disko.nixosModules.disko
     ({ pkgs, ...}: {
-      environment.systemPackages = [
-        pkgs.raspberrypi-eeprom
-        # Add other packages here
-      ];
       imports = with inputs.nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
         raspberry-pi-5.bluetooth
       ];
       boot.loader.raspberry-pi.bootloader = "kernel";
+      services.rpi5EncryptedNvme.enable = true;
     })
     ({ ... }: {
       # This is the initial version of nixOS that was installed on this system.
