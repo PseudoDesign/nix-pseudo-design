@@ -9,6 +9,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem
     ./hardware-modules/rpi5-encrypted-nvme.nix
     inputs.disko.nixosModules.disko
     ({ pkgs, ...}: {
+
       imports = with inputs.nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
         raspberry-pi-5.bluetooth

@@ -4,8 +4,6 @@ let
 in
 {
   imports = [
-    # Paths to other modules.
-    # Compose this module out of smaller ones.
   ];
 
   options.services.rpi5EncryptedNvme = {
@@ -31,6 +29,10 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    environment.systemPackages = [
+      pkgs.libraspberrypi
+      # Add other packages here
+    ];
     # The LUKS key is a sha256sum of this device's OTP private key.
     systemd.services.${cfg.service-name} = {
       unitConfig = {
