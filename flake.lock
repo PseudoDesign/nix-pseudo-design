@@ -104,11 +104,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1773631160,
-        "narHash": "sha256-abTkFqrsqhs8sr1t2IEQhf6/2cWFMP2TobpFWQbrt1A=",
+        "lastModified": 1773631472,
+        "narHash": "sha256-cgMAmIivqDzsa4dzekAI1sPgSBvRbBxr2zY3YTrfOW8=",
         "owner": "ams-tech",
         "repo": "nixos-raspberrypi",
-        "rev": "71c9e7030c41bbc1ebb3e6f7aa8c884021ea81fb",
+        "rev": "b748be708ba82ece9f849df1540f7fa390cefb7a",
         "type": "github"
       },
       "original": {
