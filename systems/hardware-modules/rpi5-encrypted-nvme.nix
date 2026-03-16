@@ -32,7 +32,7 @@ in
 
   config = lib.mkIf cfg.enable {
     # The LUKS key is a sha256sum of this device's OTP private key.
-    systemd.services."$(cfg.service-name)" = {
+    systemd.services."${cfg.service-name}" = {
       unitConfig = {
         RequiresMountsFor = cfg.working-directory;
       };
