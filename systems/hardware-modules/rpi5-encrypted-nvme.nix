@@ -39,7 +39,7 @@ in
       serviceConfig = {
         Type = "oneshot";
         User = cfg.service-name;
-        Group = cfg.service-name;
+        Group = "messagebus";
         WorkingDirectory = cfg.working-directory;
         RemainAfterExit = true;
         # This command will fail if the OTP private key hasn't been set (e.g. is all 0s)
@@ -58,6 +58,5 @@ in
       isSystemUser = true;
       group = "messagebus";
     };
-    # users.groups.${cfg.service-name} = { };
   };
 }
