@@ -10,4 +10,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJMjtOqSWLDq79t/9XljmBrfBVm8deQJdOQmTV7c45Ni adam" # content of authorized_keys file
     ];
   };
+  # We don't have a password on this accunt, so sudo shouldn't ask for one.
+  # This can have downstream effects, so be averse to including this configuration in production.
+  security.sudo.wheelNeedsPassword = false; 
 }

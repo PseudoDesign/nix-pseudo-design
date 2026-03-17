@@ -46,38 +46,6 @@ inputs.nixos-raspberrypi.lib.nixosSystem
       services.pcscd.enable = true;
     })
     ({ ... }: {
-      disko.devices = {
-        disk = {
-          nvme0n1 = {
-            type = "disk";
-            device = "/dev/nvme0n1";
-            content = {
-              type = "gpt";
-              partitions = {
-                luks = {
-                  size = "100%";
-                  label = "luks";
-                  content = {
-                    type = "luks";
-                    name = "cryptroot";
-                    settings = { 
-                      crypttabExtraOpts = [ "nofail" ]; 
-                      keyFile = "/run/rpi-luks-key/rpi-private-key.sha256";
-                    };
-                    content = {
-                      type = "btrfs";
-                      extraArgs = [ "-L" "nixos" "-f" ];
-                      subvolumes = {
-                        "/persist" = { mountpoint = "/persist"; mountOptions = [ "subvol=persist" "compress=zstd" "noatime" ]; };
-                      };
-                    };
-                  };
-                };
-              };
-            };
-          };
-        };
-      };
       fileSystems = {
         "/boot/firmware" = {
           device = "/dev/disk/by-uuid/2175-794E";
