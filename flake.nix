@@ -14,12 +14,6 @@
     };
   };
   outputs = { self, nixpkgs, flake-utils, nixos-raspberrypi, disko, home-manager, ... }@inputs: 
-  {
-      # Load nixOS configurations from the "systems" directory.
-      nixosConfigurations = {
-        ace = import ./hosts/ace {inherit inputs;};
-      };
-  } //
   flake-utils.lib.eachDefaultSystem (system:
     let 
       pkgs = import nixpkgs {
@@ -29,5 +23,21 @@
     {
       
     }
-  );
+  ) //
+  {
+      nixosConfigurations = {
+        # "'ace' is a Raspberry Pi 5 in Adam's house."
+        ace = nixos-raspberrypi.lib.nixosSystemFull {
+          specialArgs = inputs;
+          modules = [
+            ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
+              imports = with inputs.nixos-raspberrypi.nixosModules; [
+                  ./hosts/ace
+              ];
+            })
+          ];
+        };
+      };
+  };
+  
 }

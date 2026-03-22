@@ -1,15 +1,14 @@
 {
-  inputs,
+  home-manager,
+  nixos-raspberrypi,
   ...
 }:
-inputs.nixos-raspberrypi.lib.nixosSystem 
 {
-  specialArgs = inputs;
-  modules = [
+  imports = [
     ../../modules/users/adam.nix
-    inputs.home-manager.nixosModules.default
+    home-manager.nixosModules.default
     ({ pkgs, ...}: {
-      imports = with inputs.nixos-raspberrypi.nixosModules; [
+      imports = with nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
         raspberry-pi-5.bluetooth
       ];
