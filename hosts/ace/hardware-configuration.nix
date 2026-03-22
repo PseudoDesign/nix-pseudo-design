@@ -20,4 +20,5 @@
       options = [ "noatime" ];
     };
   };
+  boot.loader.raspberry-pi.bootloader = "kernel";
 }
