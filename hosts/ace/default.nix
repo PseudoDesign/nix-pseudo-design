@@ -6,8 +6,6 @@ inputs.nixos-raspberrypi.lib.nixosSystem
 {
   specialArgs = inputs;
   modules = [
-    ./hardware-modules/rpi5-encrypted-nvme.nix
-    inputs.disko.nixosModules.disko
     ({ pkgs, ...}: {
 
       imports = with inputs.nixos-raspberrypi.nixosModules; [

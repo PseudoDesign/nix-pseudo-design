@@ -13,7 +13,7 @@
   {
       # Load nixOS configurations from the "systems" directory.
       nixosConfigurations = {
-        ace = import ./systems/ace.nix {inherit inputs;};
+        ace = import ./hosts/ace {inherit inputs;};
       };
   } //
   flake-utils.lib.eachDefaultSystem (system:
