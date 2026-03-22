@@ -25,19 +25,21 @@
     }
   ) //
   {
-      nixosConfigurations = {
-        # "'ace' is a Raspberry Pi 5 in Adam's house."
-        ace = nixos-raspberrypi.lib.nixosSystemFull {
-          specialArgs = inputs;
-          modules = [
-            ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
-              imports = with inputs.nixos-raspberrypi.nixosModules; [
-                  ./hosts/ace
-              ];
-            })
-          ];
-        };
+    nixosConfigurations = {
+      # "'ace' is a Raspberry Pi 5 in Adam's house."
+      ace = nixos-raspberrypi.lib.nixosSystemFull {
+        specialArgs = inputs;
+        modules = [
+          # Since we have "specialArgs" set to "inputs", we don't need to
+          # type in the parameter names again.
+          ({ ... }: {
+            imports = with inputs.nixos-raspberrypi.nixosModules; [
+                ./hosts/ace
+            ];
+          })
+        ];
       };
+    };
   };
   
 }
