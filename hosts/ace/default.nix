@@ -13,7 +13,6 @@ inputs.nixos-raspberrypi.lib.nixosSystem
         raspberry-pi-5.bluetooth
       ];
       boot.loader.raspberry-pi.bootloader = "kernel";
-      services.rpi5EncryptedNvme.enable = true;
     })
     ({ ... }: {
       # This is the initial version of nixOS that was installed on this system.
