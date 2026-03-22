@@ -8,8 +8,12 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager/release-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { self, nixpkgs, flake-utils, nixos-raspberrypi, disko, ... }@inputs: 
+  outputs = { self, nixpkgs, flake-utils, nixos-raspberrypi, disko, home-manager, ... }@inputs: 
   {
       # Load nixOS configurations from the "systems" directory.
       nixosConfigurations = {

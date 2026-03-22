@@ -7,6 +7,7 @@ inputs.nixos-raspberrypi.lib.nixosSystem
   specialArgs = inputs;
   modules = [
     ../../modules/users/adam.nix
+    inputs.home-manager.nixosModules.default
     ({ pkgs, ...}: {
 
       imports = with inputs.nixos-raspberrypi.nixosModules; [
@@ -31,6 +32,11 @@ inputs.nixos-raspberrypi.lib.nixosSystem
         nssmdns4 = true;
       };
       services.pcscd.enable = true;
+
+      # Home Manager integration
+      home-manager.useGlobalPkgs = true;
+      home-manager.useUserPackages = true;
+      home-manager.users.adam = import ../../home/adam.nix;
     })
 
     ({ ... }: {
