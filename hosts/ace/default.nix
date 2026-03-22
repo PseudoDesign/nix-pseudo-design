@@ -16,14 +16,16 @@
   };
   networking.hostName = "ace";
   networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [ 80 443 ];
   security.sudo.wheelNeedsPassword = false;
   services.openssh.enable = true;
+
+  # Set up mDNS
   services.avahi = {
     enable = true;
     nssmdns4 = true;
   };
   services.pcscd.enable = true;
+
   # Needed for vscode
   programs.nix-ld.enable = true;
 }
