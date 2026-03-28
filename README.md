@@ -20,7 +20,7 @@ This can be configured to use remote caches, but if you're bootstrapping infrast
 
 **TODO: Does this also work on USB?**
 
-`zstdcat nixos-installer-rpi5-kernel.img.zst | sudo dd of=/dev/mmcblk0 bs=1M status=progress`
+`zstdcat result/sd-image/nixos-installer-rpi5-kernel.img.zst | sudo dd of=/dev/mmcblk0 bs=1M status=progress`
 
 ### Install the system image to NVME
 
@@ -43,19 +43,19 @@ sequenceDiagram
   participant initrd
   create participant rpi-otp-luks-key.service
   initrd->>rpi-otp-luks-key.service: Start Service
-  create participant /run/secret/luks.key@{ "type" : "database" }
-  rpi-otp-luks-key.service-->>/run/secret/luks.key: /bin/rpi-otp-luks-key
+  create participant secrets/luks.key@{ "type" : "database" }
+  rpi-otp-luks-key.service-->>secrets/luks.key: /bin/rpi-otp-luks-key
   destroy rpi-otp-luks-key.service
   rpi-otp-luks-key.service->>initrd: Success
   create participant cryptsetup.service
   initrd->>cryptsetup.service: Start Service
-  /run/secret/luks.key-->>cryptsetup.service: Read File
+  secrets/luks.key-->>cryptsetup.service: Read File
   create participant rootfs@{ "type" : "database" }
   cryptsetup.service-->>rootfs: Unlock
   destroy cryptsetup.service
   cryptsetup.service->>initrd: Success
-  destroy /run/secret/luks.key
-  initrd--x/run/secret/luks.key: initrd instance is destoryed
+  destroy secrets/luks.key
+  initrd--xsecrets/luks.key: initrd instance is destoryed
   destroy initrd
   initrd-)rootfs: Boot into rootfs
 ```
@@ -63,7 +63,7 @@ sequenceDiagram
 After booting from the EEPROM bootloader, execution is handed off to initrd.  Using systemd-initrd services, we add the following to the boot process:
 
 * Run `rpi-otp-luks-key.service` before `cryptservice` unlocks the rootfs
-  * This service uses the `rpi-otp-luks-key` script to write the secret luks key to `/run/secret/luks.key`
+  * This service uses the `rpi-otp-luks-key` script to write the secret luks key to `secrets/luks.key`
   * This script reads the raw secret value from OTP, and uses a one-way hash to generate the luks secret key.
 * The `cryptsetup` service starts, unlocking the LUKS block containing the rootfs
   * This also unlocks any additional filesystem partitions loaded within the block (e.g. persistent user data)
