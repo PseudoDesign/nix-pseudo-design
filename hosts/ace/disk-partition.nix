@@ -75,7 +75,7 @@
                 name = "crypted";
                 extraOpenArgs = [ ];
                 settings = {
-                  keyFile = "/run/secret/luks.key";
+                  keyFile = "/run/secrets/luks.key";
                   allowDiscards = true;
                 };
                 content = {
