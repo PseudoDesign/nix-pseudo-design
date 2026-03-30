@@ -34,7 +34,8 @@ in
   systemd.services.auto-upgrade = {
     description = "Auto-Upgrade Service";
     wantedBy = [ "multi-user.target" ];
-    after = [ "systemd-user-sessions.service" "getty@tty1.service" ];
+    after = [ "systemd-user-sessions.service" ];
+    conflicts = [ "getty@tty1.service" ];
     serviceConfig = {
       User = "root";
       TTYPath = "/dev/tty1";
