@@ -8,7 +8,7 @@ in
 {
 
   options = {
-    rpiOtpLuksKey.enable = lib.mkEnableOption "Raspberry Pi OTP LUKS Key"
+    rpiOtpLuksKey.enable = lib.mkEnableOption "Raspberry Pi OTP LUKS Key";
   };
 
 
