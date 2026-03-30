@@ -28,7 +28,8 @@ in
 {
   environment.systemPackages = [ installScript imageUpgrade ];
 
-  services.getty.autologinUser = "root";
+  # Do not offer a login prompt on tty1
+  systemd.services."getty@tty1".enable = false;
 
   systemd.services.auto-upgrade = {
     description = "Auto-Upgrade Service";
