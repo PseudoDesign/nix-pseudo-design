@@ -12,7 +12,7 @@ in
   };
 
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     # The service that places our key into the rootfs is needed on boot
     # necessitating the need for boot.initrd.systemd
     boot.initrd.systemd.enable = true; 
