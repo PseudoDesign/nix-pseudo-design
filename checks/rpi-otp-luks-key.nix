@@ -1,8 +1,9 @@
 { lib, testers }:
 let
-  overlayMocks = (
-
-  );
+  # Mock overlays for our system
+  mocks = final: prev: {
+        rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
+  };
 in
 {
   service = testers.runNixOSTest {
