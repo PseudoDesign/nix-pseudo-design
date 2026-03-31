@@ -11,7 +11,6 @@ in
     rpiOtpLuksKey.enable = lib.mkEnableOption "Raspberry Pi OTP LUKS Key";
   };
 
-
   config = lib.mkIf cfg.enable {
     # The service that places our key into the rootfs is needed on boot
     # necessitating the need for boot.initrd.systemd

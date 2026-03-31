@@ -21,7 +21,9 @@
       };
     in 
     {
-       checks = {};
+       checks = {
+        tests = pkgs.callPackage ./checks {};
+       };
     }
   ) //
   {
