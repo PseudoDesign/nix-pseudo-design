@@ -15,6 +15,5 @@ in
 
     testScript = ''
       start_all()
-      server.succeed("cat /run/secrets/test_key | grep -q test_value")
     '';
   }

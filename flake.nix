@@ -39,7 +39,7 @@
         specialArgs = inputs;
         modules = [
           ./hosts/ace
-          ./modules/rpi-otp-luks-key.nix
+          ./modules/rpi-otp-luks-key
           ({ pkgs, ... }: {
             nixpkgs.overlays = [ self.overlays.default ];
             environment.systemPackages = [
@@ -56,7 +56,7 @@
         modules = [
           ./modules/users/adam.nix
           ./modules/rpi5-hardware.nix
-          ./modules/rpi-otp-luks-key.nix
+          ./modules/rpi-otp-luks-key
           ./modules/rpi-installer-disk.nix
           ({ pkgs, ... }: 
           let
