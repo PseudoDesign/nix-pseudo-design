@@ -22,7 +22,7 @@
     in 
     {
        checks = {
-        tests = pkgs.callPackage ./checks {};
+        tests = pkgs.callPackage ./checks/rpi-otp-luks-key.nix {};
        };
     }
   ) //
