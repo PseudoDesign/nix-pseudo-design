@@ -39,6 +39,30 @@ let
         exit "$EX_NOINPUT"
       fi
 
+      if [ ! -t 0 ]; then
+        echo "This command requires an interactive terminal for confirmation." >&2
+        exit "$EX_NOINPUT"
+      fi
+
+      echo "About to install NixOS with the following settings:"
+      echo "  source flake: $flakeRef"
+      echo "  configuration: ${cfg.nixosConfiguration}"
+      echo "  target disk: ${cfg.disk}"
+      echo "  derived key file: ${keyCfg.keyFile}"
+      echo
+      echo "This will:"
+      echo "  1. Ensure the Raspberry Pi OTP private key is provisioned if it is unset."
+      echo "  2. Derive the LUKS key into ${keyCfg.keyFile}."
+      echo "  3. Run disko-install in format mode against ${cfg.disk}."
+      echo
+      echo "WARNING: This may permanently program OTP and will continue into disk formatting."
+      echo "Type YES to continue or anything else to cancel."
+      read -r confirmation
+      if [ "$confirmation" != "YES" ]; then
+        echo "Cancelled."
+        exit 1
+      fi
+
       systemctl start pd-luks-key-setup.service
 
       if [ ! -s '${keyCfg.keyFile}' ]; then

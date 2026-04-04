@@ -32,7 +32,7 @@ Boot the installer image, then prepare the LUKS key:
 
 `ls -l /run/secrets/luks.key`
 
-Start the install interactively. `disko-install` will still prompt before wiping the target disk:
+Start the install interactively. The command prints a summary, asks for confirmation, and then `disko-install` will still prompt before wiping the target disk:
 
 `sudo pd-nix-install`
 
