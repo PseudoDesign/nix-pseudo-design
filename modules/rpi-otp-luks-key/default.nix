@@ -1,14 +1,26 @@
 { pkgs, config, lib,  ... }: 
 let
-  secretsDirectory = "/run/secrets";
-  luksKeyFile = "${secretsDirectory}/luks.key";
-  luksKeySalt = "some-test-salt";
-  cfg = config.rpiOtpLuksKey;
+  cfg = config.services.rpiOtpLuksKey;
 in
 {
 
-  options = {
-    rpiOtpLuksKey.enable = lib.mkEnableOption "Raspberry Pi OTP LUKS Key";
+  options.services.rpiOtpLuksKey = {
+    enable = lib.mkEnableOption "Raspberry Pi OTP LUKS Key Service";
+    luksKeyGetBin = lib.mkOption {
+      type = lib.types.path;
+      default = "${pkgs.rpi-otp-private-key}/bin/rpi-otp-private-key";
+      description = "Path to the binary used to populate the LUKS key from device-unique storage";
+    };
+    luksKeySalt = lib.mkOption {
+      type = lib.types.str;
+      default = "default-salt";
+      description = "The salt value passed to luksKeyGetBin. Changing this after initial install will cause the disk decryption to fail.";
+    };
+    luksKeyFile = lib.mkOption {
+      type = lib.types.path;
+      default = "/run/secrets/luks.key";
+      description = "The location to save the LUKS key";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -26,25 +38,10 @@ in
         Type = "oneshot";
       };
       script = ''
-        install -d -m 0700 '${secretsDirectory}'
-        ${pkgs.rpi-otp-luks-key}/bin/rpi-otp-luks-key ${luksKeySalt} > '${luksKeyFile}'
-        chmod 600 '${luksKeyFile}'
+        install -d -m 0700 "$(${pkgs.coreutils}/bin/dirname '${cfg.luksKeyFile}')"
+        '${cfg.luksKeyGetBin}' '${cfg.luksKeySalt}' > '${cfg.luksKeyFile}'
+        chmod 600 '${cfg.luksKeyFile}'
       '';
-    };
-
-    # IDK if this is actually necessary?  Typically you don't need to call 
-    # out dependencies like this explicitly.
-    # Maybe now that I cleaned up the package feed, we can get rid of this.
-    boot.initrd.systemd.extraBin = {
-      rpi-otp-luks-key = "${pkgs.rpi-otp-luks-key}/bin/rpi-otp-luks-key";
-      rpi-otp-private-key = "${pkgs.rpi-otp-private-key}/bin/rpi-otp-private-key";
-      vcgencmd = "${pkgs.libraspberrypi}/bin/vcgencmd";
-      vcmailbox = "${pkgs.libraspberrypi}/bin/vcmailbox";
-      awk = "${pkgs.gawk}/bin/awk";
-      sed = "${pkgs.gnused}/bin/sed";
-      grep = "${pkgs.gnugrep}/bin/grep";
-      which = "${pkgs.which}/bin/which";
-      xxd = "${pkgs.xxd}/bin/xxd";
     };
   };
 }
