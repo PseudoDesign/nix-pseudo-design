@@ -53,7 +53,7 @@ let
       echo "  derived key file: ${keyCfg.keyFile}"
       echo
       echo "This will:"
-      echo "  1. Ensure the Raspberry Pi OTP private key is provisioned if it is unset."
+      echo "  1. Provision the Raspberry Pi OTP private key if it is unset."
       echo "  2. Derive the LUKS key into ${keyCfg.keyFile}."
       echo "  3. Run disko-install in format mode against ${cfg.disk}."
       echo
@@ -65,6 +65,12 @@ let
         exit 1
       fi
 
+      if ! ${privateKeyCheckExe} -c >/dev/null 2>&1; then
+        echo "Raspberry Pi OTP private key is unset; provisioning it now."
+        ${provisionPrivateKeyExe}
+      fi
+
+      echo "Deriving the LUKS key into ${keyCfg.keyFile}."
       systemctl start pd-luks-key-setup.service
 
       if [ ! -s '${keyCfg.keyFile}' ]; then
@@ -114,21 +120,26 @@ in
     environment.systemPackages = [ installCommand ];
 
     systemd.services.pd-luks-key-setup = {
-      description = "Provision the Raspberry Pi OTP private key and derive the LUKS key";
+      description = "Derive the LUKS key from the Raspberry Pi OTP private key";
       serviceConfig = {
         Type = "oneshot";
-        RemainAfterExit = true;
       };
       script = ''
-        ${pkgs.coreutils}/bin/install -d -m 0700 "$(${pkgs.coreutils}/bin/dirname '${keyCfg.keyFile}')"
-        if ${privateKeyCheckExe} -c >/dev/null 2>&1; then
-          echo "Raspberry Pi OTP private key is already provisioned."
-        else
-          echo "Raspberry Pi OTP private key is unset; provisioning it now."
-          ${provisionPrivateKeyExe}
+        keyDir="$(${pkgs.coreutils}/bin/dirname '${keyCfg.keyFile}')"
+        ${pkgs.coreutils}/bin/install -d -m 0700 "$keyDir"
+        if ! ${privateKeyCheckExe} -c >/dev/null 2>&1; then
+          echo "Raspberry Pi OTP private key is not provisioned. Run pd-nix-install to provision it first." >&2
+          exit 1
         fi
-        ${deriveLuksKeyExe} '${keyCfg.salt}' > '${keyCfg.keyFile}'
-        ${pkgs.coreutils}/bin/chmod 600 '${keyCfg.keyFile}'
+        tmpKeyFile="$(${pkgs.coreutils}/bin/mktemp "$keyDir/.luks.key.XXXXXX")"
+        cleanup() {
+          ${pkgs.coreutils}/bin/rm -f "$tmpKeyFile"
+        }
+        trap cleanup EXIT
+        ${deriveLuksKeyExe} '${keyCfg.salt}' > "$tmpKeyFile"
+        ${pkgs.coreutils}/bin/chmod 600 "$tmpKeyFile"
+        ${pkgs.coreutils}/bin/mv -f "$tmpKeyFile" '${keyCfg.keyFile}'
+        trap - EXIT
       '';
     };
   };

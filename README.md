@@ -24,21 +24,21 @@ This can be configured to use remote caches, but if you're bootstrapping infrast
 
 ### Install the system image to NVME
 
-Boot the installer image, then prepare the LUKS key:
-
-`sudo systemctl start pd-luks-key-setup.service`
-
-`systemctl status pd-luks-key-setup.service`
-
-`ls -l /run/secrets/luks.key`
-
-Start the install interactively. By default, the command installs from the flake bundled into the installer image, prints a summary, asks for confirmation, and then `disko-install` will still prompt before wiping the target disk:
+Boot the installer image, then start the install interactively. By default, the command installs from the flake bundled into the installer image, prints a summary, asks for confirmation, provisions the Raspberry Pi OTP private key if it is unset, derives `/run/secrets/luks.key`, and then hands off to `disko-install`, which will still prompt before wiping the target disk:
 
 `sudo pd-nix-install`
 
 To install a different NixOS configuration from the same local flake:
 
 `sudo pd-nix-install ace`
+
+If you want to troubleshoot key derivation separately after the OTP key has already been provisioned, you can run:
+
+`sudo systemctl start pd-luks-key-setup.service`
+
+`systemctl status pd-luks-key-setup.service`
+
+`ls -l /run/secrets/luks.key`
 
 Follow progress with:
 
@@ -59,12 +59,12 @@ This section covers how these operations are performed securely.
 ```mermaid
 sequenceDiagram
   participant initrd
-  create participant rpi-otp-luks-key.service
-  initrd->>rpi-otp-luks-key.service: Start Service
+  create participant rpi-otp-luks-key-initrd.service
+  initrd->>rpi-otp-luks-key-initrd.service: Start Service
   create participant /run/secrets/luks.key@{ "type" : "database" }
-  rpi-otp-luks-key.service-->>/run/secrets/luks.key: /bin/rpi-otp-luks-key
-  destroy rpi-otp-luks-key.service
-  rpi-otp-luks-key.service->>initrd: Success
+  rpi-otp-luks-key-initrd.service-->>/run/secrets/luks.key: helper package writes key
+  destroy rpi-otp-luks-key-initrd.service
+  rpi-otp-luks-key-initrd.service->>initrd: Success
   create participant cryptsetup.service
   initrd->>cryptsetup.service: Start Service
   /run/secrets/luks.key-->>cryptsetup.service: Read File
@@ -78,8 +78,8 @@ sequenceDiagram
 
 After booting from the EEPROM bootloader, execution is handed off to initrd.  Using systemd-initrd services, we add the following to the boot process:
 
-* Run `rpi-otp-luks-key.service` before `cryptsetup` unlocks the rootfs
-  * This service uses the `rpi-otp-luks-key` script to write the secret luks key to `/run/secrets/luks.key`
+* Run `rpi-otp-luks-key-initrd.service` before `cryptsetup` unlocks the rootfs
+  * This service uses the configured helper package to write the secret LUKS key to `/run/secrets/luks.key`
   * This script reads the raw secret value from OTP, and uses a one-way hash to generate the luks secret key.
 * The `cryptsetup` service starts, unlocking the LUKS block containing the rootfs
   * This also unlocks any additional filesystem partitions loaded within the block (e.g. persistent user data)

@@ -53,7 +53,7 @@
       system:
       let
         pkgs = mkPkgs system;
-        rpiOtpLuksKeyCheck = pkgs.callPackage ./checks/rpi-otp-luks-key.nix { };
+        individualChecks = import ./checks { inherit pkgs; };
       in
       {
         packages = {
@@ -63,9 +63,11 @@
           "rpi-otp-provision-private-key" = pkgs.rpi-otp-provision-private-key;
         };
 
-        checks = {
-          rpi-otp-luks-key = rpiOtpLuksKeyCheck;
-          tests = rpiOtpLuksKeyCheck;
+        checks = individualChecks // {
+          tests = pkgs.symlinkJoin {
+            name = "tests";
+            paths = builtins.attrValues individualChecks;
+          };
         };
       }
     )
@@ -74,6 +76,8 @@
 
     nixosModules.default = ./modules/rpi-otp-luks-key;
     nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key;
+    nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
+    nixosModules.rpi-installer-service = ./modules/rpi-installer-service.nix;
 
     nixosConfigurations = {
       # "'ace' is a Raspberry Pi 5 in Adam's house."

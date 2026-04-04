@@ -49,9 +49,17 @@ in
         RemainAfterExit = true;
       };
       script = ''
-        install -d -m 0700 "$(${pkgs.coreutils}/bin/dirname '${cfg.keyFile}')"
-        '${helperExe}' '${cfg.salt}' > '${cfg.keyFile}'
-        chmod 600 '${cfg.keyFile}'
+        keyDir="$(${pkgs.coreutils}/bin/dirname '${cfg.keyFile}')"
+        ${pkgs.coreutils}/bin/install -d -m 0700 "$keyDir"
+        tmpKeyFile="$(${pkgs.coreutils}/bin/mktemp "$keyDir/.luks.key.XXXXXX")"
+        cleanup() {
+          ${pkgs.coreutils}/bin/rm -f "$tmpKeyFile"
+        }
+        trap cleanup EXIT
+        '${helperExe}' '${cfg.salt}' > "$tmpKeyFile"
+        ${pkgs.coreutils}/bin/chmod 600 "$tmpKeyFile"
+        ${pkgs.coreutils}/bin/mv -f "$tmpKeyFile" '${cfg.keyFile}'
+        trap - EXIT
       '';
     };
   };

@@ -16,7 +16,12 @@
   };
   networking.hostName = "ace";
   networking.firewall.enable = true;
-  networking.nameservers = [ "8.8.8.8" "8.8.4.4" "2001:4860:4860::8888" "2001:4860:4860::8844"];
+  networking.nameservers = [
+    "8.8.8.8"
+    "8.8.4.4"
+    "2001:4860:4860::8888"
+    "2001:4860:4860::8844"
+  ];
   security.sudo.wheelNeedsPassword = false;
   services.openssh.enable = true;
 
