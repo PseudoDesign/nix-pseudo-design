@@ -2,6 +2,11 @@
 let
   cfg = config.services.rpiOtpLuksKey;
   helperExe = lib.getExe cfg.package;
+  helperClosure = lib.filter (path: path != "") (
+    lib.splitString "\n" (
+      builtins.readFile "${pkgs.closureInfo { rootPaths = [ cfg.package ]; }}/store-paths"
+    )
+  );
 in
 {
 
@@ -29,8 +34,9 @@ in
     # The service that places our key into the rootfs is needed on boot
     # necessitating the need for boot.initrd.systemd
     boot.initrd.systemd.enable = true;
-    # Explicitly copy the helper into the initrd so the stage-1 service can execute it.
-    boot.initrd.systemd.storePaths = [ helperExe ];
+    # Copy the helper package runtime closure into the initrd so arbitrary helper
+    # packages can bring along their own absolute-store-path dependencies.
+    boot.initrd.systemd.storePaths = helperClosure;
     boot.initrd.systemd.services.rpi-otp-luks-key-initrd = {
       wantedBy = [ "initrd.target" ];
       before = [
