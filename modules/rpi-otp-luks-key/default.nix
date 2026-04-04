@@ -26,7 +26,9 @@ in
   config = lib.mkIf cfg.enable {
     # The service that places our key into the rootfs is needed on boot
     # necessitating the need for boot.initrd.systemd
-    boot.initrd.systemd.enable = true; 
+    boot.initrd.systemd.enable = true;
+    # Explicitly copy the helper into the initrd so the stage-1 service can execute it.
+    boot.initrd.systemd.storePaths = [ cfg.luksKeyGetBin ];
     boot.initrd.systemd.services.rpi-otp-luks-key-initrd = {
       wantedBy = [ "initrd.target" ];
       before = [
@@ -36,6 +38,7 @@ in
           description = "Get the luks key from Raspberry Pi OTP.";
       serviceConfig = {
         Type = "oneshot";
+        RemainAfterExit = true;
       };
       script = ''
         install -d -m 0700 "$(${pkgs.coreutils}/bin/dirname '${cfg.luksKeyFile}')"
