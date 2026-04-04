@@ -32,11 +32,11 @@ Boot the installer image, then prepare the LUKS key:
 
 `ls -l /run/secrets/luks.key`
 
-Start the install interactively. The command prints a summary, asks for confirmation, and then `disko-install` will still prompt before wiping the target disk:
+Start the install interactively. By default, the command installs the latest `main` branch from GitHub, prints a summary, asks for confirmation, and then `disko-install` will still prompt before wiping the target disk:
 
 `sudo pd-nix-install`
 
-To install from a GitHub branch instead of the flake bundled into the installer image:
+To install the latest tip of a different GitHub branch:
 
 `sudo pd-nix-install your-branch-name`
 

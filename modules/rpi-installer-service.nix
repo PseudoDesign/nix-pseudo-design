@@ -15,10 +15,10 @@ let
       readonly EX_NOINPUT=66
       readonly EX_SOFTWARE=70
       readonly EX_NOPERM=77
-      readonly DEFAULT_FLAKE='${cfg.flake}#${cfg.nixosConfiguration}'
-      readonly REMOTE_FLAKE='github:pseudodesign/nix-pseudo-design'
+      readonly FLAKE_REPOSITORY='${cfg.flake}'
+      readonly DEFAULT_BRANCH='${cfg.defaultBranch}'
 
-      flakeRef="$DEFAULT_FLAKE"
+      flakeRef="$FLAKE_REPOSITORY/$DEFAULT_BRANCH#${cfg.nixosConfiguration}"
 
       if [ "$#" -gt 1 ]; then
         echo "Usage: pd-nix-install [branch]" >&2
@@ -26,7 +26,7 @@ let
       fi
 
       if [ "$#" -eq 1 ]; then
-        flakeRef="$REMOTE_FLAKE?ref=$1#${cfg.nixosConfiguration}"
+        flakeRef="$FLAKE_REPOSITORY/$1#${cfg.nixosConfiguration}"
       fi
 
       if [ "$EUID" -ne 0 ]; then
@@ -71,6 +71,7 @@ let
       fi
 
       exec ${diskoInstallExe} \
+        --option tarball-ttl 0 \
         --flake "$flakeRef" \
         --mode format \
         --disk main '${cfg.disk}'
@@ -82,10 +83,15 @@ in
     enable = lib.mkEnableOption "pseudo.design installer services";
 
     flake = lib.mkOption {
-      type = lib.types.path;
-      default = ../.;
-      defaultText = lib.literalExpression "../.";
-      description = "Flake used by the installer service.";
+      type = lib.types.str;
+      default = "github:pseudodesign/nix-pseudo-design";
+      description = "Base GitHub flake repository used by the installer command.";
+    };
+
+    defaultBranch = lib.mkOption {
+      type = lib.types.str;
+      default = "main";
+      description = "Default GitHub branch used by the installer command.";
     };
 
     nixosConfiguration = lib.mkOption {
