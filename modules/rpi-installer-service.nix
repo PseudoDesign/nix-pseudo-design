@@ -11,9 +11,23 @@ let
     name = "pd-nix-install";
     runtimeInputs = [ pkgs.systemd ];
     text = ''
+      readonly EX_USAGE=64
       readonly EX_NOINPUT=66
       readonly EX_SOFTWARE=70
       readonly EX_NOPERM=77
+      readonly DEFAULT_FLAKE='${cfg.flake}#${cfg.nixosConfiguration}'
+      readonly REMOTE_FLAKE='github:pseudodesign/nix-pseudo-design'
+
+      flakeRef="$DEFAULT_FLAKE"
+
+      if [ "$#" -gt 1 ]; then
+        echo "Usage: pd-nix-install [branch]" >&2
+        exit "$EX_USAGE"
+      fi
+
+      if [ "$#" -eq 1 ]; then
+        flakeRef="$REMOTE_FLAKE?ref=$1#${cfg.nixosConfiguration}"
+      fi
 
       if [ "$EUID" -ne 0 ]; then
         echo "This command must be run as root." >&2
@@ -33,7 +47,7 @@ let
       fi
 
       exec ${diskoInstallExe} \
-        --flake '${cfg.flake}#${cfg.nixosConfiguration}' \
+        --flake "$flakeRef" \
         --mode format \
         --disk main '${cfg.disk}'
     '';

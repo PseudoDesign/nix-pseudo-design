@@ -36,6 +36,10 @@ Start the install interactively. `disko-install` will still prompt before wiping
 
 `sudo pd-nix-install`
 
+To install from a GitHub branch instead of the flake bundled into the installer image:
+
+`sudo pd-nix-install your-branch-name`
+
 Follow progress with:
 
 `journalctl -u pd-luks-key-setup.service -f`
