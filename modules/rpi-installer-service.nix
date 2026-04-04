@@ -15,19 +15,21 @@ let
       readonly EX_NOINPUT=66
       readonly EX_SOFTWARE=70
       readonly EX_NOPERM=77
-      readonly FLAKE_REPOSITORY='${cfg.flake}'
-      readonly DEFAULT_BRANCH='${cfg.defaultBranch}'
+      readonly FLAKE_PATH='${cfg.flake}'
+      readonly DEFAULT_CONFIGURATION='${cfg.nixosConfiguration}'
 
-      flakeRef="$FLAKE_REPOSITORY/$DEFAULT_BRANCH#${cfg.nixosConfiguration}"
+      configurationName="$DEFAULT_CONFIGURATION"
 
       if [ "$#" -gt 1 ]; then
-        echo "Usage: pd-nix-install [branch]" >&2
+        echo "Usage: pd-nix-install [configuration]" >&2
         exit "$EX_USAGE"
       fi
 
       if [ "$#" -eq 1 ]; then
-        flakeRef="$FLAKE_REPOSITORY/$1#${cfg.nixosConfiguration}"
+        configurationName="$1"
       fi
+
+      flakeRef="$FLAKE_PATH#$configurationName"
 
       if [ "$EUID" -ne 0 ]; then
         echo "This command must be run as root." >&2
@@ -46,7 +48,7 @@ let
 
       echo "About to install NixOS with the following settings:"
       echo "  source flake: $flakeRef"
-      echo "  configuration: ${cfg.nixosConfiguration}"
+      echo "  configuration: $configurationName"
       echo "  target disk: ${cfg.disk}"
       echo "  derived key file: ${keyCfg.keyFile}"
       echo
@@ -71,7 +73,6 @@ let
       fi
 
       exec ${diskoInstallExe} \
-        --option tarball-ttl 0 \
         --flake "$flakeRef" \
         --mode format \
         --disk main '${cfg.disk}'
@@ -83,15 +84,10 @@ in
     enable = lib.mkEnableOption "pseudo.design installer services";
 
     flake = lib.mkOption {
-      type = lib.types.str;
-      default = "github:pseudodesign/nix-pseudo-design";
-      description = "Base GitHub flake repository used by the installer command.";
-    };
-
-    defaultBranch = lib.mkOption {
-      type = lib.types.str;
-      default = "main";
-      description = "Default GitHub branch used by the installer command.";
+      type = lib.types.path;
+      default = ../.;
+      defaultText = lib.literalExpression "../.";
+      description = "Local flake used by the installer command by default.";
     };
 
     nixosConfiguration = lib.mkOption {
