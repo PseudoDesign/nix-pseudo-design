@@ -26,7 +26,7 @@ This can be configured to use remote caches, but if you're bootstrapping infrast
 
 Boot the installer image, then prepare the LUKS key:
 
-`sudo systemctl start --wait pd-luks-key-setup.service`
+`sudo systemctl start pd-luks-key-setup.service`
 
 `systemctl status pd-luks-key-setup.service`
 

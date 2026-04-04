@@ -11,21 +11,25 @@ let
     name = "pd-nix-install";
     runtimeInputs = [ pkgs.systemd ];
     text = ''
+      readonly EX_NOINPUT=66
+      readonly EX_SOFTWARE=70
+      readonly EX_NOPERM=77
+
       if [ "$EUID" -ne 0 ]; then
         echo "This command must be run as root." >&2
-        exit 1
+        exit "$EX_NOPERM"
       fi
 
       if [ ! -e '${cfg.disk}' ]; then
         echo "Target disk '${cfg.disk}' does not exist." >&2
-        exit 1
+        exit "$EX_NOINPUT"
       fi
 
-      systemctl start --wait pd-luks-key-setup.service
+      systemctl start pd-luks-key-setup.service
 
       if [ ! -s '${keyCfg.keyFile}' ]; then
         echo "Expected derived LUKS key at '${keyCfg.keyFile}'." >&2
-        exit 1
+        exit "$EX_SOFTWARE"
       fi
 
       exec ${diskoInstallExe} \
