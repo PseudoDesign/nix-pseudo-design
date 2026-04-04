@@ -3,7 +3,6 @@
   fetchFromGitHub,
   lib,
   makeWrapper,
-  bash,
   coreutils,
   gnused,
   gawk,
@@ -13,7 +12,7 @@
   libraspberrypi,
 }:
 
-stdenvNoCC.mkDerivation (finalAttrs: {
+stdenvNoCC.mkDerivation {
   pname = "rpi-otp-private-key";
   version = "2025.12.08-2712";
 
@@ -53,10 +52,10 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   '';
 
   meta = with lib; {
-    description = "Read or program the Raspberry Pi OTP private key";
+    description = "Read or program the Raspberry Pi OTP private key.";
     homepage = "https://github.com/raspberrypi/rpi-eeprom";
     license = licenses.bsd3;
     mainProgram = "rpi-otp-private-key";
     platforms = platforms.linux;
   };
-})
+}

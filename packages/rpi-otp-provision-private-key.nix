@@ -1,24 +1,25 @@
 {
-  writeShellScriptBin,
+  writeShellApplication,
   lib,
   rpi-otp-private-key,
   openssl
 }:
-writeShellScriptBin "rpi-otp-provision-private-key" ''
-  export PATH="${
-    lib.makeBinPath ([
-      rpi-otp-private-key
-      openssl
-    ])
-  }:$PATH"
-  
-  # Generate a random key...
-  RANDOM_KEY="$(openssl rand -hex 32)"
-  # Check if we generated 32 hex bytes
-  if [ "''${#RANDOM_KEY}" -ne "64" ]; then
-    echo "Failed to generate random key"
-    exit 2
-  fi
-  # And write it to OTP.
-  rpi-otp-private-key -w "$RANDOM_KEY"
-''
+let
+  privateKeyExe = lib.getExe rpi-otp-private-key;
+in
+writeShellApplication {
+  name = "rpi-otp-provision-private-key";
+  runtimeInputs = [ openssl ];
+  text = ''
+    privateKeyHex="$(openssl rand -hex 32)"
+    if [ "''${#privateKeyHex}" -ne 64 ]; then
+      echo "Failed to generate a 32-byte private key."
+      exit 2
+    fi
+
+    ${privateKeyExe} -w "''${privateKeyHex}"
+  '';
+  meta = {
+    description = "Provision a random Raspberry Pi OTP private key.";
+  };
+}
