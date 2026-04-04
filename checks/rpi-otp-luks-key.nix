@@ -5,14 +5,14 @@ let
   '';
 in
 testers.runNixOSTest {
-  name = "rpi-otp-luks-key service writes output of configured helper to luksKeyFile";
+  name = "rpi-otp-luks-key service writes output of configured helper to keyFile";
   nodes.rpi =
     { ... }:
     {
       imports = [ ../modules/rpi-otp-luks-key ];
       services.rpiOtpLuksKey.enable = true;
       services.rpiOtpLuksKey.package = mockLuksKeyPackage;
-      services.rpiOtpLuksKey.luksKeyFile = "/run/mock/package/luks.key";
+      services.rpiOtpLuksKey.keyFile = "/run/mock/package/luks.key";
     };
 
   testScript = ''
