@@ -97,28 +97,14 @@
         inherit specialArgs;
         modules = [
           overlayModule
+          ./modules/rpi-installer-service.nix
           ./modules/users/adam.nix
           ./modules/rpi5-hardware.nix
           ./modules/rpi-otp-luks-key
           ./modules/rpi-installer-disk.nix
-          ({ pkgs, ... }:
-            let
-              diskoInstallExe =
-                "${disko.packages.${pkgs.stdenv.hostPlatform.system}.disko-install}/bin/disko-install";
-              installScript = pkgs.writeShellApplication {
-                name = "pd-nix-install";
-                runtimeInputs = [ pkgs.nix ];
-                text = ''
-                  branch="$1"
-                  ${diskoInstallExe} \
-                    --flake "github:pseudodesign/nix-pseudo-design/''${branch}#ace" \
-                    --mode format \
-                    --disk main /dev/nvme0n1
-                '';
-              };
-            in
-            {
+          ({ pkgs, ... }: {
               system.stateVersion = "25.11";
+              services.pdInstaller.enable = true;
               nix = {
                 settings = {
                   experimental-features = [
@@ -129,8 +115,9 @@
               };
               services.getty.autologinUser = "adam";
               environment.systemPackages = [
+                pkgs.rpi-otp-private-key
+                pkgs.rpi-otp-luks-key
                 pkgs.rpi-otp-provision-private-key
-                installScript
               ];
               networking.nameservers = [
                 "8.8.8.8"

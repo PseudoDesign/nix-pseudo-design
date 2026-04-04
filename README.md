@@ -24,7 +24,21 @@ This can be configured to use remote caches, but if you're bootstrapping infrast
 
 ### Install the system image to NVME
 
-`sudo nix run 'github:nix-community/disko/latest#disko-install' --  --flake github:pseudodesign/nix-pseudo-design#ace --mode format  --disk main /dev/nvme0n1`
+Boot the installer image, then prepare the LUKS key:
+
+`sudo systemctl start --wait pd-luks-key-setup.service`
+
+`systemctl status pd-luks-key-setup.service`
+
+`ls -l /run/secrets/luks.key`
+
+Start the install interactively. `disko-install` will still prompt before wiping the target disk:
+
+`sudo pd-nix-install`
+
+Follow progress with:
+
+`journalctl -u pd-luks-key-setup.service -f`
 
 
 ## LUKS Filesystem
@@ -43,13 +57,13 @@ sequenceDiagram
   participant initrd
   create participant rpi-otp-luks-key.service
   initrd->>rpi-otp-luks-key.service: Start Service
-  create participant /run/secret/luks.key@{ "type" : "database" }
-  rpi-otp-luks-key.service-->>/run/secret/luks.key: /bin/rpi-otp-luks-key
+  create participant /run/secrets/luks.key@{ "type" : "database" }
+  rpi-otp-luks-key.service-->>/run/secrets/luks.key: /bin/rpi-otp-luks-key
   destroy rpi-otp-luks-key.service
   rpi-otp-luks-key.service->>initrd: Success
   create participant cryptsetup.service
   initrd->>cryptsetup.service: Start Service
-  /run/secret/luks.key-->>cryptsetup.service: Read File
+  /run/secrets/luks.key-->>cryptsetup.service: Read File
   create participant rootfs@{ "type" : "database" }
   cryptsetup.service-->>rootfs: Unlock
   destroy cryptsetup.service
@@ -60,8 +74,8 @@ sequenceDiagram
 
 After booting from the EEPROM bootloader, execution is handed off to initrd.  Using systemd-initrd services, we add the following to the boot process:
 
-* Run `rpi-otp-luks-key.service` before `cryptservice` unlocks the rootfs
-  * This service uses the `rpi-otp-luks-key` script to write the secret luks key to `/run/secret/luks.key`
+* Run `rpi-otp-luks-key.service` before `cryptsetup` unlocks the rootfs
+  * This service uses the `rpi-otp-luks-key` script to write the secret luks key to `/run/secrets/luks.key`
   * This script reads the raw secret value from OTP, and uses a one-way hash to generate the luks secret key.
 * The `cryptsetup` service starts, unlocking the LUKS block containing the rootfs
   * This also unlocks any additional filesystem partitions loaded within the block (e.g. persistent user data)
