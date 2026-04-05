@@ -20,6 +20,6 @@ writeShellApplication {
     ${privateKeyExe} -w "''${privateKeyHex}"
   '';
   meta = {
-    description = "Provision a random Raspberry Pi OTP private key.";
+    description = "Provision a random Raspberry Pi OTP private key if one does not already exist.";
   };
 }
