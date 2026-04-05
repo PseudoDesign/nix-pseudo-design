@@ -90,7 +90,7 @@ let
   };
 in
 testers.runNixOSTest {
-  name = "pd-installer provisions OTP only from the install command";
+  name = "pd-nix-installer worflow";
 
   nodes.installer =
     { lib, ... }:
