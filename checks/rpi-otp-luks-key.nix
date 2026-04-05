@@ -9,7 +9,7 @@ testers.runNixOSTest {
   nodes.rpi =
     { ... }:
     {
-      imports = [ ../modules/rpi-otp-luks-key ];
+      imports = [ ../modules/rpi-otp-luks-key.nix ];
       services.rpiOtpLuksKey.enable = true;
       services.rpiOtpLuksKey.package = mockDerivedKeyPackage;
       services.rpiOtpLuksKey.keyFile = "/run/mock/package/luks.key";

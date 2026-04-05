@@ -104,7 +104,7 @@ testers.runNixOSTest {
       };
 
       imports = [
-        ../modules/rpi-otp-luks-key
+        ../modules/rpi-otp-luks-key.nix
         ../modules/pd-installer.nix
       ];
 

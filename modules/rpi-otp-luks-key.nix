@@ -1,7 +1,7 @@
 { pkgs, config, lib, ... }:
 let
   cfg = config.services.rpiOtpLuksKey;
-  writeKeyPackage = pkgs.callPackage ../../packages/rpi-otp-write-derived-key.nix {
+  writeKeyPackage = pkgs.callPackage ../packages/rpi-otp-write-derived-key.nix {
     derivePackage = cfg.package;
   };
   writeKeyExe = lib.getExe writeKeyPackage;

@@ -78,8 +78,8 @@
     // {
     overlays.default = overlay;
 
-    nixosModules.default = ./modules/rpi-otp-luks-key;
-    nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key;
+    nixosModules.default = ./modules/rpi-otp-luks-key.nix;
+    nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
     nixosModules.pd-installer = ./modules/pd-installer.nix;
 
@@ -90,7 +90,7 @@
         modules = [
           overlayModule
           ./hosts/ace
-          ./modules/rpi-otp-luks-key
+          ./modules/rpi-otp-luks-key.nix
           ({ pkgs, ... }: {
             environment.systemPackages = [
               pkgs.rpi-otp-private-key
@@ -108,7 +108,7 @@
           ./modules/pd-installer.nix
           ./modules/users/adam.nix
           ./modules/rpi5-hardware.nix
-          ./modules/rpi-otp-luks-key
+          ./modules/rpi-otp-luks-key.nix
           ./modules/rpi-installer-disk.nix
           ({ pkgs, ... }: {
               system.stateVersion = "25.11";
