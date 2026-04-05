@@ -1,10 +1,13 @@
 { pkgs, config, lib, ... }:
 let
   cfg = config.services.rpiOtpLuksKey;
-  helperExe = lib.getExe cfg.package;
-  helperClosure = lib.filter (path: path != "") (
+  writeKeyPackage = pkgs.callPackage ../../packages/rpi-otp-write-luks-key.nix {
+    derivePackage = cfg.package;
+  };
+  writeKeyExe = lib.getExe writeKeyPackage;
+  writeKeyClosure = lib.filter (path: path != "") (
     lib.splitString "\n" (
-      builtins.readFile "${pkgs.closureInfo { rootPaths = [ cfg.package ]; }}/store-paths"
+      builtins.readFile "${pkgs.closureInfo { rootPaths = [ writeKeyPackage ]; }}/store-paths"
     )
   );
 in
@@ -34,9 +37,9 @@ in
     # The service that places our key into the rootfs is needed on boot
     # necessitating the need for boot.initrd.systemd
     boot.initrd.systemd.enable = true;
-    # Copy the helper package runtime closure into the initrd so arbitrary helper
+    # Copy the writer package runtime closure into the initrd so arbitrary helper
     # packages can bring along their own absolute-store-path dependencies.
-    boot.initrd.systemd.storePaths = helperClosure;
+    boot.initrd.systemd.storePaths = writeKeyClosure;
     boot.initrd.systemd.services.rpi-otp-luks-key-initrd = {
       wantedBy = [ "initrd.target" ];
       before = [
@@ -49,17 +52,7 @@ in
         RemainAfterExit = true;
       };
       script = ''
-        keyDir="$(${pkgs.coreutils}/bin/dirname '${cfg.keyFile}')"
-        ${pkgs.coreutils}/bin/install -d -m 0700 "$keyDir"
-        tmpKeyFile="$(${pkgs.coreutils}/bin/mktemp "$keyDir/.luks.key.XXXXXX")"
-        cleanup() {
-          ${pkgs.coreutils}/bin/rm -f "$tmpKeyFile"
-        }
-        trap cleanup EXIT
-        '${helperExe}' '${cfg.salt}' > "$tmpKeyFile"
-        ${pkgs.coreutils}/bin/chmod 600 "$tmpKeyFile"
-        ${pkgs.coreutils}/bin/mv -f "$tmpKeyFile" '${cfg.keyFile}'
-        trap - EXIT
+        '${writeKeyExe}' '${cfg.salt}' '${cfg.keyFile}'
       '';
     };
   };

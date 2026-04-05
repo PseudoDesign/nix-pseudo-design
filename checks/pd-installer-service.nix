@@ -132,7 +132,7 @@ testers.runNixOSTest {
     start_all()
     installer.wait_for_unit("multi-user.target")
 
-    installer.fail("systemctl start pd-luks-key-setup.service")
+    installer.fail("pd-luks-key-setup")
     installer.fail("test -e /run/mock/otp.secret")
     installer.fail("test -e /run/secrets/luks.key")
 
@@ -146,7 +146,7 @@ testers.runNixOSTest {
     installer.succeed("grep -F -- '#ace' /run/mock/disko-install.args")
 
     installer.succeed("rm /run/secrets/luks.key")
-    installer.succeed("systemctl start pd-luks-key-setup.service")
+    installer.succeed("pd-luks-key-setup")
     installer.succeed("[ \"$(cat /run/secrets/luks.key)\" = \"derived:test-salt:mock-secret\" ]")
   '';
 }

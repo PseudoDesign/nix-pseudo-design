@@ -34,15 +34,11 @@ To install a different NixOS configuration from the same local flake:
 
 If you want to troubleshoot key derivation separately after the OTP key has already been provisioned, you can run:
 
-`sudo systemctl start pd-luks-key-setup.service`
-
-`systemctl status pd-luks-key-setup.service`
+`sudo pd-luks-key-setup`
 
 `ls -l /run/secrets/luks.key`
 
-Follow progress with:
-
-`journalctl -u pd-luks-key-setup.service -f`
+Any derivation errors are printed directly to the terminal.
 
 
 ## LUKS Filesystem
