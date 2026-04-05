@@ -108,6 +108,7 @@
           ./modules/rpi-installer-disk.nix
           ({ pkgs, ... }: {
               system.stateVersion = "25.11";
+              boot.consoleLogLevel = 4;
               services.pdInstaller.enable = true;
               nix = {
                 settings = {

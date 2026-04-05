@@ -9,6 +9,7 @@
   ];
   # This is the initial version of nixOS that was installed on this system.
   system.stateVersion = "25.11";
+  boot.consoleLogLevel = 4;
   nix = {
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
