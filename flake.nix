@@ -79,7 +79,7 @@
     nixosModules.default = ./modules/rpi-otp-luks-key;
     nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key;
     nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
-    nixosModules.rpi-installer-service = ./modules/rpi-installer-service.nix;
+    nixosModules.pd-installer = ./modules/pd-installer.nix;
 
     nixosConfigurations = {
       # "'ace' is a Raspberry Pi 5 in Adam's house."
@@ -103,7 +103,7 @@
         inherit specialArgs;
         modules = [
           overlayModule
-          ./modules/rpi-installer-service.nix
+          ./modules/pd-installer.nix
           ./modules/users/adam.nix
           ./modules/rpi5-hardware.nix
           ./modules/rpi-otp-luks-key

@@ -90,7 +90,7 @@ let
   };
 in
 testers.runNixOSTest {
-  name = "pd-installer-service provisions OTP only from the install command";
+  name = "pd-installer provisions OTP only from the install command";
 
   nodes.installer =
     { lib, ... }:
@@ -105,7 +105,7 @@ testers.runNixOSTest {
 
       imports = [
         ../modules/rpi-otp-luks-key
-        ../modules/rpi-installer-service.nix
+        ../modules/pd-installer.nix
       ];
 
       nixpkgs.pkgs = lib.mkForce mockPkgs;
