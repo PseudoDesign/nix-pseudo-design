@@ -3,7 +3,7 @@ let
   cfg = config.services.pdInstaller;
   keyCfg = config.services.rpiOtpLuksKey;
   # Build the shared key-writer around the currently configured derivation helper.
-  writeKeyPackage = pkgs.callPackage ../packages/rpi-otp-write-luks-key.nix {
+  writeKeyPackage = pkgs.callPackage ../packages/rpi-otp-write-derived-key.nix {
     derivePackage = keyCfg.package;
   };
   # Expose manual key setup as a standalone command for debugging/recovery.

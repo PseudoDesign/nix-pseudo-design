@@ -45,8 +45,8 @@ let
     '';
   };
 
-  mockLuksKeyPackage = pkgs.writeShellApplication {
-    name = "rpi-otp-luks-key";
+  mockDerivedKeyPackage = pkgs.writeShellApplication {
+    name = "rpi-otp-derived-key";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
       salt="$1"
@@ -112,7 +112,7 @@ testers.runNixOSTest {
 
       services.rpiOtpLuksKey = {
         enable = true;
-        package = mockLuksKeyPackage;
+        package = mockDerivedKeyPackage;
         salt = "test-salt";
         keyFile = "/run/secrets/luks.key";
       };

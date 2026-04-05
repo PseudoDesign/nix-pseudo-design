@@ -26,10 +26,10 @@
     let
       overlay = final: prev: {
         rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
-        rpi-otp-luks-key = final.callPackage ./packages/rpi-otp-luks-key.nix { };
+        rpi-otp-derived-key = final.callPackage ./packages/rpi-otp-derived-key.nix { };
         rpi-otp-provision-private-key = final.callPackage ./packages/rpi-otp-provision-private-key.nix { };
-        rpi-otp-write-luks-key = final.callPackage ./packages/rpi-otp-write-luks-key.nix {
-          derivePackage = final.rpi-otp-luks-key;
+        rpi-otp-write-derived-key = final.callPackage ./packages/rpi-otp-write-derived-key.nix {
+          derivePackage = final.rpi-otp-derived-key;
         };
       };
 
@@ -60,11 +60,11 @@
       in
       {
         packages = {
-          default = pkgs.rpi-otp-luks-key;
+          default = pkgs.rpi-otp-derived-key;
           "rpi-otp-private-key" = pkgs.rpi-otp-private-key;
-          "rpi-otp-luks-key" = pkgs.rpi-otp-luks-key;
+          "rpi-otp-derived-key" = pkgs.rpi-otp-derived-key;
           "rpi-otp-provision-private-key" = pkgs.rpi-otp-provision-private-key;
-          "rpi-otp-write-luks-key" = pkgs.rpi-otp-write-luks-key;
+          "rpi-otp-write-derived-key" = pkgs.rpi-otp-write-derived-key;
         };
 
         checks = individualChecks // {
@@ -94,7 +94,7 @@
           ({ pkgs, ... }: {
             environment.systemPackages = [
               pkgs.rpi-otp-private-key
-              pkgs.rpi-otp-luks-key
+              pkgs.rpi-otp-derived-key
               pkgs.rpi-otp-provision-private-key
             ];
           })
@@ -125,7 +125,7 @@
               services.getty.autologinUser = "adam";
               environment.systemPackages = [
                 pkgs.rpi-otp-private-key
-                pkgs.rpi-otp-luks-key
+                pkgs.rpi-otp-derived-key
                 pkgs.rpi-otp-provision-private-key
               ];
               networking.nameservers = [

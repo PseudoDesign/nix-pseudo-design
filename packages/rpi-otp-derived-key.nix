@@ -8,7 +8,7 @@ let
   privateKeyExe = lib.getExe rpi-otp-private-key;
 in
 writeShellApplication {
-  name = "rpi-otp-luks-key";
+  name = "rpi-otp-derived-key";
   runtimeInputs = [ coreutils ];
   text = ''
     salt="$1"
@@ -19,6 +19,6 @@ writeShellApplication {
     printf '%s\n' "''${salt}''${otpSecret}" | sha256sum | tr -d ' -'
   '';
   meta = {
-    description = "Derive a LUKS key from the Raspberry Pi OTP private key.";
+    description = "Derive a key from the Raspberry Pi OTP private key.";
   };
 }

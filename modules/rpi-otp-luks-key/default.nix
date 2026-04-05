@@ -1,7 +1,7 @@
 { pkgs, config, lib, ... }:
 let
   cfg = config.services.rpiOtpLuksKey;
-  writeKeyPackage = pkgs.callPackage ../../packages/rpi-otp-write-luks-key.nix {
+  writeKeyPackage = pkgs.callPackage ../../packages/rpi-otp-write-derived-key.nix {
     derivePackage = cfg.package;
   };
   writeKeyExe = lib.getExe writeKeyPackage;
@@ -17,9 +17,9 @@ in
     enable = lib.mkEnableOption "Raspberry Pi OTP LUKS Key Service";
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.rpi-otp-luks-key;
-      defaultText = lib.literalExpression "pkgs.rpi-otp-luks-key";
-      description = "Package providing the helper that derives the LUKS key in initrd.";
+      default = pkgs.rpi-otp-derived-key;
+      defaultText = lib.literalExpression "pkgs.rpi-otp-derived-key";
+      description = "Package providing the helper that derives the key material written in initrd.";
     };
     salt = lib.mkOption {
       type = lib.types.str;

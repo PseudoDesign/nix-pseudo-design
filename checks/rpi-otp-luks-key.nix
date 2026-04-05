@@ -1,6 +1,6 @@
 { lib, testers, pkgs }:
 let
-  mockLuksKeyPackage = pkgs.writeShellScriptBin "rpi-otp-luks-key" ''
+  mockDerivedKeyPackage = pkgs.writeShellScriptBin "rpi-otp-derived-key" ''
     echo "12345"
   '';
 in
@@ -11,7 +11,7 @@ testers.runNixOSTest {
     {
       imports = [ ../modules/rpi-otp-luks-key ];
       services.rpiOtpLuksKey.enable = true;
-      services.rpiOtpLuksKey.package = mockLuksKeyPackage;
+      services.rpiOtpLuksKey.package = mockDerivedKeyPackage;
       services.rpiOtpLuksKey.keyFile = "/run/mock/package/luks.key";
     };
 
