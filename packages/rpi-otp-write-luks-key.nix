@@ -2,18 +2,10 @@
   writeShellApplication,
   lib,
   coreutils,
-  rpi-otp-luks-key ? null,
-  derivePackage ? null,
+  derivePackage,
 }:
 let
-  effectiveDerivePackage =
-    if derivePackage != null then
-      derivePackage
-    else if rpi-otp-luks-key != null then
-      rpi-otp-luks-key
-    else
-      throw "rpi-otp-write-luks-key requires derivePackage or rpi-otp-luks-key";
-  deriveLuksKeyExe = lib.getExe effectiveDerivePackage;
+  deriveLuksKeyExe = lib.getExe derivePackage;
 in
 writeShellApplication {
   name = "rpi-otp-write-luks-key";

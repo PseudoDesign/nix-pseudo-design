@@ -28,7 +28,9 @@
         rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
         rpi-otp-luks-key = final.callPackage ./packages/rpi-otp-luks-key.nix { };
         rpi-otp-provision-private-key = final.callPackage ./packages/rpi-otp-provision-private-key.nix { };
-        rpi-otp-write-luks-key = final.callPackage ./packages/rpi-otp-write-luks-key.nix { };
+        rpi-otp-write-luks-key = final.callPackage ./packages/rpi-otp-write-luks-key.nix {
+          derivePackage = final.rpi-otp-luks-key;
+        };
       };
 
       mkPkgs =
