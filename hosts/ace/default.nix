@@ -23,7 +23,13 @@
     "2001:4860:4860::8844"
   ];
   security.sudo.wheelNeedsPassword = false;
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+    };
+  };
 
   # Set up mDNS
   services.avahi = {
