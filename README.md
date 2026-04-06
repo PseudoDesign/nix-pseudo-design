@@ -44,7 +44,9 @@ Any derivation errors are printed directly to the terminal.
 
 OpenVPN certificate issuance now uses the `pd-ca` helper and a workspace-oriented CA layout with root, intermediate, issued identities, and published bundles.
 
-The operator runbook lives in [docs/pki-runbook.md](docs/pki-runbook.md). The short version is:
+The operator runbook lives in [docs/pki-runbook.md](docs/pki-runbook.md), and
+the direct CLI workflow for `pd-ca` lives in
+[docs/pd-ca-manual.md](docs/pd-ca-manual.md). The short version is:
 
 * keep the CA workspace outside Git
 * initialize a root and intermediate once

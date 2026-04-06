@@ -2,6 +2,9 @@
 
 This repository uses `pd-ca` as a software-backed certificate authority helper for OpenVPN.
 
+For a command-by-command guide aimed at operators running `pd-ca` directly, see
+[pd-ca-manual.md](./pd-ca-manual.md).
+
 The current design is:
 
 * Root CA signs an intermediate CA.
@@ -288,4 +291,3 @@ Future work:
 
 * swap the root signer to hardware-backed signing
 * add artifact distribution to hosts
-* add rotation and renewal workflows
