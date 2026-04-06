@@ -20,10 +20,9 @@ let
   };
 
   serverIp = "192.168.1.1";
-  approvedWorkspace = "${testAssets}/approved";
-  rogueWorkspace = "${testAssets}/rogue";
-  approvedBundleDir = "${approvedWorkspace}/bundles";
-  serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
+  approvedServerStageDir = "${testAssets}/staged/approved/server";
+  approvedBundleDir = "${approvedServerStageDir}/bundles";
+  serverCertDir = "${approvedServerStageDir}/issued/openvpn/servers/server";
 
   mkExternalInterface =
     address:
@@ -41,8 +40,8 @@ let
     {
       hostName,
       externalIp,
-      certDir,
-      caBundleDir,
+      identityDir,
+      bundleDir,
     }:
     { ... }:
     {
@@ -61,8 +60,8 @@ let
         enable = true;
         instanceName = "smoke";
         remoteHost = serverIp;
-        pki.bundleDir = caBundleDir;
-        pki.identityDir = certDir;
+        pki.bundleDir = bundleDir;
+        pki.identityDir = identityDir;
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         verifyX509Name = "openvpn-smoke-server";
       };
@@ -106,16 +105,16 @@ testers.runNixOSTest {
     client1 = mkClientNode {
       hostName = "client1";
       externalIp = "192.168.1.2";
-      certDir = "${approvedWorkspace}/issued/openvpn/clients/client1";
-      caBundleDir = approvedBundleDir;
+      identityDir = "${testAssets}/staged/approved/clients/client1/issued/openvpn/clients/client1";
+      bundleDir = "${testAssets}/staged/approved/clients/client1/bundles";
     };
 
     # Second approved client used to prove multiple trusted clients can connect.
     client2 = mkClientNode {
       hostName = "client2";
       externalIp = "192.168.1.3";
-      certDir = "${approvedWorkspace}/issued/openvpn/clients/client2";
-      caBundleDir = approvedBundleDir;
+      identityDir = "${testAssets}/staged/approved/clients/client2/issued/openvpn/clients/client2";
+      bundleDir = "${testAssets}/staged/approved/clients/client2/bundles";
     };
 
     # Unapproved client still trusts the approved server, so any failure is about
@@ -123,8 +122,8 @@ testers.runNixOSTest {
     rogue = mkClientNode {
       hostName = "rogue";
       externalIp = "192.168.1.4";
-      certDir = "${rogueWorkspace}/issued/openvpn/clients/rogue";
-      caBundleDir = approvedBundleDir;
+      identityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
+      bundleDir = approvedBundleDir;
     };
   };
 

@@ -102,6 +102,36 @@ nix run .#pd-ca -- revoke-openvpn-client "$PD_PKI" adam-laptop
 
 Revocation updates the intermediate CA state and refreshes `bundles/openvpn-ca.crl.pem`.
 
+## Stage Host Material
+
+To stage only the material a single host needs, export a deployable tree from the workspace.
+
+Stage a server host tree:
+
+```bash
+nix run .#pd-ca -- stage-openvpn-server "$PD_PKI" ace "$PWD/stage/ace"
+```
+
+Stage a client host tree:
+
+```bash
+nix run .#pd-ca -- stage-openvpn-client "$PD_PKI" adam-laptop "$PWD/stage/adam-laptop"
+```
+
+Each staged tree contains:
+
+```text
+stage/ace/
+  bundles/
+  issued/openvpn/servers/ace/
+
+stage/adam-laptop/
+  bundles/
+  issued/openvpn/clients/adam-laptop/
+```
+
+This is the layout the OpenVPN NixOS modules consume directly.
+
 ## Consume Artifacts in NixOS
 
 The OpenVPN modules can read the `pd-ca` workspace layout directly.

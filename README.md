@@ -49,6 +49,7 @@ The operator runbook lives in [docs/pki-runbook.md](docs/pki-runbook.md). The sh
 * keep the CA workspace outside Git
 * initialize a root and intermediate once
 * issue or revoke OpenVPN server and client identities with `nix run .#pd-ca -- ...`
+* stage per-host OpenVPN material with `stage-openvpn-server` or `stage-openvpn-client`
 * point `services.pdOpenvpnServer` and `services.pdOpenvpnClient` at the exported `pki.bundleDir` and `pki.identityDir`
 
 ## LUKS Filesystem

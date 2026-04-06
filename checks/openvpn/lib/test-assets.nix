@@ -47,6 +47,22 @@ runCommand "${name}-assets" { nativeBuildInputs = [ pdCa ]; } ''
     ''
   ) rogueClients}
 
+  pd-ca stage-openvpn-server "$approved_workspace" server "$out/staged/approved/server"
+
+  ${lib.concatMapStringsSep "\n" (
+    clientName:
+    ''
+      pd-ca stage-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} "$out/staged/approved/clients/${clientName}"
+    ''
+  ) approvedClients}
+
+  ${lib.concatMapStringsSep "\n" (
+    clientName:
+    ''
+      pd-ca stage-openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} "$out/staged/rogue/clients/${clientName}"
+    ''
+  ) rogueClients}
+
   ${lib.concatStringsSep "\n" (
     lib.mapAttrsToList (
       clientName: vpnIp:

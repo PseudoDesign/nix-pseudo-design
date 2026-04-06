@@ -20,10 +20,9 @@ let
   vpnSubnet = "10.9.0.0";
   approvedVpnIp = "10.9.0.10";
   statusFile = "/run/openvpn-wrong-ca/status.log";
-  approvedWorkspace = "${testAssets}/approved";
-  rogueWorkspace = "${testAssets}/rogue";
-  approvedBundleDir = "${approvedWorkspace}/bundles";
-  serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
+  approvedServerStageDir = "${testAssets}/staged/approved/server";
+  approvedBundleDir = "${approvedServerStageDir}/bundles";
+  serverCertDir = "${approvedServerStageDir}/issued/openvpn/servers/server";
 
   mkExternalInterface =
     address:
@@ -41,8 +40,8 @@ let
     {
       hostName,
       externalIp,
-      certDir,
-      caBundleDir,
+      identityDir,
+      bundleDir,
     }:
     { ... }:
     {
@@ -61,8 +60,8 @@ let
         enable = true;
         inherit instanceName;
         remoteHost = serverIp;
-        pki.bundleDir = caBundleDir;
-        pki.identityDir = certDir;
+        pki.bundleDir = bundleDir;
+        pki.identityDir = identityDir;
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         verifyX509Name = "openvpn-wrong-ca-server";
       };
@@ -106,8 +105,8 @@ testers.runNixOSTest {
     approved = mkClientNode {
       hostName = "approved";
       externalIp = "192.168.2.2";
-      certDir = "${approvedWorkspace}/issued/openvpn/clients/approved";
-      caBundleDir = approvedBundleDir;
+      identityDir = "${testAssets}/staged/approved/clients/approved/issued/openvpn/clients/approved";
+      bundleDir = "${testAssets}/staged/approved/clients/approved/bundles";
     };
 
     # Rogue client still trusts the approved server, so rejection isolates the
@@ -115,8 +114,8 @@ testers.runNixOSTest {
     rogue = mkClientNode {
       hostName = "rogue";
       externalIp = "192.168.2.3";
-      certDir = "${rogueWorkspace}/issued/openvpn/clients/rogue";
-      caBundleDir = approvedBundleDir;
+      identityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
+      bundleDir = approvedBundleDir;
     };
   };
 

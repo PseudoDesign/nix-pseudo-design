@@ -28,6 +28,8 @@ Usage:
   pd-ca issue-openvpn-client WORKSPACE_DIR NAME COMMON_NAME
   pd-ca revoke-openvpn-server WORKSPACE_DIR NAME
   pd-ca revoke-openvpn-client WORKSPACE_DIR NAME
+  pd-ca stage-openvpn-server WORKSPACE_DIR NAME OUT_DIR
+  pd-ca stage-openvpn-client WORKSPACE_DIR NAME OUT_DIR
   pd-ca bundle-chain OUT_FILE CERT_FILE [CERT_FILE...]
 
 Profiles:
@@ -69,6 +71,15 @@ EOF
 
     workspace_openvpn_client_dir() {
       printf '%s/issued/openvpn/clients/%s\n' "$1" "$2"
+    }
+
+    copy_if_present() {
+      local source_file="$1"
+      local output_file="$2"
+
+      if [ -f "$source_file" ]; then
+        cp "$source_file" "$output_file"
+      fi
     }
 
     init_ca_state() {
@@ -240,6 +251,36 @@ EOF
       elif [ -f "$root_ca_dir/ca.crl.pem" ]; then
         cp "$root_ca_dir/ca.crl.pem" "$workspace/bundles/openvpn-ca.crl.pem"
       fi
+    }
+
+    stage_workspace_bundles() {
+      local workspace="$1"
+      local out_dir="$2"
+
+      mkdir -p "$out_dir/bundles"
+
+      copy_if_present "$workspace/bundles/root-ca.crt" "$out_dir/bundles/root-ca.crt"
+      copy_if_present "$workspace/bundles/intermediate-ca.crt" "$out_dir/bundles/intermediate-ca.crt"
+      copy_if_present "$workspace/bundles/openvpn-ca.crt" "$out_dir/bundles/openvpn-ca.crt"
+      copy_if_present "$workspace/bundles/openvpn-ca.crl.pem" "$out_dir/bundles/openvpn-ca.crl.pem"
+    }
+
+    stage_identity_dir() {
+      local source_dir="$1"
+      local name="$2"
+      local out_dir="$3"
+
+      require_file "$source_dir/$name.crt"
+      require_file "$source_dir/$name.key"
+      require_file "$source_dir/ca-chain.crt"
+      require_file "$source_dir/full-chain.crt"
+
+      mkdir -p "$out_dir"
+
+      cp "$source_dir/$name.crt" "$out_dir/$name.crt"
+      cp "$source_dir/$name.key" "$out_dir/$name.key"
+      cp "$source_dir/ca-chain.crt" "$out_dir/ca-chain.crt"
+      cp "$source_dir/full-chain.crt" "$out_dir/full-chain.crt"
     }
 
     init_root() {
@@ -574,6 +615,40 @@ EOF
       refresh_workspace_bundles "$workspace"
     }
 
+    stage_openvpn_server() {
+      local workspace="$1"
+      local name="$2"
+      local out_dir="$3"
+      local cert_dir
+      local staged_identity_dir
+
+      cert_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+      staged_identity_dir="$out_dir/issued/openvpn/servers/$name"
+
+      ensure_absent "$out_dir"
+      mkdir -p "$out_dir"
+
+      stage_workspace_bundles "$workspace" "$out_dir"
+      stage_identity_dir "$cert_dir" "$name" "$staged_identity_dir"
+    }
+
+    stage_openvpn_client() {
+      local workspace="$1"
+      local name="$2"
+      local out_dir="$3"
+      local cert_dir
+      local staged_identity_dir
+
+      cert_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
+      staged_identity_dir="$out_dir/issued/openvpn/clients/$name"
+
+      ensure_absent "$out_dir"
+      mkdir -p "$out_dir"
+
+      stage_workspace_bundles "$workspace" "$out_dir"
+      stage_identity_dir "$cert_dir" "$name" "$staged_identity_dir"
+    }
+
     if [ "$#" -lt 1 ]; then
       usage
       exit "$EX_USAGE"
@@ -659,6 +734,22 @@ EOF
         fi
 
         revoke_openvpn_client "$2" "$3"
+        ;;
+      stage-openvpn-server)
+        if [ "$#" -ne 4 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        stage_openvpn_server "$2" "$3" "$4"
+        ;;
+      stage-openvpn-client)
+        if [ "$#" -ne 4 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        stage_openvpn_client "$2" "$3" "$4"
         ;;
       bundle-chain)
         if [ "$#" -lt 3 ]; then

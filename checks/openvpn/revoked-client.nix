@@ -24,9 +24,9 @@ let
   vpnSubnet = "10.10.0.0";
   activeVpnIp = "10.10.0.10";
   statusFile = "/run/openvpn-revoked/status.log";
-  approvedWorkspace = "${testAssets}/approved";
-  approvedBundleDir = "${approvedWorkspace}/bundles";
-  serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
+  approvedServerStageDir = "${testAssets}/staged/approved/server";
+  approvedBundleDir = "${approvedServerStageDir}/bundles";
+  serverCertDir = "${approvedServerStageDir}/issued/openvpn/servers/server";
 
   mkExternalInterface =
     address:
@@ -63,8 +63,8 @@ let
         enable = true;
         inherit instanceName;
         remoteHost = serverIp;
-        pki.bundleDir = approvedBundleDir;
-        pki.identityDir = "${approvedWorkspace}/issued/openvpn/clients/${certName}";
+        pki.bundleDir = "${testAssets}/staged/approved/clients/${certName}/bundles";
+        pki.identityDir = "${testAssets}/staged/approved/clients/${certName}/issued/openvpn/clients/${certName}";
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         verifyX509Name = "openvpn-revoked-server";
       };

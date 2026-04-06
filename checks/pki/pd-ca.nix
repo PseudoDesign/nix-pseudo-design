@@ -9,16 +9,23 @@ pkgs.runCommand "pd-ca-check" { nativeBuildInputs = [ pkgs.gnugrep pkgs.openssl 
   client_dir="$workspace/issued/openvpn/clients/client"
   bundle_file="$workspace/bundles/openvpn-ca.crt"
   crl_file="$workspace/bundles/openvpn-ca.crl.pem"
+  staged_server_dir="$TMPDIR/staged-server"
+  staged_client_dir="$TMPDIR/staged-client"
 
   pd-ca init-root-ca "$workspace" "pseudo.design Test Root CA"
   pd-ca init-intermediate-ca "$workspace" "pseudo.design Test Intermediate CA"
   pd-ca issue-openvpn-server "$workspace" server "pd-ca-test-server"
   pd-ca issue-openvpn-client "$workspace" client "pd-ca-test-client"
   pd-ca revoke-openvpn-client "$workspace" client
+  pd-ca stage-openvpn-server "$workspace" server "$staged_server_dir"
+  pd-ca stage-openvpn-client "$workspace" client "$staged_client_dir"
 
   openssl verify -CAfile "$bundle_file" "$server_dir/server.crt" | grep -F "$server_dir/server.crt: OK"
   ! openssl verify -crl_check -CAfile "$bundle_file" -CRLfile "$crl_file" "$client_dir/client.crt" >"$TMPDIR/client-verify.log" 2>&1
   grep -F "certificate revoked" "$TMPDIR/client-verify.log"
+  openssl verify -CAfile "$staged_server_dir/bundles/openvpn-ca.crt" "$staged_server_dir/issued/openvpn/servers/server/server.crt" | grep -F "$staged_server_dir/issued/openvpn/servers/server/server.crt: OK"
+  ! openssl verify -crl_check -CAfile "$staged_client_dir/bundles/openvpn-ca.crt" -CRLfile "$staged_client_dir/bundles/openvpn-ca.crl.pem" "$staged_client_dir/issued/openvpn/clients/client/client.crt" >"$TMPDIR/staged-client-verify.log" 2>&1
+  grep -F "certificate revoked" "$TMPDIR/staged-client-verify.log"
 
   openssl x509 -in "$intermediate_dir/ca.crt" -noout -text | grep -F "CA:TRUE, pathlen:0"
   openssl x509 -in "$server_dir/server.crt" -noout -text | grep -F "TLS Web Server Authentication"
@@ -31,6 +38,9 @@ pkgs.runCommand "pd-ca-check" { nativeBuildInputs = [ pkgs.gnugrep pkgs.openssl 
   test -f "$server_dir/full-chain.crt"
   test -f "$client_dir/ca-chain.crt"
   test -f "$client_dir/full-chain.crt"
+  test -f "$staged_server_dir/bundles/openvpn-ca.crl.pem"
+  test -f "$staged_server_dir/issued/openvpn/servers/server/server.key"
+  test -f "$staged_client_dir/issued/openvpn/clients/client/client.key"
 
   [ "$(ls -1 "$root_dir/issued/certs" | wc -l)" -eq 1 ]
   [ "$(ls -1 "$intermediate_dir/issued/certs" | wc -l)" -eq 2 ]
