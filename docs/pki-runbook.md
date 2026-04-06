@@ -186,8 +186,10 @@ Server example:
   services.pdOpenvpnServer = {
     enable = true;
     vpnSubnet = "10.8.0.0";
-    pki.install.sourceDir = "/var/lib/pseudo-design/stage/ace";
-    tlsCryptKeyFile = "/run/secrets/openvpn/pd/tls-crypt.key";
+    pki.install = {
+      sourceDir = "/var/lib/pseudo-design/stage/ace";
+      tlsCryptSourceFile = "/var/lib/pseudo-design/openvpn/tls-crypt.key";
+    };
   };
 }
 ```
@@ -199,16 +201,18 @@ Client example:
   services.pdOpenvpnClient = {
     enable = true;
     remoteHost = "vpn.pseudo.design";
-    pki.install.sourceDir = "/var/lib/pseudo-design/stage/adam-laptop";
-    tlsCryptKeyFile = "/run/secrets/openvpn/pd/tls-crypt.key";
+    pki.install = {
+      sourceDir = "/var/lib/pseudo-design/stage/adam-laptop";
+      tlsCryptSourceFile = "/var/lib/pseudo-design/openvpn/tls-crypt.key";
+    };
     verifyX509Name = "vpn.pseudo.design";
   };
 }
 ```
 
-With the default settings, the module installs the staged tree into `/run/secrets/openvpn/<instanceName>` before `openvpn-<instanceName>.service` starts and derives `pki.bundleDir` plus `pki.identityDir` from that runtime location.
+With the default settings, the module installs the staged tree into `/run/secrets/openvpn/<instanceName>` before each `openvpn-<instanceName>.service` start and derives `pki.bundleDir` plus `pki.identityDir` from that runtime location.
 
-`tls-crypt.key` is still managed separately; the staged `pd-ca` tree currently contains only CA and certificate material.
+If `pki.install.tlsCryptSourceFile` is set, the module also copies that shared key into the same runtime directory and defaults `tlsCryptKeyFile` to `/run/secrets/openvpn/<instanceName>/tls-crypt.key`. The staged `pd-ca` tree itself still contains only CA and certificate material.
 
 ## Consume Artifacts In Place In NixOS
 

@@ -44,6 +44,7 @@ let
       identityDir,
       bundleDir,
       installSourceDir ? null,
+      installTlsCryptSourceFile ? null,
     }:
     { ... }:
     {
@@ -65,7 +66,13 @@ let
           remoteHost = serverIp;
           pki =
             {
-              install.sourceDir = installSourceDir;
+              install =
+                {
+                  sourceDir = installSourceDir;
+                }
+                // lib.optionalAttrs (installTlsCryptSourceFile != null) {
+                  tlsCryptSourceFile = installTlsCryptSourceFile;
+                };
             }
             // lib.optionalAttrs (bundleDir != null) {
               bundleDir = bundleDir;
@@ -73,8 +80,10 @@ let
             // lib.optionalAttrs (identityDir != null) {
               identityDir = identityDir;
             };
-          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           verifyX509Name = "openvpn-smoke-server";
+        }
+        // lib.optionalAttrs (installTlsCryptSourceFile == null) {
+          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         };
 
       system.stateVersion = "25.11";
@@ -103,8 +112,10 @@ testers.runNixOSTest {
           instanceName = "smoke";
           runtimeDir = "/run/openvpn-smoke";
           vpnSubnet = "10.8.0.0";
-          pki.install.sourceDir = approvedServerStageDir;
-          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
+          pki.install = {
+            sourceDir = approvedServerStageDir;
+            tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
+          };
           clientConfigDir = "${testAssets}/ccd";
         };
 
@@ -118,6 +129,7 @@ testers.runNixOSTest {
       identityDir = null;
       bundleDir = null;
       installSourceDir = "${testAssets}/staged/approved/clients/client1";
+      installTlsCryptSourceFile = "${testAssets}/tls-crypt.key";
     };
 
     # Second approved client used to prove multiple trusted clients can connect.
@@ -127,6 +139,7 @@ testers.runNixOSTest {
       identityDir = null;
       bundleDir = null;
       installSourceDir = "${testAssets}/staged/approved/clients/client2";
+      installTlsCryptSourceFile = "${testAssets}/tls-crypt.key";
     };
 
     # Unapproved client still trusts the approved server, so any failure is about
@@ -149,7 +162,9 @@ testers.runNixOSTest {
 
     gateway.succeed("test -f /run/secrets/openvpn/smoke/bundles/openvpn-ca.crt")
     gateway.succeed("test -f /run/secrets/openvpn/smoke/issued/openvpn/servers/server/server.key")
+    gateway.succeed("test -f /run/secrets/openvpn/smoke/tls-crypt.key")
     client1.succeed("test -f /run/secrets/openvpn/smoke/issued/openvpn/clients/client1/client1.key")
+    client1.succeed("test -f /run/secrets/openvpn/smoke/tls-crypt.key")
 
     gateway.wait_until_succeeds("grep -F 'CLIENT_LIST,client1,' /run/openvpn-smoke/status.log")
     gateway.wait_until_succeeds("grep -F 'CLIENT_LIST,client2,' /run/openvpn-smoke/status.log")

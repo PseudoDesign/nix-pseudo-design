@@ -135,6 +135,13 @@ in
       description = "Runtime directory where pki.install.sourceDir is installed.";
     };
 
+    pki.install.tlsCryptSourceFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/var/lib/pseudo-design/openvpn/tls-crypt.key";
+      description = "Optional tls-crypt key copied into pki.install.targetDir as tls-crypt.key before OpenVPN starts.";
+    };
+
     caCertFile = lib.mkOption {
       type = lib.types.str;
       example = "/run/secrets/openvpn/ca.crt";
@@ -156,7 +163,7 @@ in
     tlsCryptKeyFile = lib.mkOption {
       type = lib.types.str;
       example = "/run/secrets/openvpn/tls-crypt.key";
-      description = "Shared tls-crypt key distributed out of band.";
+      description = "Shared tls-crypt key used by the OpenVPN control channel.";
     };
 
     requireServerKeyUsage = lib.mkOption {
@@ -212,6 +219,10 @@ in
             assertion = cfg.pki.install.sourceDir == null || installedPkiIdentityName != null;
             message = "services.pdOpenvpnClient.pki.install.sourceDir requires an identity name that can be inferred from pki.identityName or the sourceDir basename.";
           }
+          {
+            assertion = cfg.pki.install.tlsCryptSourceFile == null || cfg.pki.install.sourceDir != null;
+            message = "services.pdOpenvpnClient.pki.install.tlsCryptSourceFile requires services.pdOpenvpnClient.pki.install.sourceDir.";
+          }
         ];
 
         services.openvpn.servers.${cfg.instanceName}.config = openvpnConfig;
@@ -235,10 +246,11 @@ in
           before = [ "openvpn-${cfg.instanceName}.service" ];
           serviceConfig = {
             Type = "oneshot";
-            RemainAfterExit = true;
           };
           script = ''
-            '${installPkiExe}' '${cfg.pki.install.sourceDir}' '${cfg.pki.install.targetDir}'
+            '${installPkiExe}' \
+              '${cfg.pki.install.sourceDir}' \
+              '${cfg.pki.install.targetDir}'${lib.optionalString (cfg.pki.install.tlsCryptSourceFile != null) " \\\n              '${cfg.pki.install.tlsCryptSourceFile}'"}
           '';
         };
 
@@ -246,6 +258,10 @@ in
           requires = [ "${installServiceName}.service" ];
           after = [ "${installServiceName}.service" ];
         };
+      })
+
+      (lib.mkIf (cfg.pki.install.sourceDir != null && cfg.pki.install.tlsCryptSourceFile != null) {
+        services.pdOpenvpnClient.tlsCryptKeyFile = lib.mkDefault "${cfg.pki.install.targetDir}/tls-crypt.key";
       })
     ]
   );

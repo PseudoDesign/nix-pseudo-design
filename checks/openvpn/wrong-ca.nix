@@ -1,5 +1,6 @@
 { testers, pkgs, ... }:
 let
+  lib = pkgs.lib;
   mkOpenvpnTestAssets = pkgs.callPackage ./lib/test-assets.nix { };
   testAssets = mkOpenvpnTestAssets {
     name = "openvpn-wrong-ca";
@@ -22,7 +23,6 @@ let
   statusFile = "/run/openvpn-wrong-ca/status.log";
   approvedServerStageDir = "${testAssets}/staged/approved/server";
   approvedBundleDir = "${approvedServerStageDir}/bundles";
-  serverCertDir = "${approvedServerStageDir}/issued/openvpn/servers/server";
 
   mkExternalInterface =
     address:
@@ -42,6 +42,8 @@ let
       externalIp,
       identityDir,
       bundleDir,
+      installSourceDir ? null,
+      installTlsCryptSourceFile ? null,
     }:
     { ... }:
     {
@@ -56,15 +58,32 @@ let
         assignIP = false;
       };
 
-      services.pdOpenvpnClient = {
-        enable = true;
-        inherit instanceName;
-        remoteHost = serverIp;
-        pki.bundleDir = bundleDir;
-        pki.identityDir = identityDir;
-        tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
-        verifyX509Name = "openvpn-wrong-ca-server";
-      };
+      services.pdOpenvpnClient =
+        {
+          enable = true;
+          inherit instanceName;
+          remoteHost = serverIp;
+          pki =
+            {
+              install =
+                {
+                  sourceDir = installSourceDir;
+                }
+                // lib.optionalAttrs (installTlsCryptSourceFile != null) {
+                  tlsCryptSourceFile = installTlsCryptSourceFile;
+                };
+            }
+            // lib.optionalAttrs (bundleDir != null) {
+              bundleDir = bundleDir;
+            }
+            // lib.optionalAttrs (identityDir != null) {
+              identityDir = identityDir;
+            };
+          verifyX509Name = "openvpn-wrong-ca-server";
+        }
+        // lib.optionalAttrs (installTlsCryptSourceFile == null) {
+          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
+        };
 
       system.stateVersion = "25.11";
     };
@@ -92,9 +111,10 @@ testers.runNixOSTest {
           inherit instanceName;
           runtimeDir = "/run/openvpn-wrong-ca";
           inherit vpnSubnet;
-          pki.bundleDir = approvedBundleDir;
-          pki.identityDir = serverCertDir;
-          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
+          pki.install = {
+            sourceDir = approvedServerStageDir;
+            tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
+          };
           clientConfigDir = "${testAssets}/ccd";
         };
 
@@ -105,8 +125,10 @@ testers.runNixOSTest {
     approved = mkClientNode {
       hostName = "approved";
       externalIp = "192.168.2.2";
-      identityDir = "${testAssets}/staged/approved/clients/approved/issued/openvpn/clients/approved";
-      bundleDir = "${testAssets}/staged/approved/clients/approved/bundles";
+      identityDir = null;
+      bundleDir = null;
+      installSourceDir = "${testAssets}/staged/approved/clients/approved";
+      installTlsCryptSourceFile = "${testAssets}/tls-crypt.key";
     };
 
     # Rogue client still trusts the approved server, so rejection isolates the
