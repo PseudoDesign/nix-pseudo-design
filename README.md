@@ -4,25 +4,6 @@ NixOS infrastructure for `pseudo.design`.
 
 This repository is a small flake-based system configuration that currently manages four hosts, `ace`, `seepho`, `mako`, and `tense`, and layers in Home Manager for the `adam` user. The active host configurations currently share the same Raspberry Pi 5 base and include the machine-level NixOS setup, user account definition, and user-space configuration.
 
-## Agent Worktree Guardrails
-
-This repo includes a pragmatic workflow for giving an agent one branch to work on without granting root/system access:
-
-```bash
-scripts/setup-agent-worktree.sh agent/codex /tmp/nix-pseudo-design-agent-codex
-cd /tmp/nix-pseudo-design-agent-codex
-```
-
-That setup enables repo-managed hooks and locks the dedicated worktree so commits and pushes only succeed from the assigned branch. The full runbook lives in [docs/agent-worktree-workflow.md](docs/agent-worktree-workflow.md).
-
-For longer autonomous runs, the operating policy lives in [docs/agent-autonomy-policy.md](docs/agent-autonomy-policy.md), and approval-needed items are collected in [docs/agent-review-queue.md](docs/agent-review-queue.md).
-
-For fully autonomous runs in this sandbox, prefer a dedicated clone under `/tmp`:
-
-```bash
-scripts/setup-agent-clone.sh /home/adam/nix-pseudo-design agent/codex
-```
-
 ## Quickstart
 
 **TODO: Link to document describing how to install nixos & set up qemu**

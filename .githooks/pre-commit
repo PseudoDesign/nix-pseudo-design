@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-hook_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-# shellcheck source=.githooks/lib/branch-guard.sh
-. "$hook_dir/lib/branch-guard.sh"
-
-branch_guard_require_branch
