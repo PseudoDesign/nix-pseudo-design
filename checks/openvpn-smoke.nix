@@ -3,8 +3,10 @@ let
   mkOpenvpnTestAssets = pkgs.callPackage ./lib/openvpn-test-assets.nix { };
   testAssets = mkOpenvpnTestAssets {
     name = "openvpn-smoke";
-    approvedCaCommonName = "OpenVPN Smoke Approved CA";
-    rogueCaCommonName = "OpenVPN Smoke Rogue CA";
+    approvedRootCommonName = "OpenVPN Smoke Approved Root CA";
+    approvedIntermediateCommonName = "OpenVPN Smoke Approved Intermediate CA";
+    rogueRootCommonName = "OpenVPN Smoke Rogue Root CA";
+    rogueIntermediateCommonName = "OpenVPN Smoke Rogue Intermediate CA";
     serverCommonName = "openvpn-smoke-server";
     approvedClients = [
       "client1"

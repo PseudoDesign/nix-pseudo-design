@@ -16,6 +16,7 @@ writeShellApplication {
       cat <<'EOF' >&2
 Usage:
   pd-ca init-root OUT_DIR COMMON_NAME
+  pd-ca issue-intermediate PARENT_CA_DIR COMMON_NAME OUT_DIR
   pd-ca issue-leaf CA_DIR PROFILE NAME COMMON_NAME OUT_DIR
 
 Profiles:
@@ -62,6 +63,61 @@ EOF
         >/dev/null 2>&1
 
       rm -rf "$tmp_dir"
+    }
+
+    issue_intermediate() {
+      local parent_ca_dir="$1"
+      local common_name="$2"
+      local out_dir="$3"
+      local tmp_dir
+      local req_config
+      local ext_config
+
+      mkdir -p "$out_dir"
+
+      tmp_dir="$(mktemp -d)"
+      req_config="$tmp_dir/intermediate.cnf"
+      ext_config="$tmp_dir/intermediate.ext"
+
+      cat > "$req_config" <<EOF
+[req]
+distinguished_name = dn
+prompt = no
+
+[dn]
+CN = $common_name
+EOF
+
+      openssl req \
+        -new \
+        -newkey rsa:2048 \
+        -nodes \
+        -config "$req_config" \
+        -keyout "$out_dir/ca.key" \
+        -out "$out_dir/ca.csr" \
+        >/dev/null 2>&1
+
+      cat > "$ext_config" <<EOF
+basicConstraints=critical,CA:TRUE,pathlen:0
+keyUsage=critical,keyCertSign,cRLSign
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
+EOF
+
+      openssl x509 \
+        -req \
+        -sha256 \
+        -days 3650 \
+        -in "$out_dir/ca.csr" \
+        -CA "$parent_ca_dir/ca.crt" \
+        -CAkey "$parent_ca_dir/ca.key" \
+        -CAcreateserial \
+        -out "$out_dir/ca.crt" \
+        -extfile "$ext_config" \
+        >/dev/null 2>&1
+
+      rm -rf "$tmp_dir"
+      rm -f "$out_dir/ca.csr"
     }
 
     issue_leaf() {
@@ -157,6 +213,14 @@ EOF
         fi
 
         init_root "$2" "$3"
+        ;;
+      issue-intermediate)
+        if [ "$#" -ne 4 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        issue_intermediate "$2" "$3" "$4"
         ;;
       issue-leaf)
         if [ "$#" -ne 6 ]; then

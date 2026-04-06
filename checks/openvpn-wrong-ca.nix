@@ -3,8 +3,10 @@ let
   mkOpenvpnTestAssets = pkgs.callPackage ./lib/openvpn-test-assets.nix { };
   testAssets = mkOpenvpnTestAssets {
     name = "openvpn-wrong-ca";
-    approvedCaCommonName = "OpenVPN Wrong-CA Approved CA";
-    rogueCaCommonName = "OpenVPN Wrong-CA Rogue CA";
+    approvedRootCommonName = "OpenVPN Wrong-CA Approved Root CA";
+    approvedIntermediateCommonName = "OpenVPN Wrong-CA Approved Intermediate CA";
+    rogueRootCommonName = "OpenVPN Wrong-CA Rogue Root CA";
+    rogueIntermediateCommonName = "OpenVPN Wrong-CA Rogue Intermediate CA";
     serverCommonName = "openvpn-wrong-ca-server";
     approvedClients = [ "approved" ];
     rogueClients = [ "rogue" ];
