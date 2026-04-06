@@ -85,6 +85,47 @@ Each issued identity directory contains:
 * `<name>.key`
 * `ca-chain.crt`
 * `full-chain.crt`
+* `common-name`
+* `profile`
+
+## Renew And Rotate
+
+Renewal issues a fresh certificate for the same logical identity and archives the previous material under the workspace history tree. It does not revoke the archived certificate.
+
+Renew a server certificate:
+
+```bash
+nix run .#pd-ca -- renew-openvpn-server "$PD_PKI" ace
+```
+
+Renew a client certificate:
+
+```bash
+nix run .#pd-ca -- renew-openvpn-client "$PD_PKI" adam-laptop
+```
+
+Rotation issues a fresh certificate, archives the previous material, and revokes the archived certificate so the CRL starts rejecting it.
+
+Rotate a server certificate:
+
+```bash
+nix run .#pd-ca -- rotate-openvpn-server "$PD_PKI" ace
+```
+
+Rotate a client certificate:
+
+```bash
+nix run .#pd-ca -- rotate-openvpn-client "$PD_PKI" adam-laptop
+```
+
+Archived material is kept here:
+
+```text
+$PD_PKI/history/openvpn/servers/ace/
+$PD_PKI/history/openvpn/clients/adam-laptop/
+```
+
+Each archived entry is named with a UTC timestamp and the archived certificate serial.
 
 ## Revoke Certificates
 
@@ -101,6 +142,8 @@ nix run .#pd-ca -- revoke-openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Revocation updates the intermediate CA state and refreshes `bundles/openvpn-ca.crl.pem`.
+
+Use direct revoke when you want to retire the current certificate without issuing a replacement. Use rotate when you want replacement and revocation as one operation.
 
 ## Stage Host Material
 

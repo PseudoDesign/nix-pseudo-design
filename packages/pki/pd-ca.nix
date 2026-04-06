@@ -1,12 +1,14 @@
 {
   writeShellApplication,
   coreutils,
+  gnused,
   openssl,
 }:
 writeShellApplication {
   name = "pd-ca";
   runtimeInputs = [
     coreutils
+    gnused
     openssl
   ];
   text = ''
@@ -26,6 +28,10 @@ Usage:
   pd-ca init-intermediate-ca WORKSPACE_DIR COMMON_NAME
   pd-ca issue-openvpn-server WORKSPACE_DIR NAME COMMON_NAME
   pd-ca issue-openvpn-client WORKSPACE_DIR NAME COMMON_NAME
+  pd-ca renew-openvpn-server WORKSPACE_DIR NAME
+  pd-ca renew-openvpn-client WORKSPACE_DIR NAME
+  pd-ca rotate-openvpn-server WORKSPACE_DIR NAME
+  pd-ca rotate-openvpn-client WORKSPACE_DIR NAME
   pd-ca revoke-openvpn-server WORKSPACE_DIR NAME
   pd-ca revoke-openvpn-client WORKSPACE_DIR NAME
   pd-ca stage-openvpn-server WORKSPACE_DIR NAME OUT_DIR
@@ -73,6 +79,14 @@ EOF
       printf '%s/issued/openvpn/clients/%s\n' "$1" "$2"
     }
 
+    workspace_openvpn_server_history_dir() {
+      printf '%s/history/openvpn/servers/%s\n' "$1" "$2"
+    }
+
+    workspace_openvpn_client_history_dir() {
+      printf '%s/history/openvpn/clients/%s\n' "$1" "$2"
+    }
+
     copy_if_present() {
       local source_file="$1"
       local output_file="$2"
@@ -105,6 +119,12 @@ EOF
 
       end_date="$(openssl x509 -in "$cert_file" -noout -enddate | cut -d= -f2-)"
       date -u -d "$end_date" '+%y%m%d%H%M%SZ'
+    }
+
+    openssl_serial_from_cert() {
+      local cert_file="$1"
+
+      openssl x509 -in "$cert_file" -noout -serial | cut -d= -f2
     }
 
     openssl_revocation_time_now() {
@@ -189,16 +209,17 @@ EOF
 
     record_issued_cert() {
       local ca_dir="$1"
-      local serial="$2"
-      local label="$3"
-      local profile="$4"
-      local common_name="$5"
+      local label="$2"
+      local profile="$3"
+      local common_name="$4"
       local subject
       local not_after
-      local cert_file="$6"
+      local cert_file="$5"
+      local serial
 
       subject="/CN=$common_name"
       not_after="$(openssl_asn1_time_from_cert "$cert_file")"
+      serial="$(openssl_serial_from_cert "$cert_file")"
 
       cp "$cert_file" "$ca_dir/issued/certs/$serial-$label.crt"
       printf 'V\t%s\t\t%s\tunknown\t%s\n' "$not_after" "$serial" "$subject" >> "$ca_dir/index.txt"
@@ -281,6 +302,59 @@ EOF
       cp "$source_dir/$name.key" "$out_dir/$name.key"
       cp "$source_dir/ca-chain.crt" "$out_dir/ca-chain.crt"
       cp "$source_dir/full-chain.crt" "$out_dir/full-chain.crt"
+      copy_if_present "$source_dir/common-name" "$out_dir/common-name"
+      copy_if_present "$source_dir/profile" "$out_dir/profile"
+    }
+
+    identity_common_name() {
+      local cert_dir="$1"
+      local name="$2"
+      local cert_file="$cert_dir/$name.crt"
+
+      if [ -f "$cert_dir/common-name" ]; then
+        cat "$cert_dir/common-name"
+      else
+        openssl x509 \
+          -in "$cert_file" \
+          -noout \
+          -subject \
+          -nameopt RFC2253 |
+          sed \
+            -e 's/^subject=//' \
+            -e 's/.*CN=//' \
+            -e 's/,.*$//'
+      fi
+    }
+
+    identity_serial() {
+      local cert_dir="$1"
+      local name="$2"
+
+      openssl x509 -in "$cert_dir/$name.crt" -noout -serial | cut -d= -f2
+    }
+
+    archive_identity_dir() {
+      local workspace="$1"
+      local history_root="$2"
+      local current_dir="$3"
+      local name="$4"
+      local timestamp
+      local serial
+      local archive_dir
+
+      require_file "$current_dir/$name.crt"
+      require_file "$current_dir/$name.key"
+
+      mkdir -p "$history_root"
+
+      timestamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+      serial="$(identity_serial "$current_dir" "$name")"
+      archive_dir="$history_root/$timestamp-$serial"
+
+      ensure_absent "$archive_dir"
+      mv "$current_dir" "$archive_dir"
+
+      printf '%s\n' "$archive_dir"
     }
 
     init_root() {
@@ -334,7 +408,6 @@ EOF
       local parent_ca_dir="$1"
       local common_name="$2"
       local out_dir="$3"
-      local serial
       local tmp_dir
       local req_config
       local ext_config
@@ -349,7 +422,6 @@ EOF
 
       mkdir -p "$out_dir"
 
-      serial="$(cat "$parent_ca_dir/serial")"
       tmp_dir="$(mktemp -d)"
       req_config="$tmp_dir/intermediate.cnf"
       ext_config="$tmp_dir/intermediate.ext"
@@ -395,7 +467,7 @@ EOF
       cp "$parent_ca_dir/ca-chain.crt" "$out_dir/issuer-chain.crt"
       refresh_ca_chain "$out_dir"
       refresh_crl "$out_dir"
-      record_issued_cert "$parent_ca_dir" "$serial" "$(basename "$out_dir")" "intermediate" "$common_name" "$out_dir/ca.crt"
+      record_issued_cert "$parent_ca_dir" "$(basename "$out_dir")" "intermediate" "$common_name" "$out_dir/ca.crt"
 
       rm -rf "$tmp_dir"
       rm -f "$out_dir/ca.csr"
@@ -407,7 +479,6 @@ EOF
       local name="$3"
       local common_name="$4"
       local out_dir="$5"
-      local serial
       local extended_key_usage
       local tmp_dir
       local req_config
@@ -437,7 +508,6 @@ EOF
 
       mkdir -p "$out_dir"
 
-      serial="$(cat "$ca_dir/serial")"
       tmp_dir="$(mktemp -d)"
       req_config="$tmp_dir/$name.cnf"
       ext_config="$tmp_dir/$name.ext"
@@ -489,7 +559,9 @@ EOF
 
       cp "$ca_dir/ca-chain.crt" "$out_dir/ca-chain.crt"
       bundle_chain "$out_dir/full-chain.crt" "$out_dir/$name.crt" "$out_dir/ca-chain.crt"
-      record_issued_cert "$ca_dir" "$serial" "$name" "$profile" "$common_name" "$out_dir/$name.crt"
+      printf '%s\n' "$common_name" > "$out_dir/common-name"
+      printf '%s\n' "$profile" > "$out_dir/profile"
+      record_issued_cert "$ca_dir" "$name" "$profile" "$common_name" "$out_dir/$name.crt"
 
       rm -rf "$tmp_dir"
       rm -f "$out_dir/$name.csr"
@@ -500,6 +572,8 @@ EOF
 
       mkdir -p \
         "$workspace/authorities" \
+        "$workspace/history/openvpn/servers" \
+        "$workspace/history/openvpn/clients" \
         "$workspace/issued/openvpn/servers" \
         "$workspace/issued/openvpn/clients" \
         "$workspace/bundles"
@@ -560,6 +634,48 @@ EOF
       refresh_workspace_bundles "$workspace"
     }
 
+    renew_openvpn_server() {
+      local workspace="$1"
+      local name="$2"
+      local intermediate_ca_dir
+      local current_dir
+      local history_dir
+      local common_name
+      local next_dir
+
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      current_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+      history_dir="$(workspace_openvpn_server_history_dir "$workspace" "$name")"
+      common_name="$(identity_common_name "$current_dir" "$name")"
+      next_dir="$(mktemp -d "$workspace/.renew-server-$name.XXXXXX")"
+
+      issue_leaf "$intermediate_ca_dir" openvpn-server "$name" "$common_name" "$next_dir"
+      archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name" >/dev/null
+      mv "$next_dir" "$current_dir"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    renew_openvpn_client() {
+      local workspace="$1"
+      local name="$2"
+      local intermediate_ca_dir
+      local current_dir
+      local history_dir
+      local common_name
+      local next_dir
+
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      current_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
+      history_dir="$(workspace_openvpn_client_history_dir "$workspace" "$name")"
+      common_name="$(identity_common_name "$current_dir" "$name")"
+      next_dir="$(mktemp -d "$workspace/.renew-client-$name.XXXXXX")"
+
+      issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$next_dir"
+      archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name" >/dev/null
+      mv "$next_dir" "$current_dir"
+      refresh_workspace_bundles "$workspace"
+    }
+
     revoke_cert() {
       local ca_dir="$1"
       local cert_file="$2"
@@ -594,11 +710,13 @@ EOF
       local name="$2"
       local intermediate_ca_dir
       local cert_dir
+      local common_name
 
       intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
       cert_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+      common_name="$(identity_common_name "$cert_dir" "$name")"
 
-      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-server" "$name"
+      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-server" "$common_name"
       refresh_workspace_bundles "$workspace"
     }
 
@@ -607,11 +725,59 @@ EOF
       local name="$2"
       local intermediate_ca_dir
       local cert_dir
+      local common_name
 
       intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
       cert_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
+      common_name="$(identity_common_name "$cert_dir" "$name")"
 
-      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-client" "$name"
+      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-client" "$common_name"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    rotate_openvpn_server() {
+      local workspace="$1"
+      local name="$2"
+      local intermediate_ca_dir
+      local current_dir
+      local history_dir
+      local common_name
+      local next_dir
+      local archived_dir
+
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      current_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+      history_dir="$(workspace_openvpn_server_history_dir "$workspace" "$name")"
+      common_name="$(identity_common_name "$current_dir" "$name")"
+      next_dir="$(mktemp -d "$workspace/.rotate-server-$name.XXXXXX")"
+
+      issue_leaf "$intermediate_ca_dir" openvpn-server "$name" "$common_name" "$next_dir"
+      archived_dir="$(archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name")"
+      mv "$next_dir" "$current_dir"
+      revoke_cert "$intermediate_ca_dir" "$archived_dir/$name.crt" "$name" "openvpn-server" "$common_name"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    rotate_openvpn_client() {
+      local workspace="$1"
+      local name="$2"
+      local intermediate_ca_dir
+      local current_dir
+      local history_dir
+      local common_name
+      local next_dir
+      local archived_dir
+
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      current_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
+      history_dir="$(workspace_openvpn_client_history_dir "$workspace" "$name")"
+      common_name="$(identity_common_name "$current_dir" "$name")"
+      next_dir="$(mktemp -d "$workspace/.rotate-client-$name.XXXXXX")"
+
+      issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$next_dir"
+      archived_dir="$(archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name")"
+      mv "$next_dir" "$current_dir"
+      revoke_cert "$intermediate_ca_dir" "$archived_dir/$name.crt" "$name" "openvpn-client" "$common_name"
       refresh_workspace_bundles "$workspace"
     }
 
@@ -718,6 +884,38 @@ EOF
         fi
 
         issue_openvpn_client "$2" "$3" "$4"
+        ;;
+      renew-openvpn-server)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        renew_openvpn_server "$2" "$3"
+        ;;
+      renew-openvpn-client)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        renew_openvpn_client "$2" "$3"
+        ;;
+      rotate-openvpn-server)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        rotate_openvpn_server "$2" "$3"
+        ;;
+      rotate-openvpn-client)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        rotate_openvpn_client "$2" "$3"
         ;;
       revoke-openvpn-server)
         if [ "$#" -ne 3 ]; then
