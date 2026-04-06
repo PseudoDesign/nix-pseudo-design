@@ -26,6 +26,8 @@ Usage:
   pd-ca init-intermediate-ca WORKSPACE_DIR COMMON_NAME
   pd-ca issue-openvpn-server WORKSPACE_DIR NAME COMMON_NAME
   pd-ca issue-openvpn-client WORKSPACE_DIR NAME COMMON_NAME
+  pd-ca revoke-openvpn-server WORKSPACE_DIR NAME
+  pd-ca revoke-openvpn-client WORKSPACE_DIR NAME
   pd-ca bundle-chain OUT_FILE CERT_FILE [CERT_FILE...]
 
 Profiles:
@@ -75,10 +77,56 @@ EOF
       local common_name="$3"
 
       mkdir -p "$ca_dir/issued/certs"
+      mkdir -p "$ca_dir/revoked/certs"
+      : > "$ca_dir/index.txt"
+      printf 'unique_subject = no\n' > "$ca_dir/index.txt.attr"
       printf '00000001\n' > "$ca_dir/serial"
-      printf 'serial\tlabel\tnot_after\tsubject\n' > "$ca_dir/issued/index.txt"
+      printf '00000001\n' > "$ca_dir/crlnumber"
+      printf 'serial\tlabel\tprofile\tnot_after\tsubject\n' > "$ca_dir/issued/records.tsv"
+      printf 'serial\tlabel\tprofile\trevoked_at\tsubject\n' > "$ca_dir/revoked/records.tsv"
       printf '%s\n' "$role" > "$ca_dir/role"
       printf '%s\n' "$common_name" > "$ca_dir/common-name"
+    }
+
+    openssl_asn1_time_from_cert() {
+      local cert_file="$1"
+      local end_date
+
+      end_date="$(openssl x509 -in "$cert_file" -noout -enddate | cut -d= -f2-)"
+      date -u -d "$end_date" '+%y%m%d%H%M%SZ'
+    }
+
+    openssl_revocation_time_now() {
+      date -u '+%y%m%d%H%M%SZ'
+    }
+
+    write_ca_config() {
+      local ca_dir="$1"
+      local config_file="$2"
+
+      cat > "$config_file" <<EOF
+[ca]
+default_ca = pd_ca
+
+[pd_ca]
+database = $ca_dir/index.txt
+new_certs_dir = $ca_dir/issued/certs
+certificate = $ca_dir/ca.crt
+private_key = $ca_dir/ca.key
+serial = $ca_dir/serial
+crlnumber = $ca_dir/crlnumber
+default_md = sha256
+default_days = 3650
+default_crl_days = 30
+policy = policy_any
+email_in_dn = no
+copy_extensions = none
+unique_subject = no
+x509_extensions = usr_cert
+
+[policy_any]
+commonName = supplied
+EOF
     }
 
     bundle_chain() {
@@ -104,19 +152,63 @@ EOF
       fi
     }
 
+    refresh_crl() {
+      local ca_dir="$1"
+      local tmp_dir
+      local config_file
+
+      require_file "$ca_dir/ca.crt"
+      require_file "$ca_dir/ca.key"
+      require_file "$ca_dir/index.txt"
+      require_file "$ca_dir/serial"
+      require_file "$ca_dir/crlnumber"
+
+      tmp_dir="$(mktemp -d)"
+      config_file="$tmp_dir/ca.cnf"
+      write_ca_config "$ca_dir" "$config_file"
+
+      openssl ca \
+        -config "$config_file" \
+        -gencrl \
+        -out "$ca_dir/ca.crl.pem" \
+        >/dev/null 2>&1
+
+      rm -rf "$tmp_dir"
+    }
+
     record_issued_cert() {
       local ca_dir="$1"
       local serial="$2"
       local label="$3"
-      local cert_file="$4"
+      local profile="$4"
+      local common_name="$5"
       local subject
       local not_after
+      local cert_file="$6"
 
-      subject="$(openssl x509 -in "$cert_file" -noout -subject)"
-      not_after="$(openssl x509 -in "$cert_file" -noout -enddate)"
+      subject="/CN=$common_name"
+      not_after="$(openssl_asn1_time_from_cert "$cert_file")"
 
       cp "$cert_file" "$ca_dir/issued/certs/$serial-$label.crt"
-      printf '%s\t%s\t%s\t%s\n' "$serial" "$label" "$not_after" "$subject" >> "$ca_dir/issued/index.txt"
+      printf 'V\t%s\t\t%s\tunknown\t%s\n' "$not_after" "$serial" "$subject" >> "$ca_dir/index.txt"
+      printf '%s\t%s\t%s\t%s\t%s\n' "$serial" "$label" "$profile" "$not_after" "$subject" >> "$ca_dir/issued/records.tsv"
+    }
+
+    record_revoked_cert() {
+      local ca_dir="$1"
+      local serial="$2"
+      local label="$3"
+      local profile="$4"
+      local common_name="$5"
+      local revoked_at
+      local subject
+      local cert_file="$6"
+
+      revoked_at="$(openssl_revocation_time_now)"
+      subject="/CN=$common_name"
+
+      cp "$cert_file" "$ca_dir/revoked/certs/$serial-$label.crt"
+      printf '%s\t%s\t%s\t%s\t%s\n' "$serial" "$label" "$profile" "$revoked_at" "$subject" >> "$ca_dir/revoked/records.tsv"
     }
 
     refresh_workspace_bundles() {
@@ -141,6 +233,12 @@ EOF
         cp "$intermediate_ca_dir/ca-chain.crt" "$workspace/bundles/openvpn-ca.crt"
       elif [ -f "$root_ca_dir/ca-chain.crt" ]; then
         cp "$root_ca_dir/ca-chain.crt" "$workspace/bundles/openvpn-ca.crt"
+      fi
+
+      if [ -f "$intermediate_ca_dir/ca.crl.pem" ]; then
+        cp "$intermediate_ca_dir/ca.crl.pem" "$workspace/bundles/openvpn-ca.crl.pem"
+      elif [ -f "$root_ca_dir/ca.crl.pem" ]; then
+        cp "$root_ca_dir/ca.crl.pem" "$workspace/bundles/openvpn-ca.crl.pem"
       fi
     }
 
@@ -186,6 +284,7 @@ EOF
 
       init_ca_state "$out_dir" "root" "$common_name"
       refresh_ca_chain "$out_dir"
+      refresh_crl "$out_dir"
 
       rm -rf "$tmp_dir"
     }
@@ -254,7 +353,8 @@ EOF
       init_ca_state "$out_dir" "intermediate" "$common_name"
       cp "$parent_ca_dir/ca-chain.crt" "$out_dir/issuer-chain.crt"
       refresh_ca_chain "$out_dir"
-      record_issued_cert "$parent_ca_dir" "$serial" "$(basename "$out_dir")" "$out_dir/ca.crt"
+      refresh_crl "$out_dir"
+      record_issued_cert "$parent_ca_dir" "$serial" "$(basename "$out_dir")" "intermediate" "$common_name" "$out_dir/ca.crt"
 
       rm -rf "$tmp_dir"
       rm -f "$out_dir/ca.csr"
@@ -348,7 +448,7 @@ EOF
 
       cp "$ca_dir/ca-chain.crt" "$out_dir/ca-chain.crt"
       bundle_chain "$out_dir/full-chain.crt" "$out_dir/$name.crt" "$out_dir/ca-chain.crt"
-      record_issued_cert "$ca_dir" "$serial" "$name" "$out_dir/$name.crt"
+      record_issued_cert "$ca_dir" "$serial" "$name" "$profile" "$common_name" "$out_dir/$name.crt"
 
       rm -rf "$tmp_dir"
       rm -f "$out_dir/$name.csr"
@@ -416,6 +516,61 @@ EOF
       out_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
 
       issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$out_dir"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    revoke_cert() {
+      local ca_dir="$1"
+      local cert_file="$2"
+      local label="$3"
+      local profile="$4"
+      local common_name="$5"
+      local serial
+      local tmp_dir
+      local config_file
+
+      require_file "$cert_file"
+      require_file "$ca_dir/index.txt"
+
+      serial="$(openssl x509 -in "$cert_file" -noout -serial | cut -d= -f2)"
+      tmp_dir="$(mktemp -d)"
+      config_file="$tmp_dir/ca.cnf"
+      write_ca_config "$ca_dir" "$config_file"
+
+      openssl ca \
+        -config "$config_file" \
+        -revoke "$cert_file" \
+        >/dev/null 2>&1
+
+      refresh_crl "$ca_dir"
+      record_revoked_cert "$ca_dir" "$serial" "$label" "$profile" "$common_name" "$cert_file"
+
+      rm -rf "$tmp_dir"
+    }
+
+    revoke_openvpn_server() {
+      local workspace="$1"
+      local name="$2"
+      local intermediate_ca_dir
+      local cert_dir
+
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      cert_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+
+      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-server" "$name"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    revoke_openvpn_client() {
+      local workspace="$1"
+      local name="$2"
+      local intermediate_ca_dir
+      local cert_dir
+
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      cert_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
+
+      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-client" "$name"
       refresh_workspace_bundles "$workspace"
     }
 
@@ -488,6 +643,22 @@ EOF
         fi
 
         issue_openvpn_client "$2" "$3" "$4"
+        ;;
+      revoke-openvpn-server)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        revoke_openvpn_server "$2" "$3"
+        ;;
+      revoke-openvpn-client)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        revoke_openvpn_client "$2" "$3"
         ;;
       bundle-chain)
         if [ "$#" -lt 3 ]; then

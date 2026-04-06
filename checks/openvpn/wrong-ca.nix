@@ -23,6 +23,7 @@ let
   approvedWorkspace = "${testAssets}/approved";
   rogueWorkspace = "${testAssets}/rogue";
   approvedCaBundleFile = "${approvedWorkspace}/bundles/openvpn-ca.crt";
+  approvedCrlFile = "${approvedWorkspace}/bundles/openvpn-ca.crl.pem";
   serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
 
   mkExternalInterface =
@@ -96,6 +97,7 @@ testers.runNixOSTest {
           runtimeDir = "/run/openvpn-wrong-ca";
           inherit vpnSubnet;
           caCertFile = approvedCaBundleFile;
+          crlFile = approvedCrlFile;
           serverCertFile = "${serverCertDir}/server.crt";
           serverKeyFile = "${serverCertDir}/server.key";
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";

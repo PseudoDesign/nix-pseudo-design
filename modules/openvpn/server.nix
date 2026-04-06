@@ -40,6 +40,7 @@ let
         "status-version ${toString cfg.statusVersion}"
         "verb ${toString cfg.verb}"
       ]
+      ++ lib.optional (cfg.crlFile != null) "crl-verify ${cfg.crlFile}"
       ++ lib.optional (cfg.clientConfigDir != null) "client-config-dir ${cfg.clientConfigDir}";
     in
     # OpenVPN expects a newline-delimited config file, so join the directives
@@ -114,6 +115,13 @@ in
       type = lib.types.str;
       example = "/run/secrets/openvpn/tls-crypt.key";
       description = "Shared tls-crypt key distributed out of band.";
+    };
+
+    crlFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/run/secrets/openvpn/ca.crl.pem";
+      description = "Optional certificate revocation list used to reject revoked client certificates.";
     };
 
     clientConfigDir = lib.mkOption {

@@ -8,6 +8,7 @@
   serverCommonName,
   approvedClients ? [ ],
   rogueClients ? [ ],
+  revokedApprovedClients ? [ ],
   ccdAssignments ? { },
 }:
 runCommand "${name}-assets" { nativeBuildInputs = [ pdCa ]; } ''
@@ -31,6 +32,13 @@ runCommand "${name}-assets" { nativeBuildInputs = [ pdCa ]; } ''
       pd-ca issue-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
     ''
   ) approvedClients}
+
+  ${lib.concatMapStringsSep "\n" (
+    clientName:
+    ''
+      pd-ca revoke-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName}
+    ''
+  ) revokedApprovedClients}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:

@@ -1,5 +1,6 @@
 { pkgs, ... }:
 {
+  openvpn-revoked-client = pkgs.callPackage ./openvpn/revoked-client.nix { };
   openvpn-smoke = pkgs.callPackage ./openvpn/smoke.nix { };
   openvpn-wrong-ca = pkgs.callPackage ./openvpn/wrong-ca.nix { };
   pd-ca = pkgs.callPackage ./pki/pd-ca.nix { };
