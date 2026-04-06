@@ -2,6 +2,21 @@
 let
   cfg = config.services.pdOpenvpnServer;
 
+  pathBaseName =
+    path:
+    let
+      segments = lib.filter (segment: segment != "") (lib.splitString "/" path);
+    in
+    if segments == [ ] then null else lib.last segments;
+
+  pkiIdentityName =
+    if cfg.pki.identityName != null then
+      cfg.pki.identityName
+    else if cfg.pki.identityDir != null then
+      pathBaseName cfg.pki.identityDir
+    else
+      null;
+
   # This module intentionally consumes externally managed PKI material rather
   # than minting certificates itself.
   openvpnConfig =
@@ -91,6 +106,27 @@ in
       type = lib.types.str;
       default = "255.255.255.0";
       description = "Netmask paired with vpnSubnet for the OpenVPN server directive.";
+    };
+
+    pki.bundleDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/run/secrets/openvpn/bundles";
+      description = "Optional pd-ca workspace bundles directory used to derive caCertFile and crlFile defaults.";
+    };
+
+    pki.identityDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/run/secrets/openvpn/issued/openvpn/servers/server";
+      description = "Optional pd-ca issued identity directory used to derive serverCertFile and serverKeyFile defaults.";
+    };
+
+    pki.identityName = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "server";
+      description = "Optional certificate basename inside pki.identityDir. Defaults to the identityDir basename.";
     };
 
     caCertFile = lib.mkOption {
@@ -201,12 +237,33 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    networking.firewall.allowedUDPPorts = lib.optional (cfg.openFirewall && lib.hasPrefix "udp" cfg.proto) cfg.port;
-    networking.firewall.allowedTCPPorts = lib.optional (cfg.openFirewall && lib.hasPrefix "tcp" cfg.proto) cfg.port;
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        assertions = [
+          {
+            assertion = cfg.pki.identityName == null || cfg.pki.identityDir != null;
+            message = "services.pdOpenvpnServer.pki.identityName requires services.pdOpenvpnServer.pki.identityDir.";
+          }
+        ];
 
-    systemd.tmpfiles.rules = [ "d ${cfg.runtimeDir} 0750 root root -" ];
+        networking.firewall.allowedUDPPorts = lib.optional (cfg.openFirewall && lib.hasPrefix "udp" cfg.proto) cfg.port;
+        networking.firewall.allowedTCPPorts = lib.optional (cfg.openFirewall && lib.hasPrefix "tcp" cfg.proto) cfg.port;
 
-    services.openvpn.servers.${cfg.instanceName}.config = openvpnConfig;
-  };
+        systemd.tmpfiles.rules = [ "d ${cfg.runtimeDir} 0750 root root -" ];
+
+        services.openvpn.servers.${cfg.instanceName}.config = openvpnConfig;
+      }
+
+      (lib.mkIf (cfg.pki.bundleDir != null) {
+        services.pdOpenvpnServer.caCertFile = lib.mkDefault "${cfg.pki.bundleDir}/openvpn-ca.crt";
+        services.pdOpenvpnServer.crlFile = lib.mkDefault "${cfg.pki.bundleDir}/openvpn-ca.crl.pem";
+      })
+
+      (lib.mkIf (cfg.pki.identityDir != null && pkiIdentityName != null) {
+        services.pdOpenvpnServer.serverCertFile = lib.mkDefault "${cfg.pki.identityDir}/${pkiIdentityName}.crt";
+        services.pdOpenvpnServer.serverKeyFile = lib.mkDefault "${cfg.pki.identityDir}/${pkiIdentityName}.key";
+      })
+    ]
+  );
 }

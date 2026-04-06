@@ -25,8 +25,7 @@ let
   activeVpnIp = "10.10.0.10";
   statusFile = "/run/openvpn-revoked/status.log";
   approvedWorkspace = "${testAssets}/approved";
-  approvedCaBundleFile = "${approvedWorkspace}/bundles/openvpn-ca.crt";
-  approvedCrlFile = "${approvedWorkspace}/bundles/openvpn-ca.crl.pem";
+  approvedBundleDir = "${approvedWorkspace}/bundles";
   serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
 
   mkExternalInterface =
@@ -64,9 +63,8 @@ let
         enable = true;
         inherit instanceName;
         remoteHost = serverIp;
-        caCertFile = approvedCaBundleFile;
-        clientCertFile = "${approvedWorkspace}/issued/openvpn/clients/${certName}/${certName}.crt";
-        clientKeyFile = "${approvedWorkspace}/issued/openvpn/clients/${certName}/${certName}.key";
+        pki.bundleDir = approvedBundleDir;
+        pki.identityDir = "${approvedWorkspace}/issued/openvpn/clients/${certName}";
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         verifyX509Name = "openvpn-revoked-server";
       };
@@ -96,10 +94,8 @@ testers.runNixOSTest {
           inherit instanceName;
           runtimeDir = "/run/openvpn-revoked";
           inherit vpnSubnet;
-          caCertFile = approvedCaBundleFile;
-          crlFile = approvedCrlFile;
-          serverCertFile = "${serverCertDir}/server.crt";
-          serverKeyFile = "${serverCertDir}/server.key";
+          pki.bundleDir = approvedBundleDir;
+          pki.identityDir = serverCertDir;
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           clientConfigDir = "${testAssets}/ccd";
         };

@@ -22,8 +22,7 @@ let
   statusFile = "/run/openvpn-wrong-ca/status.log";
   approvedWorkspace = "${testAssets}/approved";
   rogueWorkspace = "${testAssets}/rogue";
-  approvedCaBundleFile = "${approvedWorkspace}/bundles/openvpn-ca.crt";
-  approvedCrlFile = "${approvedWorkspace}/bundles/openvpn-ca.crl.pem";
+  approvedBundleDir = "${approvedWorkspace}/bundles";
   serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
 
   mkExternalInterface =
@@ -43,8 +42,7 @@ let
       hostName,
       externalIp,
       certDir,
-      caCertFile,
-      certName,
+      caBundleDir,
     }:
     { ... }:
     {
@@ -63,9 +61,8 @@ let
         enable = true;
         inherit instanceName;
         remoteHost = serverIp;
-        inherit caCertFile;
-        clientCertFile = "${certDir}/${certName}.crt";
-        clientKeyFile = "${certDir}/${certName}.key";
+        pki.bundleDir = caBundleDir;
+        pki.identityDir = certDir;
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         verifyX509Name = "openvpn-wrong-ca-server";
       };
@@ -96,10 +93,8 @@ testers.runNixOSTest {
           inherit instanceName;
           runtimeDir = "/run/openvpn-wrong-ca";
           inherit vpnSubnet;
-          caCertFile = approvedCaBundleFile;
-          crlFile = approvedCrlFile;
-          serverCertFile = "${serverCertDir}/server.crt";
-          serverKeyFile = "${serverCertDir}/server.key";
+          pki.bundleDir = approvedBundleDir;
+          pki.identityDir = serverCertDir;
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           clientConfigDir = "${testAssets}/ccd";
         };
@@ -112,8 +107,7 @@ testers.runNixOSTest {
       hostName = "approved";
       externalIp = "192.168.2.2";
       certDir = "${approvedWorkspace}/issued/openvpn/clients/approved";
-      caCertFile = approvedCaBundleFile;
-      certName = "approved";
+      caBundleDir = approvedBundleDir;
     };
 
     # Rogue client still trusts the approved server, so rejection isolates the
@@ -122,8 +116,7 @@ testers.runNixOSTest {
       hostName = "rogue";
       externalIp = "192.168.2.3";
       certDir = "${rogueWorkspace}/issued/openvpn/clients/rogue";
-      caCertFile = approvedCaBundleFile;
-      certName = "rogue";
+      caBundleDir = approvedBundleDir;
     };
   };
 

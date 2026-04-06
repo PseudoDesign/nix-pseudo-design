@@ -2,6 +2,21 @@
 let
   cfg = config.services.pdOpenvpnClient;
 
+  pathBaseName =
+    path:
+    let
+      segments = lib.filter (segment: segment != "") (lib.splitString "/" path);
+    in
+    if segments == [ ] then null else lib.last segments;
+
+  pkiIdentityName =
+    if cfg.pki.identityName != null then
+      cfg.pki.identityName
+    else if cfg.pki.identityDir != null then
+      pathBaseName cfg.pki.identityDir
+    else
+      null;
+
   # This module intentionally consumes externally managed PKI material rather
   # than minting certificates itself.
   openvpnConfig =
@@ -75,6 +90,27 @@ in
       description = "Tunnel device name requested by the client.";
     };
 
+    pki.bundleDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/run/secrets/openvpn/bundles";
+      description = "Optional pd-ca workspace bundles directory used to derive caCertFile defaults.";
+    };
+
+    pki.identityDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/run/secrets/openvpn/issued/openvpn/clients/laptop";
+      description = "Optional pd-ca issued identity directory used to derive clientCertFile and clientKeyFile defaults.";
+    };
+
+    pki.identityName = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "laptop";
+      description = "Optional certificate basename inside pki.identityDir. Defaults to the identityDir basename.";
+    };
+
     caCertFile = lib.mkOption {
       type = lib.types.str;
       example = "/run/secrets/openvpn/ca.crt";
@@ -140,7 +176,27 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    services.openvpn.servers.${cfg.instanceName}.config = openvpnConfig;
-  };
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        assertions = [
+          {
+            assertion = cfg.pki.identityName == null || cfg.pki.identityDir != null;
+            message = "services.pdOpenvpnClient.pki.identityName requires services.pdOpenvpnClient.pki.identityDir.";
+          }
+        ];
+
+        services.openvpn.servers.${cfg.instanceName}.config = openvpnConfig;
+      }
+
+      (lib.mkIf (cfg.pki.bundleDir != null) {
+        services.pdOpenvpnClient.caCertFile = lib.mkDefault "${cfg.pki.bundleDir}/openvpn-ca.crt";
+      })
+
+      (lib.mkIf (cfg.pki.identityDir != null && pkiIdentityName != null) {
+        services.pdOpenvpnClient.clientCertFile = lib.mkDefault "${cfg.pki.identityDir}/${pkiIdentityName}.crt";
+        services.pdOpenvpnClient.clientKeyFile = lib.mkDefault "${cfg.pki.identityDir}/${pkiIdentityName}.key";
+      })
+    ]
+  );
 }

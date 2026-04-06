@@ -22,8 +22,7 @@ let
   serverIp = "192.168.1.1";
   approvedWorkspace = "${testAssets}/approved";
   rogueWorkspace = "${testAssets}/rogue";
-  approvedCaBundleFile = "${approvedWorkspace}/bundles/openvpn-ca.crt";
-  approvedCrlFile = "${approvedWorkspace}/bundles/openvpn-ca.crl.pem";
+  approvedBundleDir = "${approvedWorkspace}/bundles";
   serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
 
   mkExternalInterface =
@@ -43,8 +42,7 @@ let
       hostName,
       externalIp,
       certDir,
-      caCertFile,
-      certName,
+      caBundleDir,
     }:
     { ... }:
     {
@@ -63,9 +61,8 @@ let
         enable = true;
         instanceName = "smoke";
         remoteHost = serverIp;
-        inherit caCertFile;
-        clientCertFile = "${certDir}/${certName}.crt";
-        clientKeyFile = "${certDir}/${certName}.key";
+        pki.bundleDir = caBundleDir;
+        pki.identityDir = certDir;
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
         verifyX509Name = "openvpn-smoke-server";
       };
@@ -96,10 +93,8 @@ testers.runNixOSTest {
           instanceName = "smoke";
           runtimeDir = "/run/openvpn-smoke";
           vpnSubnet = "10.8.0.0";
-          caCertFile = approvedCaBundleFile;
-          crlFile = approvedCrlFile;
-          serverCertFile = "${serverCertDir}/server.crt";
-          serverKeyFile = "${serverCertDir}/server.key";
+          pki.bundleDir = approvedBundleDir;
+          pki.identityDir = serverCertDir;
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           clientConfigDir = "${testAssets}/ccd";
         };
@@ -112,8 +107,7 @@ testers.runNixOSTest {
       hostName = "client1";
       externalIp = "192.168.1.2";
       certDir = "${approvedWorkspace}/issued/openvpn/clients/client1";
-      caCertFile = approvedCaBundleFile;
-      certName = "client1";
+      caBundleDir = approvedBundleDir;
     };
 
     # Second approved client used to prove multiple trusted clients can connect.
@@ -121,8 +115,7 @@ testers.runNixOSTest {
       hostName = "client2";
       externalIp = "192.168.1.3";
       certDir = "${approvedWorkspace}/issued/openvpn/clients/client2";
-      caCertFile = approvedCaBundleFile;
-      certName = "client2";
+      caBundleDir = approvedBundleDir;
     };
 
     # Unapproved client still trusts the approved server, so any failure is about
@@ -131,8 +124,7 @@ testers.runNixOSTest {
       hostName = "rogue";
       externalIp = "192.168.1.4";
       certDir = "${rogueWorkspace}/issued/openvpn/clients/rogue";
-      caCertFile = approvedCaBundleFile;
-      certName = "rogue";
+      caBundleDir = approvedBundleDir;
     };
   };
 
