@@ -1,6 +1,6 @@
 { testers, pkgs, ... }:
 let
-  mkOpenvpnTestAssets = pkgs.callPackage ./lib/openvpn-test-assets.nix { };
+  mkOpenvpnTestAssets = pkgs.callPackage ./lib/test-assets.nix { };
   testAssets = mkOpenvpnTestAssets {
     name = "openvpn-wrong-ca";
     approvedRootCommonName = "OpenVPN Wrong-CA Approved Root CA";
@@ -42,7 +42,7 @@ let
     }:
     { ... }:
     {
-      imports = [ ../modules/pd-openvpn-client.nix ];
+      imports = [ ../../modules/openvpn/client.nix ];
 
       networking.hostName = hostName;
       networking.useDHCP = false;
@@ -75,7 +75,7 @@ testers.runNixOSTest {
     gateway =
       { ... }:
       {
-        imports = [ ../modules/pd-openvpn-server.nix ];
+        imports = [ ../../modules/openvpn/server.nix ];
 
         networking.hostName = "gateway";
         networking.useDHCP = false;

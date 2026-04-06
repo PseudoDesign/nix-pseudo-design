@@ -25,7 +25,7 @@
     }:
     let
       overlay = final: prev: {
-        pdCa = final.callPackage ./packages/pd-ca.nix { };
+        pdCa = final.callPackage ./packages/pki/pd-ca.nix { };
         rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
         rpi-otp-derived-key = final.callPackage ./packages/rpi-otp-derived-key.nix { };
         rpi-otp-provision-private-key = final.callPackage ./packages/rpi-otp-provision-private-key.nix { };
@@ -112,8 +112,8 @@
     nixosModules.default = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
-    nixosModules.pd-openvpn-client = ./modules/pd-openvpn-client.nix;
-    nixosModules.pd-openvpn-server = ./modules/pd-openvpn-server.nix;
+    nixosModules.pd-openvpn-client = ./modules/openvpn/client.nix;
+    nixosModules.pd-openvpn-server = ./modules/openvpn/server.nix;
     nixosModules.pd-installer = ./modules/pd-installer.nix;
 
     nixosConfigurations =
