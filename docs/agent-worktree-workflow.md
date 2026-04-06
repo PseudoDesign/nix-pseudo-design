@@ -1,6 +1,9 @@
 # Agent Worktree Workflow
 
-This repository now includes a pragmatic "sandboxed branch" workflow for running an agent inside a dedicated Git worktree.
+This repository now includes two branch-constrained workflows for agent runs:
+
+* a dedicated Git worktree, which is pragmatic and lightweight
+* a dedicated clone under `/tmp`, which is stronger for unattended autonomous runs
 
 What it does:
 
@@ -82,3 +85,13 @@ If you want the agent to keep moving without waiting for input:
 The detailed policy lives in [docs/agent-autonomy-policy.md](docs/agent-autonomy-policy.md).
 
 If you need fully autonomous commits in this harness, a dedicated clone under `/tmp` is stronger than a shared Git worktree.
+
+## Dedicated Clone For Autonomous Runs
+
+To keep both the checkout and its Git metadata inside the writable sandbox, bootstrap a dedicated clone:
+
+```bash
+scripts/setup-agent-clone.sh /home/adam/nix-pseudo-design agent/codex
+```
+
+That path keeps the branch guard behavior but avoids the shared `.git/worktrees/...` metadata issue that can affect `git commit` in a worktree-based setup.

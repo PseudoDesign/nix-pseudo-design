@@ -17,6 +17,12 @@ That setup enables repo-managed hooks and locks the dedicated worktree so commit
 
 For longer autonomous runs, the operating policy lives in [docs/agent-autonomy-policy.md](docs/agent-autonomy-policy.md), and approval-needed items are collected in [docs/agent-review-queue.md](docs/agent-review-queue.md).
 
+For fully autonomous runs in this sandbox, prefer a dedicated clone under `/tmp`:
+
+```bash
+scripts/setup-agent-clone.sh /home/adam/nix-pseudo-design agent/codex
+```
+
 ## Quickstart
 
 **TODO: Link to document describing how to install nixos & set up qemu**
