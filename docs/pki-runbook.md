@@ -175,6 +175,18 @@ stage/adam-laptop/
 
 This is the layout the OpenVPN NixOS modules consume directly.
 
+## Generate the Shared tls-crypt Key
+
+The `tls-crypt` key is separate from the certificate-authority workspace. Generate it once, keep it outside Git, and distribute the same file to every OpenVPN server and client that should participate in the deployment:
+
+```bash
+install -d -m 0700 "$HOME/.local/share/pseudo-design/openvpn"
+nix run .#pd-openvpn-generate-tls-crypt-key -- \
+  "$HOME/.local/share/pseudo-design/openvpn/tls-crypt.key"
+```
+
+Treat that file like other private key material. If you need to replace it, generate a new one and roll it out to every OpenVPN peer before switching configurations over to the new path or contents.
+
 ## Install Staged Trees At Runtime
 
 When a host should copy a staged tree into `/run/secrets` on boot, point the OpenVPN module at the staged root:
