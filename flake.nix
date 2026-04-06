@@ -25,6 +25,9 @@
     }:
     let
       overlay = final: prev: {
+        pdCa = final.callPackage ./packages/pki/pd-ca.nix { };
+        pdOpenvpnGenerateTlsCryptKey = final.callPackage ./packages/pki/pd-openvpn-generate-tls-crypt-key.nix { };
+        pdOpenvpnInstallPki = final.callPackage ./packages/pki/pd-openvpn-install-pki.nix { };
         rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
         rpi-otp-derived-key = final.callPackage ./packages/rpi-otp-derived-key.nix { };
         rpi-otp-provision-private-key = final.callPackage ./packages/rpi-otp-provision-private-key.nix { };
@@ -90,6 +93,9 @@
       {
         packages = {
           default = pkgs.rpi-otp-derived-key;
+          "pd-ca" = pkgs.pdCa;
+          "pd-openvpn-generate-tls-crypt-key" = pkgs.pdOpenvpnGenerateTlsCryptKey;
+          "pd-openvpn-install-pki" = pkgs.pdOpenvpnInstallPki;
           "rpi-otp-private-key" = pkgs.rpi-otp-private-key;
           "rpi-otp-derived-key" = pkgs.rpi-otp-derived-key;
           "rpi-otp-provision-private-key" = pkgs.rpi-otp-provision-private-key;
@@ -110,8 +116,8 @@
     nixosModules.default = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
-    nixosModules.pd-openvpn-client = ./modules/pd-openvpn-client.nix;
-    nixosModules.pd-openvpn-server = ./modules/pd-openvpn-server.nix;
+    nixosModules.pd-openvpn-client = ./modules/openvpn/client.nix;
+    nixosModules.pd-openvpn-server = ./modules/openvpn/server.nix;
     nixosModules.pd-installer = ./modules/pd-installer.nix;
 
     nixosConfigurations =

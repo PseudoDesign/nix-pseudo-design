@@ -40,6 +40,19 @@ If you want to troubleshoot key derivation separately after the OTP key has alre
 
 Any derivation errors are printed directly to the terminal.
 
+## PKI
+
+OpenVPN certificate issuance now uses the `pd-ca` helper and a workspace-oriented CA layout with root, intermediate, issued identities, and published bundles.
+
+The operator runbook lives in [docs/pki-runbook.md](docs/pki-runbook.md). The short version is:
+
+* keep the CA workspace outside Git
+* initialize a root and intermediate once
+* issue or revoke OpenVPN server and client identities with `nix run .#pd-ca -- ...`
+* renew identities in place, or rotate them with revocation and history tracking
+* generate the shared `tls-crypt` key once with `nix run .#pd-openvpn-generate-tls-crypt-key -- ...`
+* stage per-host OpenVPN material with `stage-openvpn-server` or `stage-openvpn-client`
+* either install a staged tree at runtime with `pki.install.sourceDir` and optional `pki.install.tlsCryptSourceFile`, or point the modules at `pki.bundleDir` and `pki.identityDir` directly
 
 ## LUKS Filesystem
 
