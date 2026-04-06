@@ -51,6 +51,35 @@
       overlayModule = {
         nixpkgs.overlays = [ overlay ];
       };
+
+      managedHostNames = [
+        "ace"
+        "seepho"
+        "mako"
+        "tense"
+      ];
+
+      rpiOtpPackagesModule =
+        { pkgs, ... }:
+        {
+          environment.systemPackages = [
+            pkgs.rpi-otp-private-key
+            pkgs.rpi-otp-derived-key
+            pkgs.rpi-otp-provision-private-key
+          ];
+        };
+
+      mkManagedHost =
+        hostName:
+        nixos-raspberrypi.lib.nixosSystemFull {
+          inherit specialArgs;
+          modules = [
+            overlayModule
+            (./. + "/hosts/${hostName}")
+            ./modules/rpi-otp-luks-key.nix
+            rpiOtpPackagesModule
+          ];
+        };
     in
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -85,25 +114,15 @@
     nixosModules.pd-openvpn-server = ./modules/pd-openvpn-server.nix;
     nixosModules.pd-installer = ./modules/pd-installer.nix;
 
-    nixosConfigurations = {
-      # "'ace' is a Raspberry Pi 5 in Adam's house."
-      ace = nixos-raspberrypi.lib.nixosSystemFull {
-        inherit specialArgs;
-        modules = [
-          overlayModule
-          ./hosts/ace
-          ./modules/rpi-otp-luks-key.nix
-          ({ pkgs, ... }: {
-            environment.systemPackages = [
-              pkgs.rpi-otp-private-key
-              pkgs.rpi-otp-derived-key
-              pkgs.rpi-otp-provision-private-key
-            ];
-          })
-        ];
-      };
-
-      rpi5-installer = nixos-raspberrypi.lib.nixosSystemFull {
+    nixosConfigurations =
+      builtins.listToAttrs (
+        map (hostName: {
+          name = hostName;
+          value = mkManagedHost hostName;
+        }) managedHostNames
+      )
+      // {
+        rpi5-installer = nixos-raspberrypi.lib.nixosSystemFull {
         inherit specialArgs;
         modules = [
           overlayModule
@@ -112,7 +131,9 @@
           ./modules/rpi5-hardware.nix
           ./modules/rpi-otp-luks-key.nix
           ./modules/rpi-installer-disk.nix
-          ({ pkgs, ... }: {
+          (
+            { pkgs, ... }:
+            {
               system.stateVersion = "25.11";
               boot.consoleLogLevel = 4;
               services.pdInstaller.enable = true;
@@ -139,9 +160,10 @@
               networking.hostName = "rpi5-nix-installer";
               networking.firewall.enable = true;
               security.sudo.wheelNeedsPassword = false;
-            })
+            }
+          )
         ];
       };
-    };
+      };
   };
 }

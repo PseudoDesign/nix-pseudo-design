@@ -2,7 +2,7 @@
 
 NixOS infrastructure for `pseudo.design`.
 
-This repository is a small flake-based system configuration that currently manages a single host, `ace`, and layers in Home Manager for the `adam` user. The active host configuration targets a Raspberry Pi 5 and includes the machine-level NixOS setup, user account definition, and user-space configuration.
+This repository is a small flake-based system configuration that currently manages four hosts, `ace`, `seepho`, `mako`, and `tense`, and layers in Home Manager for the `adam` user. The active host configurations currently share the same Raspberry Pi 5 base and include the machine-level NixOS setup, user account definition, and user-space configuration.
 
 ## Quickstart
 
@@ -28,7 +28,7 @@ Boot the installer image, then start the install interactively. By default, the 
 
 `sudo pd-nix-install`
 
-To install a different NixOS configuration from the same local flake:
+To install a specific NixOS configuration from the same local flake:
 
 `sudo pd-nix-install ace`
 

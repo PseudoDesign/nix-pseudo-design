@@ -7,5 +7,5 @@
     ../common/rpi5
   ];
 
-  networking.hostName = "ace";
+  networking.hostName = "mako";
 }

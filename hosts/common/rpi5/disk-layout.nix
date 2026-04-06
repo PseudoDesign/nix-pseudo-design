@@ -3,7 +3,9 @@
   imports = [
     disko.nixosModules.disko
   ];
+
   services.rpiOtpLuksKey.enable = true;
+
   disko.devices = {
     disk = {
       main = {
@@ -12,12 +14,10 @@
           type = "gpt";
           partitions = {
             boot = {
-              # label = "FIRMWARE";
               priority = 1;
-
-              type = "0700";  # Microsoft basic data
+              type = "0700";
               attributes = [
-                0 # Required Partition
+                0
               ];
 
               size = "1024M";
@@ -33,12 +33,11 @@
                 ];
               };
             };
-            ESP = {
-              # label = "ESP";
 
-              type = "EF00";  # EFI System Partition (ESP)
+            ESP = {
+              type = "EF00";
               attributes = [
-                2 # Legacy BIOS Bootable, for U-Boot to find extlinux config
+                2
               ];
 
               size = "1024M";
@@ -55,6 +54,7 @@
                 ];
               };
             };
+
             luks = {
               size = "100%";
               content = {
@@ -75,6 +75,7 @@
         };
       };
     };
+
     lvm_vg = {
       pool = {
         type = "lvm_vg";
@@ -87,6 +88,7 @@
               mountpoint = "/";
             };
           };
+
           home = {
             size = "100%";
             content = {
