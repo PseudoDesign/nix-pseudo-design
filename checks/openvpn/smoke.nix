@@ -24,6 +24,8 @@ let
   approvedServerStageDir = "${testAssets}/staged/approved/server";
   approvedBundleDir = "${approvedServerStageDir}/bundles";
   rogueIdentityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
+  client1VpnIp = "10.8.0.10";
+  client2VpnIp = "10.8.0.11";
 
   mkExternalInterface =
     address:
@@ -112,6 +114,7 @@ testers.runNixOSTest {
           instanceName = "smoke";
           runtimeDir = "/run/openvpn-smoke";
           vpnSubnet = "10.8.0.0";
+          clientToClient = true;
           pki.install = {
             sourceDir = approvedServerStageDir;
             tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
@@ -171,8 +174,10 @@ testers.runNixOSTest {
 
     client1.wait_until_succeeds("ping -c 1 10.8.0.1")
     client2.wait_until_succeeds("ping -c 1 10.8.0.1")
-    gateway.wait_until_succeeds("ping -c 1 10.8.0.10")
-    gateway.wait_until_succeeds("ping -c 1 10.8.0.11")
+    gateway.wait_until_succeeds("ping -c 1 ${client1VpnIp}")
+    gateway.wait_until_succeeds("ping -c 1 ${client2VpnIp}")
+    client1.wait_until_succeeds("ping -c 1 ${client2VpnIp}")
+    client2.wait_until_succeeds("ping -c 1 ${client1VpnIp}")
 
     rogue.succeed("sleep 5")
     rogue.fail("ip -o -4 addr show dev tun0 | grep -F '10.8.0.'")

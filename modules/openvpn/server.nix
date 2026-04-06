@@ -65,6 +65,7 @@ let
         "status-version ${toString cfg.statusVersion}"
         "verb ${toString cfg.verb}"
       ]
+      ++ lib.optional cfg.clientToClient "client-to-client"
       ++ lib.optional (cfg.crlFile != null) "crl-verify ${cfg.crlFile}"
       ++ lib.optional (cfg.clientConfigDir != null) "client-config-dir ${cfg.clientConfigDir}";
     in
@@ -196,6 +197,12 @@ in
       default = null;
       example = "/etc/openvpn/ccd";
       description = "Optional client-config-dir used for per-client address assignments.";
+    };
+
+    clientToClient = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Allow connected VPN clients to reach each other through the server without relying on separate kernel routing setup.";
     };
 
     runtimeDir = lib.mkOption {

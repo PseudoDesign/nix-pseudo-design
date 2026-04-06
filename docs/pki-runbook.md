@@ -186,6 +186,7 @@ Server example:
   services.pdOpenvpnServer = {
     enable = true;
     vpnSubnet = "10.8.0.0";
+    clientToClient = true;
     pki.install = {
       sourceDir = "/var/lib/pseudo-design/stage/ace";
       tlsCryptSourceFile = "/var/lib/pseudo-design/openvpn/tls-crypt.key";
@@ -214,6 +215,8 @@ With the default settings, the module installs the staged tree into `/run/secret
 
 If `pki.install.tlsCryptSourceFile` is set, the module also copies that shared key into the same runtime directory and defaults `tlsCryptKeyFile` to `/run/secrets/openvpn/<instanceName>/tls-crypt.key`. The staged `pd-ca` tree itself still contains only CA and certificate material.
 
+Set `clientToClient = true;` on the server when connected VPN peers should be able to talk to each other directly through the OpenVPN daemon, such as a host-to-host management overlay.
+
 ## Consume Artifacts In Place In NixOS
 
 The OpenVPN modules can read the `pd-ca` workspace layout directly.
@@ -225,6 +228,7 @@ Server example:
   services.pdOpenvpnServer = {
     enable = true;
     vpnSubnet = "10.8.0.0";
+    clientToClient = true;
     pki.bundleDir = "/run/secrets/openvpn/bundles";
     pki.identityDir = "/run/secrets/openvpn/issued/openvpn/servers/ace";
     tlsCryptKeyFile = "/run/secrets/openvpn/tls-crypt.key";
