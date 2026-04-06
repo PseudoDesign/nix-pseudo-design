@@ -172,6 +172,8 @@ EOF
     }:
     { ... }:
     {
+      imports = [ ../modules/pd-openvpn-client.nix ];
+
       networking.hostName = hostName;
       networking.useDHCP = false;
       networking.firewall.enable = false;
@@ -181,25 +183,15 @@ EOF
         assignIP = false;
       };
 
-      services.openvpn.servers.smoke = {
-        config = ''
-          client
-          dev tun
-          proto udp
-          remote ${serverIp} 1194
-          nobind
-          tls-client
-          persist-key
-          persist-tun
-          data-ciphers AES-256-GCM:AES-128-GCM
-          tls-version-min 1.2
-          ca ${certDir}/ca.crt
-          cert ${certDir}/${certName}.crt
-          key ${certDir}/${certName}.key
-          tls-crypt ${testAssets}/tls-crypt.key
-          remote-cert-tls server
-          verb 3
-        '';
+      services.pdOpenvpnClient = {
+        enable = true;
+        instanceName = "smoke";
+        remoteHost = serverIp;
+        caCertFile = "${certDir}/ca.crt";
+        clientCertFile = "${certDir}/${certName}.crt";
+        clientKeyFile = "${certDir}/${certName}.key";
+        tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
+        verifyX509Name = "openvpn-smoke-server";
       };
 
       system.stateVersion = "25.11";

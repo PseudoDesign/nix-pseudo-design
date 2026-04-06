@@ -81,6 +81,7 @@
     nixosModules.default = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
+    nixosModules.pd-openvpn-client = ./modules/pd-openvpn-client.nix;
     nixosModules.pd-openvpn-server = ./modules/pd-openvpn-server.nix;
     nixosModules.pd-installer = ./modules/pd-installer.nix;
 
