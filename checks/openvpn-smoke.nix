@@ -213,42 +213,26 @@ testers.runNixOSTest {
     gateway =
       { ... }:
       {
+        imports = [ ../modules/pd-openvpn-server.nix ];
+
         networking.hostName = "gateway";
         networking.useDHCP = false;
-        networking.firewall.allowedUDPPorts = [ 1194 ];
         networking.interfaces.eth1 = mkExternalInterface serverIp;
         virtualisation.interfaces.eth1 = {
           vlan = 1;
           assignIP = false;
         };
 
-        systemd.tmpfiles.rules = [ "d /run/openvpn-smoke 0755 root root -" ];
-
-        services.openvpn.servers.smoke = {
-          config = ''
-            port 1194
-            proto udp
-            dev tun0
-            topology subnet
-            server 10.8.0.0 255.255.255.0
-            tls-server
-            keepalive 10 60
-            persist-key
-            persist-tun
-            data-ciphers AES-256-GCM:AES-128-GCM
-            tls-version-min 1.2
-            dh none
-            ca ${testAssets}/approved/ca.crt
-            cert ${testAssets}/approved/server.crt
-            key ${testAssets}/approved/server.key
-            tls-crypt ${testAssets}/tls-crypt.key
-            verify-client-cert require
-            client-config-dir ${testAssets}/ccd
-            ifconfig-pool-persist /run/openvpn-smoke/ipp.txt
-            status /run/openvpn-smoke/status.log
-            status-version 2
-            verb 3
-          '';
+        services.pdOpenvpnServer = {
+          enable = true;
+          instanceName = "smoke";
+          runtimeDir = "/run/openvpn-smoke";
+          vpnSubnet = "10.8.0.0";
+          caCertFile = "${testAssets}/approved/ca.crt";
+          serverCertFile = "${testAssets}/approved/server.crt";
+          serverKeyFile = "${testAssets}/approved/server.key";
+          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
+          clientConfigDir = "${testAssets}/ccd";
         };
 
         system.stateVersion = "25.11";
