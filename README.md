@@ -51,7 +51,7 @@ The operator runbook lives in [docs/pki-runbook.md](docs/pki-runbook.md). The sh
 * issue or revoke OpenVPN server and client identities with `nix run .#pd-ca -- ...`
 * renew identities in place, or rotate them with revocation and history tracking
 * stage per-host OpenVPN material with `stage-openvpn-server` or `stage-openvpn-client`
-* point `services.pdOpenvpnServer` and `services.pdOpenvpnClient` at the exported `pki.bundleDir` and `pki.identityDir`
+* either install a staged tree at runtime with `pki.install.sourceDir`, or point the modules at `pki.bundleDir` and `pki.identityDir` directly
 
 ## LUKS Filesystem
 

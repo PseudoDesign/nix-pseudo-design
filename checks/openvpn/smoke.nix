@@ -1,5 +1,6 @@
 { testers, pkgs, ... }:
 let
+  lib = pkgs.lib;
   mkOpenvpnTestAssets = pkgs.callPackage ./lib/test-assets.nix { };
   testAssets = mkOpenvpnTestAssets {
     name = "openvpn-smoke";
@@ -22,7 +23,7 @@ let
   serverIp = "192.168.1.1";
   approvedServerStageDir = "${testAssets}/staged/approved/server";
   approvedBundleDir = "${approvedServerStageDir}/bundles";
-  serverCertDir = "${approvedServerStageDir}/issued/openvpn/servers/server";
+  rogueIdentityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
 
   mkExternalInterface =
     address:
@@ -42,6 +43,7 @@ let
       externalIp,
       identityDir,
       bundleDir,
+      installSourceDir ? null,
     }:
     { ... }:
     {
@@ -56,15 +58,24 @@ let
         assignIP = false;
       };
 
-      services.pdOpenvpnClient = {
-        enable = true;
-        instanceName = "smoke";
-        remoteHost = serverIp;
-        pki.bundleDir = bundleDir;
-        pki.identityDir = identityDir;
-        tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
-        verifyX509Name = "openvpn-smoke-server";
-      };
+      services.pdOpenvpnClient =
+        {
+          enable = true;
+          instanceName = "smoke";
+          remoteHost = serverIp;
+          pki =
+            {
+              install.sourceDir = installSourceDir;
+            }
+            // lib.optionalAttrs (bundleDir != null) {
+              bundleDir = bundleDir;
+            }
+            // lib.optionalAttrs (identityDir != null) {
+              identityDir = identityDir;
+            };
+          tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
+          verifyX509Name = "openvpn-smoke-server";
+        };
 
       system.stateVersion = "25.11";
     };
@@ -92,8 +103,7 @@ testers.runNixOSTest {
           instanceName = "smoke";
           runtimeDir = "/run/openvpn-smoke";
           vpnSubnet = "10.8.0.0";
-          pki.bundleDir = approvedBundleDir;
-          pki.identityDir = serverCertDir;
+          pki.install.sourceDir = approvedServerStageDir;
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           clientConfigDir = "${testAssets}/ccd";
         };
@@ -105,16 +115,18 @@ testers.runNixOSTest {
     client1 = mkClientNode {
       hostName = "client1";
       externalIp = "192.168.1.2";
-      identityDir = "${testAssets}/staged/approved/clients/client1/issued/openvpn/clients/client1";
-      bundleDir = "${testAssets}/staged/approved/clients/client1/bundles";
+      identityDir = null;
+      bundleDir = null;
+      installSourceDir = "${testAssets}/staged/approved/clients/client1";
     };
 
     # Second approved client used to prove multiple trusted clients can connect.
     client2 = mkClientNode {
       hostName = "client2";
       externalIp = "192.168.1.3";
-      identityDir = "${testAssets}/staged/approved/clients/client2/issued/openvpn/clients/client2";
-      bundleDir = "${testAssets}/staged/approved/clients/client2/bundles";
+      identityDir = null;
+      bundleDir = null;
+      installSourceDir = "${testAssets}/staged/approved/clients/client2";
     };
 
     # Unapproved client still trusts the approved server, so any failure is about
@@ -122,7 +134,7 @@ testers.runNixOSTest {
     rogue = mkClientNode {
       hostName = "rogue";
       externalIp = "192.168.1.4";
-      identityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
+      identityDir = rogueIdentityDir;
       bundleDir = approvedBundleDir;
     };
   };
@@ -134,6 +146,10 @@ testers.runNixOSTest {
     client1.wait_for_unit("openvpn-smoke.service")
     client2.wait_for_unit("openvpn-smoke.service")
     rogue.wait_for_unit("openvpn-smoke.service")
+
+    gateway.succeed("test -f /run/secrets/openvpn/smoke/bundles/openvpn-ca.crt")
+    gateway.succeed("test -f /run/secrets/openvpn/smoke/issued/openvpn/servers/server/server.key")
+    client1.succeed("test -f /run/secrets/openvpn/smoke/issued/openvpn/clients/client1/client1.key")
 
     gateway.wait_until_succeeds("grep -F 'CLIENT_LIST,client1,' /run/openvpn-smoke/status.log")
     gateway.wait_until_succeeds("grep -F 'CLIENT_LIST,client2,' /run/openvpn-smoke/status.log")

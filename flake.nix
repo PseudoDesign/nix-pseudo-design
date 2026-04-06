@@ -26,6 +26,7 @@
     let
       overlay = final: prev: {
         pdCa = final.callPackage ./packages/pki/pd-ca.nix { };
+        pdOpenvpnInstallPki = final.callPackage ./packages/pki/pd-openvpn-install-pki.nix { };
         rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
         rpi-otp-derived-key = final.callPackage ./packages/rpi-otp-derived-key.nix { };
         rpi-otp-provision-private-key = final.callPackage ./packages/rpi-otp-provision-private-key.nix { };
@@ -92,6 +93,7 @@
         packages = {
           default = pkgs.rpi-otp-derived-key;
           "pd-ca" = pkgs.pdCa;
+          "pd-openvpn-install-pki" = pkgs.pdOpenvpnInstallPki;
           "rpi-otp-private-key" = pkgs.rpi-otp-private-key;
           "rpi-otp-derived-key" = pkgs.rpi-otp-derived-key;
           "rpi-otp-provision-private-key" = pkgs.rpi-otp-provision-private-key;

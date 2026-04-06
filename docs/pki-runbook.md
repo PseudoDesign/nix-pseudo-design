@@ -175,7 +175,42 @@ stage/adam-laptop/
 
 This is the layout the OpenVPN NixOS modules consume directly.
 
-## Consume Artifacts in NixOS
+## Install Staged Trees At Runtime
+
+When a host should copy a staged tree into `/run/secrets` on boot, point the OpenVPN module at the staged root:
+
+Server example:
+
+```nix
+{
+  services.pdOpenvpnServer = {
+    enable = true;
+    vpnSubnet = "10.8.0.0";
+    pki.install.sourceDir = "/var/lib/pseudo-design/stage/ace";
+    tlsCryptKeyFile = "/run/secrets/openvpn/pd/tls-crypt.key";
+  };
+}
+```
+
+Client example:
+
+```nix
+{
+  services.pdOpenvpnClient = {
+    enable = true;
+    remoteHost = "vpn.pseudo.design";
+    pki.install.sourceDir = "/var/lib/pseudo-design/stage/adam-laptop";
+    tlsCryptKeyFile = "/run/secrets/openvpn/pd/tls-crypt.key";
+    verifyX509Name = "vpn.pseudo.design";
+  };
+}
+```
+
+With the default settings, the module installs the staged tree into `/run/secrets/openvpn/<instanceName>` before `openvpn-<instanceName>.service` starts and derives `pki.bundleDir` plus `pki.identityDir` from that runtime location.
+
+`tls-crypt.key` is still managed separately; the staged `pd-ca` tree currently contains only CA and certificate material.
+
+## Consume Artifacts In Place In NixOS
 
 The OpenVPN modules can read the `pd-ca` workspace layout directly.
 

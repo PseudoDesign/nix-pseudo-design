@@ -1,6 +1,8 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.services.pdOpenvpnServer;
+  installPkiExe = lib.getExe (pkgs.callPackage ../../packages/pki/pd-openvpn-install-pki.nix { });
+  installServiceName = "pd-openvpn-server-${cfg.instanceName}-pki-install";
 
   pathBaseName =
     path:
@@ -14,6 +16,14 @@ let
       cfg.pki.identityName
     else if cfg.pki.identityDir != null then
       pathBaseName cfg.pki.identityDir
+    else
+      null;
+
+  installedPkiIdentityName =
+    if cfg.pki.identityName != null then
+      cfg.pki.identityName
+    else if cfg.pki.install.sourceDir != null then
+      pathBaseName cfg.pki.install.sourceDir
     else
       null;
 
@@ -127,6 +137,20 @@ in
       default = null;
       example = "server";
       description = "Optional certificate basename inside pki.identityDir. Defaults to the identityDir basename.";
+    };
+
+    pki.install.sourceDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/var/lib/pseudo-design/stage/openvpn/ace";
+      description = "Optional staged pd-ca tree copied into a writable runtime directory before OpenVPN starts.";
+    };
+
+    pki.install.targetDir = lib.mkOption {
+      type = lib.types.str;
+      default = "/run/secrets/openvpn/${cfg.instanceName}";
+      example = "/run/secrets/openvpn/server";
+      description = "Runtime directory where pki.install.sourceDir is installed.";
     };
 
     caCertFile = lib.mkOption {
@@ -245,6 +269,10 @@ in
             assertion = cfg.pki.identityName == null || cfg.pki.identityDir != null;
             message = "services.pdOpenvpnServer.pki.identityName requires services.pdOpenvpnServer.pki.identityDir.";
           }
+          {
+            assertion = cfg.pki.install.sourceDir == null || installedPkiIdentityName != null;
+            message = "services.pdOpenvpnServer.pki.install.sourceDir requires an identity name that can be inferred from pki.identityName or the sourceDir basename.";
+          }
         ];
 
         networking.firewall.allowedUDPPorts = lib.optional (cfg.openFirewall && lib.hasPrefix "udp" cfg.proto) cfg.port;
@@ -263,6 +291,28 @@ in
       (lib.mkIf (cfg.pki.identityDir != null && pkiIdentityName != null) {
         services.pdOpenvpnServer.serverCertFile = lib.mkDefault "${cfg.pki.identityDir}/${pkiIdentityName}.crt";
         services.pdOpenvpnServer.serverKeyFile = lib.mkDefault "${cfg.pki.identityDir}/${pkiIdentityName}.key";
+      })
+
+      (lib.mkIf (cfg.pki.install.sourceDir != null) {
+        services.pdOpenvpnServer.pki.bundleDir = lib.mkDefault "${cfg.pki.install.targetDir}/bundles";
+        services.pdOpenvpnServer.pki.identityDir = lib.mkDefault "${cfg.pki.install.targetDir}/issued/openvpn/servers/${installedPkiIdentityName}";
+
+        systemd.services.${installServiceName} = {
+          description = "Install staged OpenVPN server PKI material for ${cfg.instanceName}.";
+          before = [ "openvpn-${cfg.instanceName}.service" ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+          script = ''
+            '${installPkiExe}' '${cfg.pki.install.sourceDir}' '${cfg.pki.install.targetDir}'
+          '';
+        };
+
+        systemd.services."openvpn-${cfg.instanceName}" = {
+          requires = [ "${installServiceName}.service" ];
+          after = [ "${installServiceName}.service" ];
+        };
       })
     ]
   );
