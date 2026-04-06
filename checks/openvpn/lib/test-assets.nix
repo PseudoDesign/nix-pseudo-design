@@ -13,50 +13,31 @@
 runCommand "${name}-assets" { nativeBuildInputs = [ pdCa ]; } ''
   set -euo pipefail
 
-  approved_dir="$out/approved"
-  approved_root_dir="$approved_dir/root"
-  approved_intermediate_dir="$approved_dir/intermediate"
-  rogue_dir="$out/rogue"
-  rogue_root_dir="$rogue_dir/root"
-  rogue_intermediate_dir="$rogue_dir/intermediate"
+  approved_workspace="$out/approved"
+  rogue_workspace="$out/rogue"
 
-  mkdir -p \
-    "$approved_dir" \
-    "$approved_root_dir" \
-    "$approved_intermediate_dir" \
-    "$rogue_dir" \
-    "$rogue_root_dir" \
-    "$rogue_intermediate_dir" \
-    "$out/ccd"
+  mkdir -p "$out/ccd"
 
-  pd-ca init-root "$approved_root_dir" ${lib.escapeShellArg approvedRootCommonName}
-  pd-ca issue-intermediate "$approved_root_dir" ${lib.escapeShellArg approvedIntermediateCommonName} "$approved_intermediate_dir"
-  pd-ca init-root "$rogue_root_dir" ${lib.escapeShellArg rogueRootCommonName}
-  pd-ca issue-intermediate "$rogue_root_dir" ${lib.escapeShellArg rogueIntermediateCommonName} "$rogue_intermediate_dir"
+  pd-ca init-root-ca "$approved_workspace" ${lib.escapeShellArg approvedRootCommonName}
+  pd-ca init-intermediate-ca "$approved_workspace" ${lib.escapeShellArg approvedIntermediateCommonName}
+  pd-ca init-root-ca "$rogue_workspace" ${lib.escapeShellArg rogueRootCommonName}
+  pd-ca init-intermediate-ca "$rogue_workspace" ${lib.escapeShellArg rogueIntermediateCommonName}
 
-  pd-ca issue-leaf "$approved_intermediate_dir" openvpn-server server ${lib.escapeShellArg serverCommonName} "$approved_dir"
+  pd-ca issue-openvpn-server "$approved_workspace" server ${lib.escapeShellArg serverCommonName}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca issue-leaf "$approved_intermediate_dir" openvpn-client ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName} "$approved_dir"
+      pd-ca issue-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
     ''
   ) approvedClients}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca issue-leaf "$rogue_intermediate_dir" openvpn-client ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName} "$rogue_dir"
+      pd-ca issue-openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
     ''
   ) rogueClients}
-
-  cat "$approved_root_dir/ca.crt" "$approved_intermediate_dir/ca.crt" > "$approved_dir/ca.crt"
-  cat "$approved_root_dir/ca.crt" > "$approved_dir/root-ca.crt"
-  cat "$approved_intermediate_dir/ca.crt" > "$approved_dir/intermediate-ca.crt"
-
-  cat "$rogue_root_dir/ca.crt" "$rogue_intermediate_dir/ca.crt" > "$rogue_dir/ca.crt"
-  cat "$rogue_root_dir/ca.crt" > "$rogue_dir/root-ca.crt"
-  cat "$rogue_intermediate_dir/ca.crt" > "$rogue_dir/intermediate-ca.crt"
 
   ${lib.concatStringsSep "\n" (
     lib.mapAttrsToList (
@@ -92,10 +73,4 @@ e7811584363597599cce2040a68ac00e
 f2125540e0f7f4adc37cb3f0d922eeb7
 -----END OpenVPN Static key V1-----
 EOF
-
-  rm -f \
-    "$approved_root_dir/ca.srl" \
-    "$approved_intermediate_dir/ca.srl" \
-    "$rogue_root_dir/ca.srl" \
-    "$rogue_intermediate_dir/ca.srl"
 ''

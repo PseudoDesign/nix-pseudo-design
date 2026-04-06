@@ -20,6 +20,10 @@ let
   vpnSubnet = "10.9.0.0";
   approvedVpnIp = "10.9.0.10";
   statusFile = "/run/openvpn-wrong-ca/status.log";
+  approvedWorkspace = "${testAssets}/approved";
+  rogueWorkspace = "${testAssets}/rogue";
+  approvedCaBundleFile = "${approvedWorkspace}/bundles/openvpn-ca.crt";
+  serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
 
   mkExternalInterface =
     address:
@@ -38,6 +42,7 @@ let
       hostName,
       externalIp,
       certDir,
+      caCertFile,
       certName,
     }:
     { ... }:
@@ -57,7 +62,7 @@ let
         enable = true;
         inherit instanceName;
         remoteHost = serverIp;
-        caCertFile = "${certDir}/ca.crt";
+        inherit caCertFile;
         clientCertFile = "${certDir}/${certName}.crt";
         clientKeyFile = "${certDir}/${certName}.key";
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
@@ -90,9 +95,9 @@ testers.runNixOSTest {
           inherit instanceName;
           runtimeDir = "/run/openvpn-wrong-ca";
           inherit vpnSubnet;
-          caCertFile = "${testAssets}/approved/ca.crt";
-          serverCertFile = "${testAssets}/approved/server.crt";
-          serverKeyFile = "${testAssets}/approved/server.key";
+          caCertFile = approvedCaBundleFile;
+          serverCertFile = "${serverCertDir}/server.crt";
+          serverKeyFile = "${serverCertDir}/server.key";
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           clientConfigDir = "${testAssets}/ccd";
         };
@@ -104,15 +109,18 @@ testers.runNixOSTest {
     approved = mkClientNode {
       hostName = "approved";
       externalIp = "192.168.2.2";
-      certDir = "${testAssets}/approved";
+      certDir = "${approvedWorkspace}/issued/openvpn/clients/approved";
+      caCertFile = approvedCaBundleFile;
       certName = "approved";
     };
 
-    # Rogue client uses the wrong CA and should never receive a tunnel interface.
+    # Rogue client still trusts the approved server, so rejection isolates the
+    # server-side client-CA policy rather than the server certificate chain.
     rogue = mkClientNode {
       hostName = "rogue";
       externalIp = "192.168.2.3";
-      certDir = "${testAssets}/rogue";
+      certDir = "${rogueWorkspace}/issued/openvpn/clients/rogue";
+      caCertFile = approvedCaBundleFile;
       certName = "rogue";
     };
   };

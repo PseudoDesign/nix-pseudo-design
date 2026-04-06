@@ -11,6 +11,8 @@ writeShellApplication {
   ];
   text = ''
     readonly EX_USAGE=64
+    readonly EX_NOINPUT=66
+    readonly EX_CANTCREAT=73
 
     usage() {
       cat <<'EOF' >&2
@@ -19,10 +21,127 @@ Usage:
   pd-ca issue-intermediate PARENT_CA_DIR COMMON_NAME OUT_DIR
   pd-ca issue-leaf CA_DIR PROFILE NAME COMMON_NAME OUT_DIR
 
+  pd-ca init-workspace WORKSPACE_DIR
+  pd-ca init-root-ca WORKSPACE_DIR COMMON_NAME
+  pd-ca init-intermediate-ca WORKSPACE_DIR COMMON_NAME
+  pd-ca issue-openvpn-server WORKSPACE_DIR NAME COMMON_NAME
+  pd-ca issue-openvpn-client WORKSPACE_DIR NAME COMMON_NAME
+  pd-ca bundle-chain OUT_FILE CERT_FILE [CERT_FILE...]
+
 Profiles:
   openvpn-server
   openvpn-client
 EOF
+    }
+
+    fail() {
+      echo "$*" >&2
+      exit 1
+    }
+
+    require_file() {
+      if [ ! -f "$1" ]; then
+        echo "Missing required file: $1" >&2
+        exit "$EX_NOINPUT"
+      fi
+    }
+
+    ensure_absent() {
+      if [ -e "$1" ]; then
+        echo "Refusing to overwrite existing path: $1" >&2
+        exit "$EX_CANTCREAT"
+      fi
+    }
+
+    workspace_root_ca_dir() {
+      printf '%s/authorities/root\n' "$1"
+    }
+
+    workspace_intermediate_ca_dir() {
+      printf '%s/authorities/intermediate\n' "$1"
+    }
+
+    workspace_openvpn_server_dir() {
+      printf '%s/issued/openvpn/servers/%s\n' "$1" "$2"
+    }
+
+    workspace_openvpn_client_dir() {
+      printf '%s/issued/openvpn/clients/%s\n' "$1" "$2"
+    }
+
+    init_ca_state() {
+      local ca_dir="$1"
+      local role="$2"
+      local common_name="$3"
+
+      mkdir -p "$ca_dir/issued/certs"
+      printf '00000001\n' > "$ca_dir/serial"
+      printf 'serial\tlabel\tnot_after\tsubject\n' > "$ca_dir/issued/index.txt"
+      printf '%s\n' "$role" > "$ca_dir/role"
+      printf '%s\n' "$common_name" > "$ca_dir/common-name"
+    }
+
+    bundle_chain() {
+      local out_file="$1"
+
+      shift
+
+      if [ "$#" -lt 1 ]; then
+        echo "bundle-chain requires at least one certificate file." >&2
+        exit "$EX_USAGE"
+      fi
+
+      cat "$@" > "$out_file"
+    }
+
+    refresh_ca_chain() {
+      local ca_dir="$1"
+
+      if [ -f "$ca_dir/issuer-chain.crt" ]; then
+        bundle_chain "$ca_dir/ca-chain.crt" "$ca_dir/ca.crt" "$ca_dir/issuer-chain.crt"
+      else
+        bundle_chain "$ca_dir/ca-chain.crt" "$ca_dir/ca.crt"
+      fi
+    }
+
+    record_issued_cert() {
+      local ca_dir="$1"
+      local serial="$2"
+      local label="$3"
+      local cert_file="$4"
+      local subject
+      local not_after
+
+      subject="$(openssl x509 -in "$cert_file" -noout -subject)"
+      not_after="$(openssl x509 -in "$cert_file" -noout -enddate)"
+
+      cp "$cert_file" "$ca_dir/issued/certs/$serial-$label.crt"
+      printf '%s\t%s\t%s\t%s\n' "$serial" "$label" "$not_after" "$subject" >> "$ca_dir/issued/index.txt"
+    }
+
+    refresh_workspace_bundles() {
+      local workspace="$1"
+      local root_ca_dir
+      local intermediate_ca_dir
+
+      root_ca_dir="$(workspace_root_ca_dir "$workspace")"
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+
+      mkdir -p "$workspace/bundles"
+
+      if [ -f "$root_ca_dir/ca.crt" ]; then
+        cp "$root_ca_dir/ca.crt" "$workspace/bundles/root-ca.crt"
+      fi
+
+      if [ -f "$intermediate_ca_dir/ca.crt" ]; then
+        cp "$intermediate_ca_dir/ca.crt" "$workspace/bundles/intermediate-ca.crt"
+      fi
+
+      if [ -f "$intermediate_ca_dir/ca-chain.crt" ]; then
+        cp "$intermediate_ca_dir/ca-chain.crt" "$workspace/bundles/openvpn-ca.crt"
+      elif [ -f "$root_ca_dir/ca-chain.crt" ]; then
+        cp "$root_ca_dir/ca-chain.crt" "$workspace/bundles/openvpn-ca.crt"
+      fi
     }
 
     init_root() {
@@ -30,6 +149,9 @@ EOF
       local common_name="$2"
       local tmp_dir
       local req_config
+
+      ensure_absent "$out_dir/ca.key"
+      ensure_absent "$out_dir/ca.crt"
 
       mkdir -p "$out_dir"
 
@@ -62,6 +184,9 @@ EOF
         -out "$out_dir/ca.crt" \
         >/dev/null 2>&1
 
+      init_ca_state "$out_dir" "root" "$common_name"
+      refresh_ca_chain "$out_dir"
+
       rm -rf "$tmp_dir"
     }
 
@@ -69,12 +194,22 @@ EOF
       local parent_ca_dir="$1"
       local common_name="$2"
       local out_dir="$3"
+      local serial
       local tmp_dir
       local req_config
       local ext_config
 
+      require_file "$parent_ca_dir/ca.crt"
+      require_file "$parent_ca_dir/ca.key"
+      require_file "$parent_ca_dir/serial"
+      require_file "$parent_ca_dir/ca-chain.crt"
+
+      ensure_absent "$out_dir/ca.key"
+      ensure_absent "$out_dir/ca.crt"
+
       mkdir -p "$out_dir"
 
+      serial="$(cat "$parent_ca_dir/serial")"
       tmp_dir="$(mktemp -d)"
       req_config="$tmp_dir/intermediate.cnf"
       ext_config="$tmp_dir/intermediate.ext"
@@ -111,10 +246,15 @@ EOF
         -in "$out_dir/ca.csr" \
         -CA "$parent_ca_dir/ca.crt" \
         -CAkey "$parent_ca_dir/ca.key" \
-        -CAcreateserial \
+        -CAserial "$parent_ca_dir/serial" \
         -out "$out_dir/ca.crt" \
         -extfile "$ext_config" \
         >/dev/null 2>&1
+
+      init_ca_state "$out_dir" "intermediate" "$common_name"
+      cp "$parent_ca_dir/ca-chain.crt" "$out_dir/issuer-chain.crt"
+      refresh_ca_chain "$out_dir"
+      record_issued_cert "$parent_ca_dir" "$serial" "$(basename "$out_dir")" "$out_dir/ca.crt"
 
       rm -rf "$tmp_dir"
       rm -f "$out_dir/ca.csr"
@@ -126,10 +266,16 @@ EOF
       local name="$3"
       local common_name="$4"
       local out_dir="$5"
+      local serial
       local extended_key_usage
       local tmp_dir
       local req_config
       local ext_config
+
+      require_file "$ca_dir/ca.crt"
+      require_file "$ca_dir/ca.key"
+      require_file "$ca_dir/serial"
+      require_file "$ca_dir/ca-chain.crt"
 
       case "$profile" in
         openvpn-server)
@@ -145,8 +291,12 @@ EOF
           ;;
       esac
 
+      ensure_absent "$out_dir/$name.key"
+      ensure_absent "$out_dir/$name.crt"
+
       mkdir -p "$out_dir"
 
+      serial="$(cat "$ca_dir/serial")"
       tmp_dir="$(mktemp -d)"
       req_config="$tmp_dir/$name.cnf"
       ext_config="$tmp_dir/$name.ext"
@@ -191,13 +341,82 @@ EOF
         -in "$out_dir/$name.csr" \
         -CA "$ca_dir/ca.crt" \
         -CAkey "$ca_dir/ca.key" \
-        -CAcreateserial \
+        -CAserial "$ca_dir/serial" \
         -out "$out_dir/$name.crt" \
         -extfile "$ext_config" \
         >/dev/null 2>&1
 
+      cp "$ca_dir/ca-chain.crt" "$out_dir/ca-chain.crt"
+      bundle_chain "$out_dir/full-chain.crt" "$out_dir/$name.crt" "$out_dir/ca-chain.crt"
+      record_issued_cert "$ca_dir" "$serial" "$name" "$out_dir/$name.crt"
+
       rm -rf "$tmp_dir"
       rm -f "$out_dir/$name.csr"
+    }
+
+    init_workspace() {
+      local workspace="$1"
+
+      mkdir -p \
+        "$workspace/authorities" \
+        "$workspace/issued/openvpn/servers" \
+        "$workspace/issued/openvpn/clients" \
+        "$workspace/bundles"
+    }
+
+    init_root_ca() {
+      local workspace="$1"
+      local common_name="$2"
+      local root_ca_dir
+
+      init_workspace "$workspace"
+      root_ca_dir="$(workspace_root_ca_dir "$workspace")"
+      init_root "$root_ca_dir" "$common_name"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    init_intermediate_ca() {
+      local workspace="$1"
+      local common_name="$2"
+      local root_ca_dir
+      local intermediate_ca_dir
+
+      init_workspace "$workspace"
+      root_ca_dir="$(workspace_root_ca_dir "$workspace")"
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+
+      issue_intermediate "$root_ca_dir" "$common_name" "$intermediate_ca_dir"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    issue_openvpn_server() {
+      local workspace="$1"
+      local name="$2"
+      local common_name="$3"
+      local intermediate_ca_dir
+      local out_dir
+
+      init_workspace "$workspace"
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      out_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+
+      issue_leaf "$intermediate_ca_dir" openvpn-server "$name" "$common_name" "$out_dir"
+      refresh_workspace_bundles "$workspace"
+    }
+
+    issue_openvpn_client() {
+      local workspace="$1"
+      local name="$2"
+      local common_name="$3"
+      local intermediate_ca_dir
+      local out_dir
+
+      init_workspace "$workspace"
+      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
+      out_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
+
+      issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$out_dir"
+      refresh_workspace_bundles "$workspace"
     }
 
     if [ "$#" -lt 1 ]; then
@@ -229,6 +448,56 @@ EOF
         fi
 
         issue_leaf "$2" "$3" "$4" "$5" "$6"
+        ;;
+      init-workspace)
+        if [ "$#" -ne 2 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        init_workspace "$2"
+        ;;
+      init-root-ca)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        init_root_ca "$2" "$3"
+        ;;
+      init-intermediate-ca)
+        if [ "$#" -ne 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        init_intermediate_ca "$2" "$3"
+        ;;
+      issue-openvpn-server)
+        if [ "$#" -ne 4 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        issue_openvpn_server "$2" "$3" "$4"
+        ;;
+      issue-openvpn-client)
+        if [ "$#" -ne 4 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        issue_openvpn_client "$2" "$3" "$4"
+        ;;
+      bundle-chain)
+        if [ "$#" -lt 3 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        bundle_out_file="$2"
+        shift 2
+        bundle_chain "$bundle_out_file" "$@"
         ;;
       *)
         usage

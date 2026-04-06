@@ -20,6 +20,10 @@ let
   };
 
   serverIp = "192.168.1.1";
+  approvedWorkspace = "${testAssets}/approved";
+  rogueWorkspace = "${testAssets}/rogue";
+  approvedCaBundleFile = "${approvedWorkspace}/bundles/openvpn-ca.crt";
+  serverCertDir = "${approvedWorkspace}/issued/openvpn/servers/server";
 
   mkExternalInterface =
     address:
@@ -38,6 +42,7 @@ let
       hostName,
       externalIp,
       certDir,
+      caCertFile,
       certName,
     }:
     { ... }:
@@ -57,7 +62,7 @@ let
         enable = true;
         instanceName = "smoke";
         remoteHost = serverIp;
-        caCertFile = "${certDir}/ca.crt";
+        inherit caCertFile;
         clientCertFile = "${certDir}/${certName}.crt";
         clientKeyFile = "${certDir}/${certName}.key";
         tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
@@ -90,9 +95,9 @@ testers.runNixOSTest {
           instanceName = "smoke";
           runtimeDir = "/run/openvpn-smoke";
           vpnSubnet = "10.8.0.0";
-          caCertFile = "${testAssets}/approved/ca.crt";
-          serverCertFile = "${testAssets}/approved/server.crt";
-          serverKeyFile = "${testAssets}/approved/server.key";
+          caCertFile = approvedCaBundleFile;
+          serverCertFile = "${serverCertDir}/server.crt";
+          serverKeyFile = "${serverCertDir}/server.key";
           tlsCryptKeyFile = "${testAssets}/tls-crypt.key";
           clientConfigDir = "${testAssets}/ccd";
         };
@@ -104,7 +109,8 @@ testers.runNixOSTest {
     client1 = mkClientNode {
       hostName = "client1";
       externalIp = "192.168.1.2";
-      certDir = "${testAssets}/approved";
+      certDir = "${approvedWorkspace}/issued/openvpn/clients/client1";
+      caCertFile = approvedCaBundleFile;
       certName = "client1";
     };
 
@@ -112,15 +118,18 @@ testers.runNixOSTest {
     client2 = mkClientNode {
       hostName = "client2";
       externalIp = "192.168.1.3";
-      certDir = "${testAssets}/approved";
+      certDir = "${approvedWorkspace}/issued/openvpn/clients/client2";
+      caCertFile = approvedCaBundleFile;
       certName = "client2";
     };
 
-    # Unapproved client signed by a different CA; it should never join the VPN.
+    # Unapproved client still trusts the approved server, so any failure is about
+    # client-certificate admission rather than server verification.
     rogue = mkClientNode {
       hostName = "rogue";
       externalIp = "192.168.1.4";
-      certDir = "${testAssets}/rogue";
+      certDir = "${rogueWorkspace}/issued/openvpn/clients/rogue";
+      caCertFile = approvedCaBundleFile;
       certName = "rogue";
     };
   };
