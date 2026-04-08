@@ -11,6 +11,9 @@ The current design is:
 * The intermediate CA issues OpenVPN server and client certificates.
 * OpenVPN hosts consume the generated artifacts; they do not mint certificates themselves.
 
+The workspace-oriented `pd-ca` CLI uses a verb plus profile form such as
+`issue openvpn-server ...` or `rotate openvpn-client ...`.
+
 YubiKey-backed root signing can be added later without changing the host-facing artifact layout.
 
 ## Workspace Location
@@ -66,13 +69,13 @@ The `bundles/` directory is the stable public-consumer interface:
 Issue a server certificate:
 
 ```bash
-nix run .#pd-ca -- issue-openvpn-server "$PD_PKI" ace "vpn.pseudo.design"
+nix run .#pd-ca -- issue openvpn-server "$PD_PKI" ace "vpn.pseudo.design"
 ```
 
 Issue a client certificate:
 
 ```bash
-nix run .#pd-ca -- issue-openvpn-client "$PD_PKI" adam-laptop "adam-laptop"
+nix run .#pd-ca -- issue openvpn-client "$PD_PKI" adam-laptop "adam-laptop"
 ```
 
 Issued identities land here:
@@ -98,13 +101,13 @@ Renewal issues a fresh certificate for the same logical identity and archives th
 Renew a server certificate:
 
 ```bash
-nix run .#pd-ca -- renew-openvpn-server "$PD_PKI" ace
+nix run .#pd-ca -- renew openvpn-server "$PD_PKI" ace
 ```
 
 Renew a client certificate:
 
 ```bash
-nix run .#pd-ca -- renew-openvpn-client "$PD_PKI" adam-laptop
+nix run .#pd-ca -- renew openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Rotation issues a fresh certificate, archives the previous material, and revokes the archived certificate so the CRL starts rejecting it.
@@ -112,13 +115,13 @@ Rotation issues a fresh certificate, archives the previous material, and revokes
 Rotate a server certificate:
 
 ```bash
-nix run .#pd-ca -- rotate-openvpn-server "$PD_PKI" ace
+nix run .#pd-ca -- rotate openvpn-server "$PD_PKI" ace
 ```
 
 Rotate a client certificate:
 
 ```bash
-nix run .#pd-ca -- rotate-openvpn-client "$PD_PKI" adam-laptop
+nix run .#pd-ca -- rotate openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Archived material is kept here:
@@ -135,13 +138,13 @@ Each archived entry is named with a UTC timestamp and the archived certificate s
 Revoke a server certificate:
 
 ```bash
-nix run .#pd-ca -- revoke-openvpn-server "$PD_PKI" ace
+nix run .#pd-ca -- revoke openvpn-server "$PD_PKI" ace
 ```
 
 Revoke a client certificate:
 
 ```bash
-nix run .#pd-ca -- revoke-openvpn-client "$PD_PKI" adam-laptop
+nix run .#pd-ca -- revoke openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Revocation updates the intermediate CA state and refreshes `bundles/openvpn-ca.crl.pem`.
@@ -155,13 +158,13 @@ To stage only the material a single host needs, export a deployable tree from th
 Stage a server host tree:
 
 ```bash
-nix run .#pd-ca -- stage-openvpn-server "$PD_PKI" ace "$PWD/stage/ace"
+nix run .#pd-ca -- stage openvpn-server "$PD_PKI" ace "$PWD/stage/ace"
 ```
 
 Stage a client host tree:
 
 ```bash
-nix run .#pd-ca -- stage-openvpn-client "$PD_PKI" adam-laptop "$PWD/stage/adam-laptop"
+nix run .#pd-ca -- stage openvpn-client "$PD_PKI" adam-laptop "$PWD/stage/adam-laptop"
 ```
 
 Each staged tree contains:

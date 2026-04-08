@@ -11,6 +11,9 @@ Most users should stay on the workspace-oriented commands. They maintain the
 expected workspace layout, published bundle files, issuance history, and CRL
 updates for you.
 
+The workspace-oriented commands use a verb plus profile form such as
+`issue openvpn-server ...` or `revoke openvpn-client ...`.
+
 ## Before You Start
 
 Keep the CA workspace outside Git and treat it like other secret-bearing
@@ -87,13 +90,13 @@ intermediate private signing key is created at
 Issue a server identity:
 
 ```bash
-nix run .#pd-ca -- issue-openvpn-server "$PD_PKI" ace "vpn.pseudo.design"
+nix run .#pd-ca -- issue openvpn-server "$PD_PKI" ace "vpn.pseudo.design"
 ```
 
 Issue a client identity:
 
 ```bash
-nix run .#pd-ca -- issue-openvpn-client "$PD_PKI" adam-laptop "adam-laptop"
+nix run .#pd-ca -- issue openvpn-client "$PD_PKI" adam-laptop "adam-laptop"
 ```
 
 The resulting directories contain the leaf certificate, key, CA chain, full
@@ -116,8 +119,8 @@ the previous keypair under `history/`. Renewal does not revoke the archived
 certificate.
 
 ```bash
-nix run .#pd-ca -- renew-openvpn-server "$PD_PKI" ace
-nix run .#pd-ca -- renew-openvpn-client "$PD_PKI" adam-laptop
+nix run .#pd-ca -- renew openvpn-server "$PD_PKI" ace
+nix run .#pd-ca -- renew openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Use renewal when you want a new certificate but do not need to invalidate the
@@ -133,8 +136,8 @@ Rotation also issues a fresh certificate and archives the previous keypair, but
 it revokes the archived certificate and refreshes the CRL.
 
 ```bash
-nix run .#pd-ca -- rotate-openvpn-server "$PD_PKI" ace
-nix run .#pd-ca -- rotate-openvpn-client "$PD_PKI" adam-laptop
+nix run .#pd-ca -- rotate openvpn-server "$PD_PKI" ace
+nix run .#pd-ca -- rotate openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Use rotation when the previous certificate must stop working as soon as the
@@ -150,8 +153,8 @@ Direct revocation retires the current certificate in place without creating a
 replacement.
 
 ```bash
-nix run .#pd-ca -- revoke-openvpn-server "$PD_PKI" ace
-nix run .#pd-ca -- revoke-openvpn-client "$PD_PKI" adam-laptop
+nix run .#pd-ca -- revoke openvpn-server "$PD_PKI" ace
+nix run .#pd-ca -- revoke openvpn-client "$PD_PKI" adam-laptop
 ```
 
 Use direct revoke when the identity should stop working and you are not rolling
@@ -163,8 +166,8 @@ key or move the existing one.
 Export just the material a single host needs:
 
 ```bash
-nix run .#pd-ca -- stage-openvpn-server "$PD_PKI" ace "$PWD/stage/ace"
-nix run .#pd-ca -- stage-openvpn-client "$PD_PKI" adam-laptop "$PWD/stage/adam-laptop"
+nix run .#pd-ca -- stage openvpn-server "$PD_PKI" ace "$PWD/stage/ace"
+nix run .#pd-ca -- stage openvpn-client "$PD_PKI" adam-laptop "$PWD/stage/adam-laptop"
 ```
 
 Each staged tree contains the published bundles plus one identity subtree:

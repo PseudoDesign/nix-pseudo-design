@@ -24,42 +24,42 @@ runCommand "${name}-assets" { nativeBuildInputs = [ pdCa pdOpenvpnIdentity ]; } 
   pd-ca init-root-ca "$rogue_workspace" ${lib.escapeShellArg rogueRootCommonName}
   pd-ca init-intermediate-ca "$rogue_workspace" ${lib.escapeShellArg rogueIntermediateCommonName}
 
-  pd-ca issue-openvpn-server "$approved_workspace" server ${lib.escapeShellArg serverCommonName}
+  pd-ca issue openvpn-server "$approved_workspace" server ${lib.escapeShellArg serverCommonName}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca issue-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
+      pd-ca issue openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
     ''
   ) approvedClients}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca revoke-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName}
+      pd-ca revoke openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName}
     ''
   ) revokedApprovedClients}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca issue-openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
+      pd-ca issue openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} ${lib.escapeShellArg clientName}
     ''
   ) rogueClients}
 
-  pd-ca stage-openvpn-server "$approved_workspace" server "$out/staged/approved/server"
+  pd-ca stage openvpn-server "$approved_workspace" server "$out/staged/approved/server"
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca stage-openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} "$out/staged/approved/clients/${clientName}"
+      pd-ca stage openvpn-client "$approved_workspace" ${lib.escapeShellArg clientName} "$out/staged/approved/clients/${clientName}"
     ''
   ) approvedClients}
 
   ${lib.concatMapStringsSep "\n" (
     clientName:
     ''
-      pd-ca stage-openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} "$out/staged/rogue/clients/${clientName}"
+      pd-ca stage openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} "$out/staged/rogue/clients/${clientName}"
     ''
   ) rogueClients}
 

@@ -19,23 +19,19 @@ writeShellApplication {
     usage() {
       cat <<'EOF' >&2
 Usage:
+  pd-ca init-root-ca WORKSPACE_DIR COMMON_NAME
+  pd-ca init-intermediate-ca WORKSPACE_DIR COMMON_NAME
+  pd-ca issue PROFILE WORKSPACE_DIR NAME COMMON_NAME
+  pd-ca renew PROFILE WORKSPACE_DIR NAME
+  pd-ca rotate PROFILE WORKSPACE_DIR NAME
+  pd-ca revoke PROFILE WORKSPACE_DIR NAME
+  pd-ca stage PROFILE WORKSPACE_DIR NAME OUT_DIR
+
+Advanced:
+  pd-ca init-workspace WORKSPACE_DIR
   pd-ca init-root OUT_DIR COMMON_NAME
   pd-ca issue-intermediate PARENT_CA_DIR COMMON_NAME OUT_DIR
   pd-ca issue-leaf CA_DIR PROFILE NAME COMMON_NAME OUT_DIR
-
-  pd-ca init-workspace WORKSPACE_DIR
-  pd-ca init-root-ca WORKSPACE_DIR COMMON_NAME
-  pd-ca init-intermediate-ca WORKSPACE_DIR COMMON_NAME
-  pd-ca issue-openvpn-server WORKSPACE_DIR NAME COMMON_NAME
-  pd-ca issue-openvpn-client WORKSPACE_DIR NAME COMMON_NAME
-  pd-ca renew-openvpn-server WORKSPACE_DIR NAME
-  pd-ca renew-openvpn-client WORKSPACE_DIR NAME
-  pd-ca rotate-openvpn-server WORKSPACE_DIR NAME
-  pd-ca rotate-openvpn-client WORKSPACE_DIR NAME
-  pd-ca revoke-openvpn-server WORKSPACE_DIR NAME
-  pd-ca revoke-openvpn-client WORKSPACE_DIR NAME
-  pd-ca stage-openvpn-server WORKSPACE_DIR NAME OUT_DIR
-  pd-ca stage-openvpn-client WORKSPACE_DIR NAME OUT_DIR
   pd-ca bundle-chain OUT_FILE CERT_FILE [CERT_FILE...]
 
 Profiles:
@@ -71,20 +67,50 @@ EOF
       printf '%s/authorities/intermediate\n' "$1"
     }
 
-    workspace_openvpn_server_dir() {
-      printf '%s/issued/openvpn/servers/%s\n' "$1" "$2"
+    openvpn_profile_collection_dir() {
+      case "$1" in
+        openvpn-server)
+          printf '%s\n' "servers"
+          ;;
+        openvpn-client)
+          printf '%s\n' "clients"
+          ;;
+        *)
+          echo "Unsupported certificate profile: $1" >&2
+          usage
+          exit "$EX_USAGE"
+          ;;
+      esac
     }
 
-    workspace_openvpn_client_dir() {
-      printf '%s/issued/openvpn/clients/%s\n' "$1" "$2"
+    workspace_openvpn_identity_dir() {
+      local workspace="$1"
+      local profile="$2"
+      local name="$3"
+      local collection_dir
+
+      collection_dir="$(openvpn_profile_collection_dir "$profile")"
+      printf '%s/issued/openvpn/%s/%s\n' "$workspace" "$collection_dir" "$name"
     }
 
-    workspace_openvpn_server_history_dir() {
-      printf '%s/history/openvpn/servers/%s\n' "$1" "$2"
+    workspace_openvpn_identity_history_dir() {
+      local workspace="$1"
+      local profile="$2"
+      local name="$3"
+      local collection_dir
+
+      collection_dir="$(openvpn_profile_collection_dir "$profile")"
+      printf '%s/history/openvpn/%s/%s\n' "$workspace" "$collection_dir" "$name"
     }
 
-    workspace_openvpn_client_history_dir() {
-      printf '%s/history/openvpn/clients/%s\n' "$1" "$2"
+    staged_openvpn_identity_dir() {
+      local out_dir="$1"
+      local profile="$2"
+      local name="$3"
+      local collection_dir
+
+      collection_dir="$(openvpn_profile_collection_dir "$profile")"
+      printf '%s/issued/openvpn/%s/%s\n' "$out_dir" "$collection_dir" "$name"
     }
 
     copy_if_present() {
@@ -602,39 +628,26 @@ EOF
       refresh_workspace_bundles "$workspace"
     }
 
-    issue_openvpn_server() {
-      local workspace="$1"
-      local name="$2"
-      local common_name="$3"
+    issue_identity() {
+      local profile="$1"
+      local workspace="$2"
+      local name="$3"
+      local common_name="$4"
       local intermediate_ca_dir
       local out_dir
 
       init_workspace "$workspace"
       intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      out_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+      out_dir="$(workspace_openvpn_identity_dir "$workspace" "$profile" "$name")"
 
-      issue_leaf "$intermediate_ca_dir" openvpn-server "$name" "$common_name" "$out_dir"
+      issue_leaf "$intermediate_ca_dir" "$profile" "$name" "$common_name" "$out_dir"
       refresh_workspace_bundles "$workspace"
     }
 
-    issue_openvpn_client() {
-      local workspace="$1"
-      local name="$2"
-      local common_name="$3"
-      local intermediate_ca_dir
-      local out_dir
-
-      init_workspace "$workspace"
-      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      out_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
-
-      issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$out_dir"
-      refresh_workspace_bundles "$workspace"
-    }
-
-    renew_openvpn_server() {
-      local workspace="$1"
-      local name="$2"
+    renew_identity() {
+      local profile="$1"
+      local workspace="$2"
+      local name="$3"
       local intermediate_ca_dir
       local current_dir
       local history_dir
@@ -642,33 +655,12 @@ EOF
       local next_dir
 
       intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      current_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
-      history_dir="$(workspace_openvpn_server_history_dir "$workspace" "$name")"
+      current_dir="$(workspace_openvpn_identity_dir "$workspace" "$profile" "$name")"
+      history_dir="$(workspace_openvpn_identity_history_dir "$workspace" "$profile" "$name")"
       common_name="$(identity_common_name "$current_dir" "$name")"
-      next_dir="$(mktemp -d "$workspace/.renew-server-$name.XXXXXX")"
+      next_dir="$(mktemp -d "$workspace/.renew-$profile-$name.XXXXXX")"
 
-      issue_leaf "$intermediate_ca_dir" openvpn-server "$name" "$common_name" "$next_dir"
-      archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name" >/dev/null
-      mv "$next_dir" "$current_dir"
-      refresh_workspace_bundles "$workspace"
-    }
-
-    renew_openvpn_client() {
-      local workspace="$1"
-      local name="$2"
-      local intermediate_ca_dir
-      local current_dir
-      local history_dir
-      local common_name
-      local next_dir
-
-      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      current_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
-      history_dir="$(workspace_openvpn_client_history_dir "$workspace" "$name")"
-      common_name="$(identity_common_name "$current_dir" "$name")"
-      next_dir="$(mktemp -d "$workspace/.renew-client-$name.XXXXXX")"
-
-      issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$next_dir"
+      issue_leaf "$intermediate_ca_dir" "$profile" "$name" "$common_name" "$next_dir"
       archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name" >/dev/null
       mv "$next_dir" "$current_dir"
       refresh_workspace_bundles "$workspace"
@@ -703,39 +695,26 @@ EOF
       rm -rf "$tmp_dir"
     }
 
-    revoke_openvpn_server() {
-      local workspace="$1"
-      local name="$2"
+    revoke_identity() {
+      local profile="$1"
+      local workspace="$2"
+      local name="$3"
       local intermediate_ca_dir
       local cert_dir
       local common_name
 
       intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      cert_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
+      cert_dir="$(workspace_openvpn_identity_dir "$workspace" "$profile" "$name")"
       common_name="$(identity_common_name "$cert_dir" "$name")"
 
-      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-server" "$common_name"
+      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "$profile" "$common_name"
       refresh_workspace_bundles "$workspace"
     }
 
-    revoke_openvpn_client() {
-      local workspace="$1"
-      local name="$2"
-      local intermediate_ca_dir
-      local cert_dir
-      local common_name
-
-      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      cert_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
-      common_name="$(identity_common_name "$cert_dir" "$name")"
-
-      revoke_cert "$intermediate_ca_dir" "$cert_dir/$name.crt" "$name" "openvpn-client" "$common_name"
-      refresh_workspace_bundles "$workspace"
-    }
-
-    rotate_openvpn_server() {
-      local workspace="$1"
-      local name="$2"
+    rotate_identity() {
+      local profile="$1"
+      local workspace="$2"
+      local name="$3"
       local intermediate_ca_dir
       local current_dir
       local history_dir
@@ -744,67 +723,28 @@ EOF
       local archived_dir
 
       intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      current_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
-      history_dir="$(workspace_openvpn_server_history_dir "$workspace" "$name")"
+      current_dir="$(workspace_openvpn_identity_dir "$workspace" "$profile" "$name")"
+      history_dir="$(workspace_openvpn_identity_history_dir "$workspace" "$profile" "$name")"
       common_name="$(identity_common_name "$current_dir" "$name")"
-      next_dir="$(mktemp -d "$workspace/.rotate-server-$name.XXXXXX")"
+      next_dir="$(mktemp -d "$workspace/.rotate-$profile-$name.XXXXXX")"
 
-      issue_leaf "$intermediate_ca_dir" openvpn-server "$name" "$common_name" "$next_dir"
+      issue_leaf "$intermediate_ca_dir" "$profile" "$name" "$common_name" "$next_dir"
       archived_dir="$(archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name")"
       mv "$next_dir" "$current_dir"
-      revoke_cert "$intermediate_ca_dir" "$archived_dir/$name.crt" "$name" "openvpn-server" "$common_name"
+      revoke_cert "$intermediate_ca_dir" "$archived_dir/$name.crt" "$name" "$profile" "$common_name"
       refresh_workspace_bundles "$workspace"
     }
 
-    rotate_openvpn_client() {
-      local workspace="$1"
-      local name="$2"
-      local intermediate_ca_dir
-      local current_dir
-      local history_dir
-      local common_name
-      local next_dir
-      local archived_dir
-
-      intermediate_ca_dir="$(workspace_intermediate_ca_dir "$workspace")"
-      current_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
-      history_dir="$(workspace_openvpn_client_history_dir "$workspace" "$name")"
-      common_name="$(identity_common_name "$current_dir" "$name")"
-      next_dir="$(mktemp -d "$workspace/.rotate-client-$name.XXXXXX")"
-
-      issue_leaf "$intermediate_ca_dir" openvpn-client "$name" "$common_name" "$next_dir"
-      archived_dir="$(archive_identity_dir "$workspace" "$history_dir" "$current_dir" "$name")"
-      mv "$next_dir" "$current_dir"
-      revoke_cert "$intermediate_ca_dir" "$archived_dir/$name.crt" "$name" "openvpn-client" "$common_name"
-      refresh_workspace_bundles "$workspace"
-    }
-
-    stage_openvpn_server() {
-      local workspace="$1"
-      local name="$2"
-      local out_dir="$3"
+    stage_identity() {
+      local profile="$1"
+      local workspace="$2"
+      local name="$3"
+      local out_dir="$4"
       local cert_dir
       local staged_identity_dir
 
-      cert_dir="$(workspace_openvpn_server_dir "$workspace" "$name")"
-      staged_identity_dir="$out_dir/issued/openvpn/servers/$name"
-
-      ensure_absent "$out_dir"
-      mkdir -p "$out_dir"
-
-      stage_workspace_bundles "$workspace" "$out_dir"
-      stage_identity_dir "$cert_dir" "$name" "$staged_identity_dir"
-    }
-
-    stage_openvpn_client() {
-      local workspace="$1"
-      local name="$2"
-      local out_dir="$3"
-      local cert_dir
-      local staged_identity_dir
-
-      cert_dir="$(workspace_openvpn_client_dir "$workspace" "$name")"
-      staged_identity_dir="$out_dir/issued/openvpn/clients/$name"
+      cert_dir="$(workspace_openvpn_identity_dir "$workspace" "$profile" "$name")"
+      staged_identity_dir="$(staged_openvpn_identity_dir "$out_dir" "$profile" "$name")"
 
       ensure_absent "$out_dir"
       mkdir -p "$out_dir"
@@ -867,85 +807,45 @@ EOF
 
         init_intermediate_ca "$2" "$3"
         ;;
-      issue-openvpn-server)
+      issue)
+        if [ "$#" -ne 5 ]; then
+          usage
+          exit "$EX_USAGE"
+        fi
+
+        issue_identity "$2" "$3" "$4" "$5"
+        ;;
+      renew)
         if [ "$#" -ne 4 ]; then
           usage
           exit "$EX_USAGE"
         fi
 
-        issue_openvpn_server "$2" "$3" "$4"
+        renew_identity "$2" "$3" "$4"
         ;;
-      issue-openvpn-client)
+      rotate)
         if [ "$#" -ne 4 ]; then
           usage
           exit "$EX_USAGE"
         fi
 
-        issue_openvpn_client "$2" "$3" "$4"
+        rotate_identity "$2" "$3" "$4"
         ;;
-      renew-openvpn-server)
-        if [ "$#" -ne 3 ]; then
-          usage
-          exit "$EX_USAGE"
-        fi
-
-        renew_openvpn_server "$2" "$3"
-        ;;
-      renew-openvpn-client)
-        if [ "$#" -ne 3 ]; then
-          usage
-          exit "$EX_USAGE"
-        fi
-
-        renew_openvpn_client "$2" "$3"
-        ;;
-      rotate-openvpn-server)
-        if [ "$#" -ne 3 ]; then
-          usage
-          exit "$EX_USAGE"
-        fi
-
-        rotate_openvpn_server "$2" "$3"
-        ;;
-      rotate-openvpn-client)
-        if [ "$#" -ne 3 ]; then
-          usage
-          exit "$EX_USAGE"
-        fi
-
-        rotate_openvpn_client "$2" "$3"
-        ;;
-      revoke-openvpn-server)
-        if [ "$#" -ne 3 ]; then
-          usage
-          exit "$EX_USAGE"
-        fi
-
-        revoke_openvpn_server "$2" "$3"
-        ;;
-      revoke-openvpn-client)
-        if [ "$#" -ne 3 ]; then
-          usage
-          exit "$EX_USAGE"
-        fi
-
-        revoke_openvpn_client "$2" "$3"
-        ;;
-      stage-openvpn-server)
+      revoke)
         if [ "$#" -ne 4 ]; then
           usage
           exit "$EX_USAGE"
         fi
 
-        stage_openvpn_server "$2" "$3" "$4"
+        revoke_identity "$2" "$3" "$4"
         ;;
-      stage-openvpn-client)
-        if [ "$#" -ne 4 ]; then
+      stage)
+        if [ "$#" -ne 5 ]; then
           usage
           exit "$EX_USAGE"
         fi
 
-        stage_openvpn_client "$2" "$3" "$4"
+        stage_identity "$2" "$3" "$4" "$5"
         ;;
       bundle-chain)
         if [ "$#" -lt 3 ]; then

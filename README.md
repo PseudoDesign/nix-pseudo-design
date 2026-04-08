@@ -50,11 +50,9 @@ the direct CLI workflow for `pd-ca` lives in
 
 * keep the CA workspace outside Git
 * initialize a root and intermediate once
-* issue or revoke OpenVPN server and client identities with `nix run .#pd-ca -- ...`
-* renew identities in place, or rotate them with revocation and history tracking
+* issue, renew, rotate, revoke, or stage OpenVPN identities with `nix run .#pd-ca -- <verb> <profile> ...`
 * keep endpoint-local OpenVPN key state with `nix run .#pd-openvpn-identity -- ...`
 * generate the shared `tls-crypt` key once with `nix run .#pd-openvpn-generate-tls-crypt-key -- ...`
-* stage per-host OpenVPN material with `stage-openvpn-server` or `stage-openvpn-client`
 * either install a staged public tree at runtime with `pki.install.sourceDir`, `pki.install.identityKeySourceFile`, and optional `pki.install.tlsCryptSourceFile`, or point the modules at `pki.bundleDir` and `pki.identityDir` directly
 
 ## LUKS Filesystem

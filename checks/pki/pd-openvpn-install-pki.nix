@@ -27,12 +27,12 @@ pkgs.runCommand "pd-openvpn-install-pki-check" {
   # Produce staged public trees plus separate private keys for both roles.
   pd-ca init-root-ca "$workspace" "pd-openvpn-install-pki Test Root CA"
   pd-ca init-intermediate-ca "$workspace" "pd-openvpn-install-pki Test Intermediate CA"
-  pd-ca issue-openvpn-server "$workspace" server "pd-openvpn-install-server"
-  pd-ca issue-openvpn-server "$workspace" other "pd-openvpn-install-other-server"
-  pd-ca issue-openvpn-client "$workspace" client "pd-openvpn-install-client"
-  pd-ca issue-openvpn-client "$workspace" other "pd-openvpn-install-other"
-  pd-ca stage-openvpn-server "$workspace" server "$staged_server_dir"
-  pd-ca stage-openvpn-client "$workspace" client "$staged_client_dir"
+  pd-ca issue openvpn-server "$workspace" server "pd-openvpn-install-server"
+  pd-ca issue openvpn-server "$workspace" other "pd-openvpn-install-other-server"
+  pd-ca issue openvpn-client "$workspace" client "pd-openvpn-install-client"
+  pd-ca issue openvpn-client "$workspace" other "pd-openvpn-install-other"
+  pd-ca stage openvpn-server "$workspace" server "$staged_server_dir"
+  pd-ca stage openvpn-client "$workspace" client "$staged_client_dir"
 
   printf '%s\n' "test tls crypt key" > "$TMPDIR/tls-crypt.key"
 

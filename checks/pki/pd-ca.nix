@@ -23,14 +23,14 @@ pkgs.runCommand "pd-ca-check" { nativeBuildInputs = [ pkgs.gnugrep pkgs.openssl 
   # Build a CA workspace and issue one server plus one client identity.
   pd-ca init-root-ca "$workspace" "pseudo.design Test Root CA"
   pd-ca init-intermediate-ca "$workspace" "pseudo.design Test Intermediate CA"
-  pd-ca issue-openvpn-server "$workspace" server "pd-ca-test-server"
-  pd-ca issue-openvpn-client "$workspace" client "pd-ca-test-client"
+  pd-ca issue openvpn-server "$workspace" server "pd-ca-test-server"
+  pd-ca issue openvpn-client "$workspace" client "pd-ca-test-client"
 
   # Renew the server in place and rotate the client through revocation/history.
   old_server_serial="$(openssl x509 -in "$server_dir/server.crt" -noout -serial | cut -d= -f2)"
   old_client_serial="$(openssl x509 -in "$client_dir/client.crt" -noout -serial | cut -d= -f2)"
-  pd-ca renew-openvpn-server "$workspace" server
-  pd-ca rotate-openvpn-client "$workspace" client
+  pd-ca renew openvpn-server "$workspace" server
+  pd-ca rotate openvpn-client "$workspace" client
   new_server_serial="$(openssl x509 -in "$server_dir/server.crt" -noout -serial | cut -d= -f2)"
   new_client_serial="$(openssl x509 -in "$client_dir/client.crt" -noout -serial | cut -d= -f2)"
   [ "$old_server_serial" != "$new_server_serial" ]
@@ -50,8 +50,8 @@ pkgs.runCommand "pd-ca-check" { nativeBuildInputs = [ pkgs.gnugrep pkgs.openssl 
   archived_client_dir="$1"
 
   # Stage public-consumer trees for the server and client outputs.
-  pd-ca stage-openvpn-server "$workspace" server "$staged_server_dir"
-  pd-ca stage-openvpn-client "$workspace" client "$staged_client_dir"
+  pd-ca stage openvpn-server "$workspace" server "$staged_server_dir"
+  pd-ca stage openvpn-client "$workspace" client "$staged_client_dir"
 
   # Verify trust and revocation behavior for current, archived, and staged certs.
   openssl verify -CAfile "$bundle_file" "$server_dir/server.crt" | grep -F "$server_dir/server.crt: OK"

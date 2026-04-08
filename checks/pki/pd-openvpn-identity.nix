@@ -69,10 +69,10 @@ EOF
   # Prepare a CA workspace with one server and one client identity to import.
   pd-ca init-root-ca "$workspace" "pd-openvpn-identity Test Root CA"
   pd-ca init-intermediate-ca "$workspace" "pd-openvpn-identity Test Intermediate CA"
-  pd-ca issue-openvpn-server "$workspace" server "pd-openvpn-identity-server"
-  pd-ca issue-openvpn-client "$workspace" client "pd-openvpn-identity-client"
-  pd-ca stage-openvpn-server "$workspace" server "$staged_server_dir"
-  pd-ca stage-openvpn-client "$workspace" client "$staged_client_dir"
+  pd-ca issue openvpn-server "$workspace" server "pd-openvpn-identity-server"
+  pd-ca issue openvpn-client "$workspace" client "pd-openvpn-identity-client"
+  pd-ca stage openvpn-server "$workspace" server "$staged_server_dir"
+  pd-ca stage openvpn-client "$workspace" client "$staged_client_dir"
 
   # Import an existing issued key plus staged certificate bundle into local state.
   pd-openvpn-identity import-active \
