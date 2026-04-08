@@ -27,6 +27,7 @@
       overlay = final: prev: {
         pdCa = final.callPackage ./packages/pki/pd-ca.nix { };
         pdOpenvpnGenerateTlsCryptKey = final.callPackage ./packages/pki/pd-openvpn-generate-tls-crypt-key.nix { };
+        pdOpenvpnIdentity = final.callPackage ./packages/pki/pd-openvpn-identity.nix { };
         pdOpenvpnInstallPki = final.callPackage ./packages/pki/pd-openvpn-install-pki.nix { };
         rpi-otp-private-key = final.callPackage ./packages/rpi-otp-private-key.nix { };
         rpi-otp-derived-key = final.callPackage ./packages/rpi-otp-derived-key.nix { };
@@ -95,6 +96,7 @@
           default = pkgs.rpi-otp-derived-key;
           "pd-ca" = pkgs.pdCa;
           "pd-openvpn-generate-tls-crypt-key" = pkgs.pdOpenvpnGenerateTlsCryptKey;
+          "pd-openvpn-identity" = pkgs.pdOpenvpnIdentity;
           "pd-openvpn-install-pki" = pkgs.pdOpenvpnInstallPki;
           "rpi-otp-private-key" = pkgs.rpi-otp-private-key;
           "rpi-otp-derived-key" = pkgs.rpi-otp-derived-key;

@@ -176,7 +176,46 @@ stage/adam-laptop/
   issued/openvpn/clients/adam-laptop/
 ```
 
-This is the layout the OpenVPN NixOS modules consume directly.
+The staged tree contains only public CA and certificate material. It does not
+include `<name>.key`.
+
+This is the public side of the layout the OpenVPN NixOS modules consume.
+
+## Endpoint-Local Identity State
+
+Use `pd-openvpn-identity` on the endpoint that owns the OpenVPN private key.
+The helper keeps endpoint-local `active/`, `pending/`, and `history/`
+directories outside the CA workspace.
+
+A transitional import flow looks like:
+
+```bash
+export PD_OPENVPN_IDENTITIES="$HOME/.local/share/pseudo-design/openvpn/identities"
+install -d -m 0700 "$PD_OPENVPN_IDENTITIES"
+
+nix run .#pd-openvpn-identity -- import-active \
+  "$PD_OPENVPN_IDENTITIES/adam-laptop" \
+  "/var/lib/pseudo-design/private/adam-laptop.key" \
+  "$PWD/stage/adam-laptop/issued/openvpn/clients/adam-laptop"
+```
+
+That creates an endpoint-local state tree such as:
+
+```text
+$PD_OPENVPN_IDENTITIES/adam-laptop/
+  active/
+    adam-laptop.key
+    adam-laptop.crt
+    ca-chain.crt
+    full-chain.crt
+  pending/
+  history/
+```
+
+`init-server`, `init-client`, `prepare-server-rekey`, and
+`prepare-client-rekey` are available for the future CSR-driven flow. Today, the
+important operational point is that the endpoint key should come from local
+state rather than from the staged `pd-ca` tree.
 
 ## Generate the Shared tls-crypt Key
 
@@ -204,6 +243,7 @@ Server example:
     clientToClient = true;
     pki.install = {
       sourceDir = "/var/lib/pseudo-design/stage/ace";
+      identityKeySourceFile = "/var/lib/pseudo-design/openvpn/identities/ace/active/ace.key";
       tlsCryptSourceFile = "/var/lib/pseudo-design/openvpn/tls-crypt.key";
     };
   };
@@ -219,6 +259,7 @@ Client example:
     remoteHost = "vpn.pseudo.design";
     pki.install = {
       sourceDir = "/var/lib/pseudo-design/stage/adam-laptop";
+      identityKeySourceFile = "/var/lib/pseudo-design/openvpn/identities/adam-laptop/active/adam-laptop.key";
       tlsCryptSourceFile = "/var/lib/pseudo-design/openvpn/tls-crypt.key";
     };
     verifyX509Name = "vpn.pseudo.design";
@@ -227,6 +268,9 @@ Client example:
 ```
 
 With the default settings, the module installs the staged tree into `/run/secrets/openvpn/<instanceName>` before each `openvpn-<instanceName>.service` start and derives `pki.bundleDir` plus `pki.identityDir` from that runtime location.
+
+`pki.install.identityKeySourceFile` is required for install mode and is copied
+into the installed identity directory as `<name>.key`.
 
 If `pki.install.tlsCryptSourceFile` is set, the module also copies that shared key into the same runtime directory and defaults `tlsCryptKeyFile` to `/run/secrets/openvpn/<instanceName>/tls-crypt.key`. The staged `pd-ca` tree itself still contains only CA and certificate material.
 
@@ -244,8 +288,9 @@ Server example:
     enable = true;
     vpnSubnet = "10.8.0.0";
     clientToClient = true;
-    pki.bundleDir = "/run/secrets/openvpn/bundles";
-    pki.identityDir = "/run/secrets/openvpn/issued/openvpn/servers/ace";
+    pki.bundleDir = "/var/lib/pseudo-design/pki/bundles";
+    pki.identityDir = "/var/lib/pseudo-design/openvpn/identities/ace/active";
+    pki.identityName = "ace";
     tlsCryptKeyFile = "/run/secrets/openvpn/tls-crypt.key";
   };
 }
@@ -258,15 +303,18 @@ Client example:
   services.pdOpenvpnClient = {
     enable = true;
     remoteHost = "vpn.pseudo.design";
-    pki.bundleDir = "/run/secrets/openvpn/bundles";
-    pki.identityDir = "/run/secrets/openvpn/issued/openvpn/clients/adam-laptop";
+    pki.bundleDir = "/var/lib/pseudo-design/pki/bundles";
+    pki.identityDir = "/var/lib/pseudo-design/openvpn/identities/adam-laptop/active";
+    pki.identityName = "adam-laptop";
     tlsCryptKeyFile = "/run/secrets/openvpn/tls-crypt.key";
     verifyX509Name = "vpn.pseudo.design";
   };
 }
 ```
 
-`pki.identityName` is optional and only needed when the certificate basename does not match the identity directory name.
+`pki.identityName` is optional when the identity directory basename already
+matches the certificate basename. It is required when pointing at an endpoint
+state directory such as `.../active`.
 
 ## What To Treat As Secret
 
@@ -275,6 +323,7 @@ Do not commit these:
 * `authorities/root/ca.key`
 * `authorities/intermediate/ca.key`
 * Any issued `*.key`
+* Any endpoint-local `active/*.key` or `pending/*/*.key`
 * The CA workspace as a whole
 
 Usually safe to distribute to OpenVPN consumers:

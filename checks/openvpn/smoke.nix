@@ -22,8 +22,9 @@ let
 
   serverIp = "192.168.1.1";
   approvedServerStageDir = "${testAssets}/staged/approved/server";
+  approvedServerIdentityKeySourceFile = "${testAssets}/endpoints/approved/servers/server/active/server.key";
   approvedBundleDir = "${approvedServerStageDir}/bundles";
-  rogueIdentityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
+  rogueIdentityDir = "${testAssets}/endpoints/rogue/clients/rogue/active";
   client1VpnIp = "10.8.0.10";
   client2VpnIp = "10.8.0.11";
 
@@ -44,8 +45,10 @@ let
       hostName,
       externalIp,
       identityDir,
+      identityName ? null,
       bundleDir,
       installSourceDir ? null,
+      installIdentityKeySourceFile ? null,
       installTlsCryptSourceFile ? null,
     }:
     { ... }:
@@ -72,6 +75,9 @@ let
                 {
                   sourceDir = installSourceDir;
                 }
+                // lib.optionalAttrs (installIdentityKeySourceFile != null) {
+                  identityKeySourceFile = installIdentityKeySourceFile;
+                }
                 // lib.optionalAttrs (installTlsCryptSourceFile != null) {
                   tlsCryptSourceFile = installTlsCryptSourceFile;
                 };
@@ -81,6 +87,9 @@ let
             }
             // lib.optionalAttrs (identityDir != null) {
               identityDir = identityDir;
+            }
+            // lib.optionalAttrs (identityName != null) {
+              identityName = identityName;
             };
           verifyX509Name = "openvpn-smoke-server";
         }
@@ -117,6 +126,7 @@ testers.runNixOSTest {
           clientToClient = true;
           pki.install = {
             sourceDir = approvedServerStageDir;
+            identityKeySourceFile = approvedServerIdentityKeySourceFile;
             tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
           };
           clientConfigDir = "${testAssets}/ccd";
@@ -132,6 +142,7 @@ testers.runNixOSTest {
       identityDir = null;
       bundleDir = null;
       installSourceDir = "${testAssets}/staged/approved/clients/client1";
+      installIdentityKeySourceFile = "${testAssets}/endpoints/approved/clients/client1/active/client1.key";
       installTlsCryptSourceFile = "${testAssets}/tls-crypt.key";
     };
 
@@ -142,6 +153,7 @@ testers.runNixOSTest {
       identityDir = null;
       bundleDir = null;
       installSourceDir = "${testAssets}/staged/approved/clients/client2";
+      installIdentityKeySourceFile = "${testAssets}/endpoints/approved/clients/client2/active/client2.key";
       installTlsCryptSourceFile = "${testAssets}/tls-crypt.key";
     };
 
@@ -151,6 +163,7 @@ testers.runNixOSTest {
       hostName = "rogue";
       externalIp = "192.168.1.4";
       identityDir = rogueIdentityDir;
+      identityName = "rogue";
       bundleDir = approvedBundleDir;
     };
   };

@@ -40,7 +40,7 @@ $PD_PKI/
 ```
 
 `bundles/` is public-consumer material only. Private keys live under
-`authorities/`, `issued/`, `history/`, or any staged output tree you create.
+`authorities/`, `issued/`, or `history/`.
 
 ## Normal OpenVPN Workflow
 
@@ -179,12 +179,11 @@ stage/adam-laptop/
   issued/openvpn/clients/adam-laptop/
 ```
 
-The staged identity subtree includes a copy of the private key:
+The staged identity subtree is public-only. It contains the leaf certificate,
+chain files, and metadata, but it does not include `<name>.key`.
 
-* `stage/ace/issued/openvpn/servers/ace/ace.key`
-* `stage/adam-laptop/issued/openvpn/clients/adam-laptop/adam-laptop.key`
-
-Treat staged output as secret-bearing material.
+When you install staged material onto an endpoint, provide the private key from
+a separate local source such as endpoint state managed by `pd-openvpn-identity`.
 
 ## Lower-Level CA Primitives
 

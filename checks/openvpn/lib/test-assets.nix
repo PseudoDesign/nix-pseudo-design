@@ -1,4 +1,4 @@
-{ lib, pdCa, runCommand }:
+{ lib, pdCa, pdOpenvpnIdentity, runCommand }:
 {
   name,
   approvedRootCommonName,
@@ -11,7 +11,7 @@
   revokedApprovedClients ? [ ],
   ccdAssignments ? { },
 }:
-runCommand "${name}-assets" { nativeBuildInputs = [ pdCa ]; } ''
+runCommand "${name}-assets" { nativeBuildInputs = [ pdCa pdOpenvpnIdentity ]; } ''
   set -euo pipefail
 
   approved_workspace="$out/approved"
@@ -60,6 +60,31 @@ runCommand "${name}-assets" { nativeBuildInputs = [ pdCa ]; } ''
     clientName:
     ''
       pd-ca stage-openvpn-client "$rogue_workspace" ${lib.escapeShellArg clientName} "$out/staged/rogue/clients/${clientName}"
+    ''
+  ) rogueClients}
+
+  pd-openvpn-identity import-active \
+    "$out/endpoints/approved/servers/server" \
+    "$approved_workspace/issued/openvpn/servers/server/server.key" \
+    "$out/staged/approved/server/issued/openvpn/servers/server"
+
+  ${lib.concatMapStringsSep "\n" (
+    clientName:
+    ''
+      pd-openvpn-identity import-active \
+        "$out/endpoints/approved/clients/${clientName}" \
+        "$approved_workspace/issued/openvpn/clients/${clientName}/${clientName}.key" \
+        "$out/staged/approved/clients/${clientName}/issued/openvpn/clients/${clientName}"
+    ''
+  ) approvedClients}
+
+  ${lib.concatMapStringsSep "\n" (
+    clientName:
+    ''
+      pd-openvpn-identity import-active \
+        "$out/endpoints/rogue/clients/${clientName}" \
+        "$rogue_workspace/issued/openvpn/clients/${clientName}/${clientName}.key" \
+        "$out/staged/rogue/clients/${clientName}/issued/openvpn/clients/${clientName}"
     ''
   ) rogueClients}
 

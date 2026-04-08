@@ -292,14 +292,12 @@ EOF
       local out_dir="$3"
 
       require_file "$source_dir/$name.crt"
-      require_file "$source_dir/$name.key"
       require_file "$source_dir/ca-chain.crt"
       require_file "$source_dir/full-chain.crt"
 
       mkdir -p "$out_dir"
 
       cp "$source_dir/$name.crt" "$out_dir/$name.crt"
-      cp "$source_dir/$name.key" "$out_dir/$name.key"
       cp "$source_dir/ca-chain.crt" "$out_dir/ca-chain.crt"
       cp "$source_dir/full-chain.crt" "$out_dir/full-chain.crt"
       copy_if_present "$source_dir/common-name" "$out_dir/common-name"

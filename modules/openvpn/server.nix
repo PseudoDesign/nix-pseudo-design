@@ -154,6 +154,13 @@ in
       description = "Runtime directory where pki.install.sourceDir is installed.";
     };
 
+    pki.install.identityKeySourceFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "/var/lib/pseudo-design/openvpn/identities/ace/active/ace.key";
+      description = "Private key copied into the installed identity directory before OpenVPN starts.";
+    };
+
     pki.install.tlsCryptSourceFile = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
@@ -288,6 +295,14 @@ in
             message = "services.pdOpenvpnServer.pki.install.sourceDir requires an identity name that can be inferred from pki.identityName or the sourceDir basename.";
           }
           {
+            assertion = cfg.pki.install.identityKeySourceFile == null || cfg.pki.install.sourceDir != null;
+            message = "services.pdOpenvpnServer.pki.install.identityKeySourceFile requires services.pdOpenvpnServer.pki.install.sourceDir.";
+          }
+          {
+            assertion = cfg.pki.install.sourceDir == null || cfg.pki.install.identityKeySourceFile != null;
+            message = "services.pdOpenvpnServer.pki.install.sourceDir requires services.pdOpenvpnServer.pki.install.identityKeySourceFile.";
+          }
+          {
             assertion = cfg.pki.install.tlsCryptSourceFile == null || cfg.pki.install.sourceDir != null;
             message = "services.pdOpenvpnServer.pki.install.tlsCryptSourceFile requires services.pdOpenvpnServer.pki.install.sourceDir.";
           }
@@ -324,7 +339,8 @@ in
           script = ''
             '${installPkiExe}' \
               '${cfg.pki.install.sourceDir}' \
-              '${cfg.pki.install.targetDir}'${lib.optionalString (cfg.pki.install.tlsCryptSourceFile != null) " \\\n              '${cfg.pki.install.tlsCryptSourceFile}'"}
+              '${cfg.pki.install.targetDir}' \
+              '${cfg.pki.install.identityKeySourceFile}'${lib.optionalString (cfg.pki.install.tlsCryptSourceFile != null) " \\\n              '${cfg.pki.install.tlsCryptSourceFile}'"}
           '';
         };
 

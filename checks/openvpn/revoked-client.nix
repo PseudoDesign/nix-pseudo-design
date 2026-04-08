@@ -25,6 +25,7 @@ let
   activeVpnIp = "10.10.0.10";
   statusFile = "/run/openvpn-revoked/status.log";
   approvedServerStageDir = "${testAssets}/staged/approved/server";
+  approvedServerIdentityKeySourceFile = "${testAssets}/endpoints/approved/servers/server/active/server.key";
 
   mkExternalInterface =
     address:
@@ -63,6 +64,7 @@ let
         remoteHost = serverIp;
         pki.install = {
           sourceDir = "${testAssets}/staged/approved/clients/${certName}";
+          identityKeySourceFile = "${testAssets}/endpoints/approved/clients/${certName}/active/${certName}.key";
           tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
         };
         verifyX509Name = "openvpn-revoked-server";
@@ -95,6 +97,7 @@ testers.runNixOSTest {
           inherit vpnSubnet;
           pki.install = {
             sourceDir = approvedServerStageDir;
+            identityKeySourceFile = approvedServerIdentityKeySourceFile;
             tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
           };
           clientConfigDir = "${testAssets}/ccd";

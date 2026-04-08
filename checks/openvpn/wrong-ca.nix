@@ -22,6 +22,7 @@ let
   approvedVpnIp = "10.9.0.10";
   statusFile = "/run/openvpn-wrong-ca/status.log";
   approvedServerStageDir = "${testAssets}/staged/approved/server";
+  approvedServerIdentityKeySourceFile = "${testAssets}/endpoints/approved/servers/server/active/server.key";
   approvedBundleDir = "${approvedServerStageDir}/bundles";
 
   mkExternalInterface =
@@ -41,8 +42,10 @@ let
       hostName,
       externalIp,
       identityDir,
+      identityName ? null,
       bundleDir,
       installSourceDir ? null,
+      installIdentityKeySourceFile ? null,
       installTlsCryptSourceFile ? null,
     }:
     { ... }:
@@ -69,6 +72,9 @@ let
                 {
                   sourceDir = installSourceDir;
                 }
+                // lib.optionalAttrs (installIdentityKeySourceFile != null) {
+                  identityKeySourceFile = installIdentityKeySourceFile;
+                }
                 // lib.optionalAttrs (installTlsCryptSourceFile != null) {
                   tlsCryptSourceFile = installTlsCryptSourceFile;
                 };
@@ -78,6 +84,9 @@ let
             }
             // lib.optionalAttrs (identityDir != null) {
               identityDir = identityDir;
+            }
+            // lib.optionalAttrs (identityName != null) {
+              identityName = identityName;
             };
           verifyX509Name = "openvpn-wrong-ca-server";
         }
@@ -113,6 +122,7 @@ testers.runNixOSTest {
           inherit vpnSubnet;
           pki.install = {
             sourceDir = approvedServerStageDir;
+            identityKeySourceFile = approvedServerIdentityKeySourceFile;
             tlsCryptSourceFile = "${testAssets}/tls-crypt.key";
           };
           clientConfigDir = "${testAssets}/ccd";
@@ -128,6 +138,7 @@ testers.runNixOSTest {
       identityDir = null;
       bundleDir = null;
       installSourceDir = "${testAssets}/staged/approved/clients/approved";
+      installIdentityKeySourceFile = "${testAssets}/endpoints/approved/clients/approved/active/approved.key";
       installTlsCryptSourceFile = "${testAssets}/tls-crypt.key";
     };
 
@@ -136,7 +147,8 @@ testers.runNixOSTest {
     rogue = mkClientNode {
       hostName = "rogue";
       externalIp = "192.168.2.3";
-      identityDir = "${testAssets}/staged/rogue/clients/rogue/issued/openvpn/clients/rogue";
+      identityDir = "${testAssets}/endpoints/rogue/clients/rogue/active";
+      identityName = "rogue";
       bundleDir = approvedBundleDir;
     };
   };
