@@ -82,6 +82,9 @@
     nixosModules.rpi-otp-luks-key = ./modules/rpi-otp-luks-key.nix;
     nixosModules.rpi-installer-disk = ./modules/rpi-installer-disk.nix;
     nixosModules.pd-installer = ./modules/pd-installer.nix;
+    nixosModules.pd-openvpn-root-ca = ./modules/pd-openvpn-root-ca.nix;
+    nixosModules.pd-openvpn-intermediate-ca = ./modules/pd-openvpn-intermediate-ca.nix;
+    nixosModules.pd-openvpn-leaf = ./modules/pd-openvpn-leaf.nix;
 
     nixosConfigurations = {
       # "'ace' is a Raspberry Pi 5 in Adam's house."
