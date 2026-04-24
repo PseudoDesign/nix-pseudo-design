@@ -1,4 +1,4 @@
-{ lib, pkgs, testers }:
+{ lib, nixos-raspberrypi, pkgs, testers }:
 let
   mockPrivateKeyPackage = pkgs.writeShellApplication {
     name = "rpi-otp-private-key";
@@ -49,15 +49,43 @@ let
     name = "rpi-otp-derived-key";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
-      salt="$1"
+      format=""
+      saltFile=""
       secretFile=/run/mock/otp.secret
+
+      while [ "$#" -gt 0 ]; do
+        case "$1" in
+          --format)
+            format="$2"
+            shift 2
+            ;;
+          --salt-file)
+            saltFile="$2"
+            shift 2
+            ;;
+          *)
+            echo "Unexpected arguments: $*" >&2
+            exit 64
+            ;;
+        esac
+      done
+
+      [ "$format" = "hex" ] || {
+        echo "Unexpected format: $format" >&2
+        exit 64
+      }
+
+      [ -r "$saltFile" ] || {
+        echo "Missing salt file: $saltFile" >&2
+        exit 1
+      }
 
       if [ ! -s "$secretFile" ]; then
         echo "OTP private key is missing." >&2
         exit 1
       fi
 
-      printf '%s\n' "derived:''${salt}:$(cat "$secretFile")"
+      printf '%s\n' "derived:$format:$(cat "$saltFile"):$(cat "$secretFile")"
     '';
   };
 
@@ -88,6 +116,7 @@ let
       })
     ];
   };
+  testSaltFile = pkgs.writeText "rpi-otp-derived-key-test-salt" "test-salt";
 in
 testers.runNixOSTest {
   name = "pd-nix-installer worflow";
@@ -104,17 +133,21 @@ testers.runNixOSTest {
       };
 
       imports = [
-        ../modules/rpi-otp-luks-key.nix
+        nixos-raspberrypi.nixosModules.rpi-otp-derived-key
         ../modules/pd-installer.nix
       ];
 
       nixpkgs.pkgs = lib.mkForce mockPkgs;
 
-      services.rpiOtpLuksKey = {
-        enable = true;
+      services.rpiOtpDerivedKey = {
         package = mockDerivedKeyPackage;
-        salt = "test-salt";
-        keyFile = "/run/secrets/luks.key";
+        generateSalt = false;
+        saltFile = "/run/secrets/rpi-otp-derived-key-luks.salt";
+        initrdSaltSource = testSaltFile;
+        secrets.luks = {
+          format = "hex";
+          path = "/run/secrets/luks.key";
+        };
       };
 
       services.pdInstaller = {
@@ -124,6 +157,7 @@ testers.runNixOSTest {
         provisionPackage = mockProvisionPackage;
       };
 
+      boot.initrd.systemd.enable = true;
       environment.systemPackages = [ mockPkgs.util-linux ];
       system.stateVersion = "25.11";
     };
@@ -140,13 +174,13 @@ testers.runNixOSTest {
     installer.succeed("printf 'YES\\n' | script -qefc 'pd-nix-install ace' /dev/null")
 
     installer.succeed("[ \"$(cat /run/mock/otp.secret)\" = \"mock-secret\" ]")
-    installer.succeed("[ \"$(cat /run/secrets/luks.key)\" = \"derived:test-salt:mock-secret\" ]")
+    installer.succeed("[ \"$(cat /run/secrets/luks.key)\" = \"derived:hex:test-salt:mock-secret\" ]")
     installer.succeed("test -f /run/mock/disko-install.ran")
     installer.succeed("grep -F -- '--mode format --disk main /tmp/mockdisk' /run/mock/disko-install.args")
     installer.succeed("grep -F -- '#ace' /run/mock/disko-install.args")
 
     installer.succeed("rm /run/secrets/luks.key")
     installer.succeed("pd-luks-key-setup")
-    installer.succeed("[ \"$(cat /run/secrets/luks.key)\" = \"derived:test-salt:mock-secret\" ]")
+    installer.succeed("[ \"$(cat /run/secrets/luks.key)\" = \"derived:hex:test-salt:mock-secret\" ]")
   '';
 }

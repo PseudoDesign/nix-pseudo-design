@@ -1,16 +1,51 @@
 { config, disko, lib, pkgs, ... }:
 let
   cfg = config.services.pdInstaller;
-  keyCfg = config.services.rpiOtpLuksKey;
-  # Build the shared key-writer around the currently configured derivation helper.
-  writeKeyPackage = pkgs.callPackage ../packages/rpi-otp-write-derived-key.nix {
-    derivePackage = keyCfg.package;
+  keyCfg = config.services.rpiOtpDerivedKey;
+  luksSecret = keyCfg.secrets.luks or null;
+  luksKeyFile = if luksSecret != null then luksSecret.path else "/run/secrets/luks.key";
+  saltSource = if keyCfg.initrdSaltSource != null then keyCfg.initrdSaltSource else keyCfg.saltFile;
+  defaultProvisionPackage = pkgs.writeShellApplication {
+    name = "pd-rpi-otp-provision-private-key";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.gawk
+      pkgs.openssl
+      pkgs.rpi-otp-private-key
+    ];
+    text = ''
+      tmpKey="$(${pkgs.coreutils}/bin/mktemp)"
+      cleanup() {
+        ${pkgs.coreutils}/bin/rm -f "$tmpKey"
+      }
+      trap cleanup EXIT
+
+      ${pkgs.openssl}/bin/openssl ecparam \
+        -name prime256v1 \
+        -genkey \
+        -noout \
+        -out "$tmpKey"
+
+      privateKeyHex="$(
+        ${pkgs.openssl}/bin/openssl ec -in "$tmpKey" -text -noout \
+          | ${pkgs.gawk}/bin/awk '/priv:/{flag=1; next} /pub:/{flag=0} flag' \
+          | ${pkgs.coreutils}/bin/tr -d ' \n:' \
+          | ${pkgs.coreutils}/bin/head -n1
+      )"
+
+      if [ "''${#privateKeyHex}" -ne 64 ]; then
+        echo "Failed to generate a valid P-256 OTP private key." >&2
+        exit 2
+      fi
+
+      exec ${lib.getExe pkgs.rpi-otp-private-key} -w "$privateKeyHex"
+    '';
   };
   # Expose manual key setup as a standalone command for debugging/recovery.
   setupCommand = pkgs.callPackage ../packages/pd-luks-key-setup.nix {
-    inherit writeKeyPackage;
-    salt = keyCfg.salt;
-    keyFile = keyCfg.keyFile;
+    derivePackage = keyCfg.package;
+    inherit saltSource;
+    keyFile = luksKeyFile;
   };
   # Keep the interactive installer command in a package; this module just injects
   # the host-specific configuration values it should operate with.
@@ -21,7 +56,7 @@ let
     flakePath = cfg.flake;
     nixosConfiguration = cfg.nixosConfiguration;
     disk = cfg.disk;
-    keyFile = keyCfg.keyFile;
+    keyFile = luksKeyFile;
   };
 in
 {
@@ -49,13 +84,23 @@ in
 
     provisionPackage = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.rpi-otp-provision-private-key;
-      defaultText = lib.literalExpression "pkgs.rpi-otp-provision-private-key";
+      default = defaultProvisionPackage;
       description = "Package used to provision the Raspberry Pi OTP private key if it is unset.";
     };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = luksSecret != null;
+        message = "services.pdInstaller.enable requires services.rpiOtpDerivedKey.secrets.luks to be configured.";
+      }
+      {
+        assertion = luksSecret == null || luksSecret.format == "hex";
+        message = "services.pdInstaller.enable requires services.rpiOtpDerivedKey.secrets.luks.format = \"hex\".";
+      }
+    ];
+
     # Installing the commands into PATH is the whole point of this module now.
     environment.systemPackages = [
       installCommand

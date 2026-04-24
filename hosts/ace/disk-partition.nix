@@ -3,7 +3,6 @@
   imports = [
     disko.nixosModules.disko
   ];
-  services.rpiOtpLuksKey.enable = true;
   disko.devices = {
     disk = {
       main = {

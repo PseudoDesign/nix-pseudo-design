@@ -1,20 +1,22 @@
 {
   writeShellApplication,
   lib,
+  coreutils,
   rpi-otp-private-key,
-  writeKeyPackage,
-  salt,
+  derivePackage,
+  saltSource,
   keyFile,
 }:
 let
-  # Reuse the underlying OTP check and writer helpers so this command stays thin.
   privateKeyCheckExe = lib.getExe rpi-otp-private-key;
-  writeKeyExe = lib.getExe writeKeyPackage;
+  deriveKeyExe = lib.getExe derivePackage;
 in
 writeShellApplication {
   name = "pd-luks-key-setup";
+  runtimeInputs = [ coreutils ];
   text = ''
     readonly EX_NOPERM=77
+    readonly EX_SOFTWARE=70
 
     # This helper is intended for explicit root-driven recovery/debug flows.
     if [ "$EUID" -ne 0 ]; then
@@ -28,8 +30,27 @@ writeShellApplication {
       exit 1
     fi
 
-    # Delegate the actual atomic write to the shared helper used by initrd too.
-    exec ${writeKeyExe} '${salt}' '${keyFile}'
+    if [ ! -r '${saltSource}' ]; then
+      echo "Salt source '${saltSource}' is not readable." >&2
+      exit "$EX_SOFTWARE"
+    fi
+
+    keyDir="$(${coreutils}/bin/dirname '${keyFile}')"
+    ${coreutils}/bin/install -d -m 0700 "$keyDir"
+    tmpKeyFile="$(${coreutils}/bin/mktemp "$keyDir/.luks.key.XXXXXX")"
+    cleanup() {
+      ${coreutils}/bin/rm -f "$tmpKeyFile"
+    }
+    trap cleanup EXIT
+
+    ${deriveKeyExe} \
+      --format hex \
+      --salt-file '${saltSource}' \
+      > "$tmpKeyFile"
+
+    ${coreutils}/bin/chmod 600 "$tmpKeyFile"
+    ${coreutils}/bin/mv -f "$tmpKeyFile" '${keyFile}'
+    trap - EXIT
   '';
 
   meta = {
