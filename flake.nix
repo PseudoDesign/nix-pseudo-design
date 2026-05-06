@@ -13,8 +13,19 @@
   };
 
   outputs =
-    { self, disko, nixos-raspberrypi, ... }:
+    {
+      self,
+      disko,
+      nixos-raspberrypi,
+      nixpkgs,
+      ...
+    }:
     let
+      forAllSystems = nixpkgs.lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
       specialArgs = {
         inherit disko nixos-raspberrypi;
       };
@@ -32,6 +43,21 @@
         };
     in
     {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          default = pkgs.mkShell {
+            packages = [
+              pkgs.nixos-anywhere
+              pkgs.openssh
+            ];
+          };
+        }
+      );
+
       nixosModules.rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
 
       nixosConfigurations = {

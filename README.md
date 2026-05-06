@@ -66,6 +66,13 @@ unset OTP_KEYDIR
 Install one of the hosts with `nixos-anywhere`:
 
 ```shell
+nix develop --command nixos-anywhere --flake .#ace root@nixos-installer.local
+nix develop --command nixos-anywhere --flake .#mako root@nixos-installer.local
+```
+
+Or run `nixos-anywhere` directly from its upstream flake:
+
+```shell
 nix run github:nix-community/nixos-anywhere -- --flake .#ace root@nixos-installer.local
 nix run github:nix-community/nixos-anywhere -- --flake .#mako root@nixos-installer.local
 ```
