@@ -20,6 +20,7 @@
 
     virtualHosts."pseudo.design" = {
       root = ./site;
+      serverAliases = [ "www.pseudo.design" ];
       enableACME = true;
       forceSSL = true;
 
