@@ -36,6 +36,8 @@
           inherit specialArgs;
           modules = [
             self.nixosModules.rpi5-luks-hardware
+            self.nixosModules.pseudo-design-device-identity
+            self.nixosModules.pseudo-design-auth-server
             ./modules/profiles/base-rpi.nix
             ./modules/users/adam.nix
             hostModule
@@ -43,6 +45,13 @@
         };
     in
     {
+      checks = forAllSystems (
+        system:
+        import ./checks/default.nix {
+          inherit nixpkgs self system;
+        }
+      );
+
       devShells = forAllSystems (
         system:
         let
@@ -53,12 +62,17 @@
             packages = [
               pkgs.nixos-anywhere
               pkgs.openssh
+              pkgs.step-cli
             ];
           };
         }
       );
 
-      nixosModules.rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
+      nixosModules = {
+        rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
+        pseudo-design-auth-server = ./modules/services/pseudo-design-auth-server.nix;
+        pseudo-design-device-identity = ./modules/services/pseudo-design-device-identity.nix;
+      };
 
       nixosConfigurations = {
         ace = mkRpi5Host ./hosts/ace;

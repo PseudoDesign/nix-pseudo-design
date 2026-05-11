@@ -10,6 +10,8 @@
 
   networking.firewall.enable = true;
 
+  services.pseudoDesign.deviceIdentity.enable = true;
+
   security.sudo.wheelNeedsPassword = false;
 
   services.openssh = {

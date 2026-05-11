@@ -12,6 +12,14 @@
     defaults.email = "admin@pseudo.design";
   };
 
+  services.pseudoDesign.authServer = {
+    enable = true;
+    # Fill this with the public half of the offline-generated JWK provisioner:
+    #
+    # enrollmentProvisionerPublicKey =
+    #   builtins.fromJSON (builtins.readFile ./device-enrollment.pub.json);
+  };
+
   services.nginx = {
     enable = true;
     recommendedGzipSettings = true;
