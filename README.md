@@ -1,16 +1,17 @@
 # nix-pseudo-design
 
-NixOS configurations for the `ace` and `mako` Raspberry Pi 5 hosts.
+NixOS configurations for the `ace`, `mako`, and `rootca` Raspberry Pi 5 hosts.
 
-Both systems share a generic Raspberry Pi 5 hardware configuration that boots
-from NVMe and unlocks a LUKS encrypted root filesystem with a key derived from
-the Raspberry Pi OTP private key.
+All three systems share a generic Raspberry Pi 5 hardware configuration that
+boots from NVMe and unlocks a LUKS encrypted root filesystem with a key derived
+from the Raspberry Pi OTP private key.
 
 ## Systems
 
 ```shell
 nix eval --raw .#nixosConfigurations.ace.config.networking.hostName
 nix eval --raw .#nixosConfigurations.mako.config.networking.hostName
+nix eval --raw .#nixosConfigurations.rootca.config.networking.hostName
 ```
 
 ## Installation
@@ -68,6 +69,7 @@ Install one of the hosts with `nixos-anywhere`:
 ```shell
 nix develop --command nixos-anywhere --flake .#ace root@nixos-installer.local
 nix develop --command nixos-anywhere --flake .#mako root@nixos-installer.local
+nix develop --command nixos-anywhere --flake .#rootca root@nixos-installer.local
 ```
 
 Or run `nixos-anywhere` directly from its upstream flake:
@@ -75,6 +77,7 @@ Or run `nixos-anywhere` directly from its upstream flake:
 ```shell
 nix run github:nix-community/nixos-anywhere -- --flake .#ace root@nixos-installer.local
 nix run github:nix-community/nixos-anywhere -- --flake .#mako root@nixos-installer.local
+nix run github:nix-community/nixos-anywhere -- --flake .#rootca root@nixos-installer.local
 ```
 
 During install, the disko configuration stages a per-install random salt and
@@ -93,58 +96,72 @@ gateway:
   local P-256 key, create a CSR, enroll with a one-time token, and renew the
   certificate automatically.
 
-The CA private material and enrollment signing key are intentionally not stored
-in this repository.
+The offline `rootca` host stores the CA private material and enrollment signing
+key under `/var/lib/pseudo-design/offline-ca`. Private material is intentionally
+not stored in this repository or the Nix store. The non-secret CA workflow and
+public artifacts live under `packages/pseudo-design-ca-tools/` and `ca/public/`.
 
 See [docs/device-certificate-auth.md](docs/device-certificate-auth.md) for the
 architecture, trust model, runtime files, and module-level change summary.
 
 ### Bootstrap the CA
 
-Create the root CA, online intermediate CA, and one-time-token provisioner on an
-offline or otherwise trusted machine:
+Install or build the offline CA host:
 
 ```shell
-mkdir -p pseudo-design-ca
-cd pseudo-design-ca
-umask 077
-
-printf '%s\n' 'replace-with-root-password' > root-password
-printf '%s\n' 'replace-with-intermediate-password' > intermediate-password
-printf '%s\n' 'replace-with-provisioner-password' > provisioner-password
-
-nix develop /path/to/nix-pseudo-design --command step certificate create \
-  "Pseudo Design Root CA" root_ca.crt root_ca.key \
-  --profile root-ca \
-  --kty EC \
-  --curve P-256 \
-  --password-file root-password
-
-nix develop /path/to/nix-pseudo-design --command step certificate create \
-  "Pseudo Design Intermediate CA" intermediate_ca.crt intermediate_ca.key \
-  --profile intermediate-ca \
-  --ca root_ca.crt \
-  --ca-key root_ca.key \
-  --ca-password-file root-password \
-  --password-file intermediate-password \
-  --kty EC \
-  --curve P-256
-
-nix develop /path/to/nix-pseudo-design --command step crypto jwk create \
-  device-enrollment.pub.json device-enrollment.key.json \
-  --kty EC \
-  --crv P-256 \
-  --use sig \
-  --password-file provisioner-password
-
-nix develop /path/to/nix-pseudo-design --command step certificate fingerprint \
-  root_ca.crt > root_ca.fingerprint
+nix build --no-link .#nixosConfigurations.rootca.config.system.build.toplevel
+nix develop --command nixos-anywhere --flake .#rootca root@nixos-installer.local
 ```
+
+On `rootca`, create the root CA, online intermediate CA, and one-time-token
+provisioner in the fixed root-only state directory:
+
+```shell
+sudo pseudo-design-ca-bootstrap
+```
+
+The non-secret CA settings are in
+`packages/pseudo-design-ca-tools/config.sh` and are baked into the installed CA
+commands. Override them in the script before deploying `rootca` if the domain,
+names, or durations ever need to change.
+
+Export artifacts for removable-media transfer:
+
+```shell
+sudo pseudo-design-ca-export
+```
+
+This writes:
+
+- `/var/lib/pseudo-design/offline-ca/export/public/` for commit-safe public
+  artifacts.
+- `/var/lib/pseudo-design/offline-ca/export/mako/` for online CA material to
+  stage onto `mako`.
+
+Install the public artifacts into this repository and commit them:
+
+```shell
+EXPORT_PUBLIC=/path/to/removable-media/public
+nix run .#ca-install-public-artifacts -- "$EXPORT_PUBLIC"
+
+git add ca/public/root_ca.crt \
+  ca/public/root_ca.fingerprint \
+  hosts/mako/device-enrollment.pub.json
+```
+
+Once committed, `hosts/mako/default.nix` automatically configures the public
+enrollment JWK and `modules/profiles/base-rpi.nix` automatically pins the root
+fingerprint for device enrollment.
 
 Copy only the online CA material to `mako`:
 
 ```shell
-scp root_ca.crt intermediate_ca.crt intermediate_ca.key intermediate-password root@mako.local:/root/
+EXPORT_MAKO=/path/to/removable-media/mako
+scp "$EXPORT_MAKO"/root_ca.crt \
+  "$EXPORT_MAKO"/intermediate_ca.crt \
+  "$EXPORT_MAKO"/intermediate_ca.key \
+  "$EXPORT_MAKO"/intermediate-password \
+  root@mako.local:/root/
 ssh root@mako.local
 
 install -d -o step-ca -g step-ca -m 0750 /var/lib/step-ca/certs /var/lib/step-ca/secrets
@@ -158,11 +175,9 @@ rm -f /root/root_ca.crt /root/intermediate_ca.crt /root/intermediate_ca.key /roo
 systemctl restart step-ca.service pseudo-design-auth-ca-bundle.service nginx.service
 ```
 
-Make the public JWK visible to Nix by copying `device-enrollment.pub.json` into
-`hosts/mako/` and enabling the commented
-`services.pseudoDesign.authServer.enrollmentProvisionerPublicKey` line in
-`hosts/mako/default.nix`. The public JWK can be committed; keep
-`device-enrollment.key.json` and `provisioner-password` offline.
+Keep `root_ca.key`, `root-password`, `device-enrollment.key.json`, and
+`provisioner-password` offline. The encrypted intermediate key is online CA
+material and belongs only on `mako`.
 
 ### Enroll a device
 
@@ -171,30 +186,24 @@ Generate a short-lived, identity-bound token for the host you are enrolling:
 ```shell
 HOST=ace
 TOKEN="$(
-  nix develop /path/to/nix-pseudo-design --command step ca token "device:$HOST" \
-    --issuer device-enrollment \
-    --key ./device-enrollment.key.json \
-    --provisioner-password-file ./provisioner-password \
-    --san "$HOST.devices.pseudo.design" \
-    --san "spiffe://pseudo.design/device/$HOST" \
-    --not-after 15m \
-    --ca-url https://ca.pseudo.design:8443 \
-    --root ./root_ca.crt
+  sudo pseudo-design-ca-mint-token "$HOST"
 )"
 ```
 
-Install the token and pinned root fingerprint on the Pi, then start enrollment:
+Install the token on the Pi, then start enrollment:
 
 ```shell
 ssh root@$HOST.local 'install -d -m 0700 /run/keys'
 printf '%s' "$TOKEN" \
   | ssh root@$HOST.local 'install -m 0600 /dev/stdin /run/keys/pseudo-design-device-enrollment-token'
-cat root_ca.fingerprint \
-  | ssh root@$HOST.local 'install -m 0644 /dev/stdin /run/keys/pseudo-design-ca-fingerprint'
 
 ssh root@$HOST.local systemctl start pseudo-design-device-enroll.service
 ssh root@$HOST.local systemctl status pseudo-design-device-renew.timer
 ```
+
+If the deployed host configuration does not yet include
+`ca/public/root_ca.fingerprint`, also copy the exported `root_ca.fingerprint` to
+`/run/keys/pseudo-design-ca-fingerprint` before starting enrollment.
 
 The Pi stores its client key and certificate under
 `/var/lib/pseudo-design/device-identity/`. The enrollment token is removed after

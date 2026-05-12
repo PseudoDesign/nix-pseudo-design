@@ -1,3 +1,8 @@
+{ lib, ... }:
+
+let
+  enrollmentProvisionerPublicKeyFile = ./device-enrollment.pub.json;
+in
 {
   networking = {
     hostName = "mako";
@@ -14,10 +19,9 @@
 
   services.pseudoDesign.authServer = {
     enable = true;
-    # Fill this with the public half of the offline-generated JWK provisioner:
-    #
-    # enrollmentProvisionerPublicKey =
-    #   builtins.fromJSON (builtins.readFile ./device-enrollment.pub.json);
+  } // lib.optionalAttrs (builtins.pathExists enrollmentProvisionerPublicKeyFile) {
+    enrollmentProvisionerPublicKey =
+      builtins.fromJSON (builtins.readFile enrollmentProvisionerPublicKeyFile);
   };
 
   services.nginx = {

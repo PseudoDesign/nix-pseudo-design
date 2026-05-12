@@ -86,6 +86,16 @@ let
   provisioner = builtins.head stepCaSettings.authority.provisioners;
   authVhost = authConfig.services.nginx.virtualHosts.${authServer.authHost};
   authLocation = authVhost.locations."/";
+
+  offlineCaConfig = mkConfig [
+    self.nixosModules.pseudo-design-offline-ca
+    {
+      services.pseudoDesign.offlineCa.enable = true;
+    }
+  ];
+
+  offlineCa = offlineCaConfig.services.pseudoDesign.offlineCa;
+  offlineCaPackageNames = map lib.getName offlineCaConfig.environment.systemPackages;
 in
 {
   pseudo-design-device-identity-module = mkCheck "pseudo-design-device-identity-module" [
@@ -242,6 +252,41 @@ in
     {
       condition = !lib.any (hasInfix "enrollmentProvisionerPublicKey") authConfig.warnings;
       message = "configured public JWK should suppress the enrollment provisioner warning";
+    }
+  ];
+
+  pseudo-design-offline-ca-module = mkCheck "pseudo-design-offline-ca-module" [
+    {
+      condition = offlineCa.enable;
+      message = "offline CA module should be enabled";
+    }
+    {
+      condition = offlineCa.stateDir == "/var/lib/pseudo-design/offline-ca";
+      message = "offline CA state directory should use the fixed default";
+    }
+    {
+      condition = offlineCa.exportDir == "/var/lib/pseudo-design/offline-ca/export";
+      message = "offline CA export directory should default under the state directory";
+    }
+    {
+      condition = lib.elem "d /var/lib/pseudo-design/offline-ca 0700 root root -" offlineCaConfig.systemd.tmpfiles.rules;
+      message = "offline CA state directory should be root-only";
+    }
+    {
+      condition = lib.elem "d /var/lib/pseudo-design/offline-ca/export 0700 root root -" offlineCaConfig.systemd.tmpfiles.rules;
+      message = "offline CA export directory should be root-only";
+    }
+    {
+      condition = lib.elem "pseudo-design-ca-bootstrap" offlineCaPackageNames;
+      message = "offline CA bootstrap command should be installed";
+    }
+    {
+      condition = lib.elem "pseudo-design-ca-export" offlineCaPackageNames;
+      message = "offline CA export command should be installed";
+    }
+    {
+      condition = lib.elem "pseudo-design-ca-mint-token" offlineCaPackageNames;
+      message = "offline CA token command should be installed";
     }
   ];
 }

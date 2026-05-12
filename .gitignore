@@ -1,3 +1,11 @@
 result
 .codex
 secrets/
+ca/private/
+ca/generated/
+root-password
+intermediate-password
+provisioner-password
+root_ca.key
+intermediate_ca.key
+device-enrollment.key.json

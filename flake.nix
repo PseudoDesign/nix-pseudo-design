@@ -30,25 +30,70 @@
         inherit disko nixos-raspberrypi;
       };
 
-      mkRpi5Host =
-        hostModule:
+      mkRpi5System =
+        modules:
         nixos-raspberrypi.lib.nixosSystemFull {
           inherit specialArgs;
           modules = [
             self.nixosModules.rpi5-luks-hardware
-            self.nixosModules.pseudo-design-device-identity
-            self.nixosModules.pseudo-design-auth-server
-            ./modules/profiles/base-rpi.nix
             ./modules/users/adam.nix
-            hostModule
-          ];
+          ] ++ modules;
         };
+
+      mkRpi5Host =
+        hostModule:
+        mkRpi5System [
+          self.nixosModules.pseudo-design-device-identity
+          self.nixosModules.pseudo-design-auth-server
+          ./modules/profiles/base-rpi.nix
+          hostModule
+        ];
+
+      mkRpi5OfflineCaHost =
+        hostModule:
+        mkRpi5System [
+          self.nixosModules.pseudo-design-offline-ca
+          ./modules/profiles/rpi-common.nix
+          hostModule
+        ];
     in
     {
       checks = forAllSystems (
         system:
         import ./checks/default.nix {
           inherit nixpkgs self system;
+        }
+      );
+
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        rec {
+          pseudo-design-ca-tools = pkgs.callPackage ./packages/pseudo-design-ca-tools { };
+          default = pseudo-design-ca-tools;
+        }
+      );
+
+      apps = forAllSystems (
+        system:
+        let
+          caTools = self.packages.${system}.pseudo-design-ca-tools;
+          mkCaApp =
+            name: description:
+            {
+              type = "app";
+              program = "${caTools}/bin/${name}";
+              meta.description = description;
+            };
+        in
+        {
+          ca-bootstrap = mkCaApp "pseudo-design-ca-bootstrap" "Bootstrap the pseudo.design offline CA state";
+          ca-export = mkCaApp "pseudo-design-ca-export" "Export pseudo.design CA artifacts for transfer";
+          ca-install-public-artifacts =
+            mkCaApp "pseudo-design-ca-install-public-artifacts" "Install pseudo.design public CA artifacts into the repo";
+          ca-mint-token = mkCaApp "pseudo-design-ca-mint-token" "Mint a pseudo.design device enrollment token";
         }
       );
 
@@ -61,8 +106,10 @@
           default = pkgs.mkShell {
             packages = [
               pkgs.nixos-anywhere
+              pkgs.openssl
               pkgs.openssh
               pkgs.step-cli
+              self.packages.${system}.pseudo-design-ca-tools
             ];
           };
         }
@@ -72,11 +119,13 @@
         rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
         pseudo-design-auth-server = ./modules/services/pseudo-design-auth-server.nix;
         pseudo-design-device-identity = ./modules/services/pseudo-design-device-identity.nix;
+        pseudo-design-offline-ca = ./modules/services/pseudo-design-offline-ca.nix;
       };
 
       nixosConfigurations = {
         ace = mkRpi5Host ./hosts/ace;
         mako = mkRpi5Host ./hosts/mako;
+        rootca = mkRpi5OfflineCaHost ./hosts/rootca;
       };
     };
 }
