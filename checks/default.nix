@@ -7,6 +7,7 @@
 let
   lib = nixpkgs.lib;
   pkgs = import nixpkgs { inherit system; };
+  caTools = self.packages.${system}.pseudo-design-ca-tools;
 
   enrollmentProvisionerPublicKey = {
     kty = "EC";
@@ -76,12 +77,16 @@ let
         enable = true;
         enrollmentProvisionerPublicKey = enrollmentProvisionerPublicKey;
         authUpstream = "http://127.0.0.1:8080";
+        rootCertificateSourceFile = ../ca/public/README.md;
       };
     }
   ];
 
   authServer = authConfig.services.pseudoDesign.authServer;
+  authPackageNames = map lib.getName authConfig.environment.systemPackages;
+  rootCertService = authConfig.systemd.services.pseudo-design-step-ca-root-cert;
   stepCa = authConfig.services.step-ca;
+  stepCaService = authConfig.systemd.services.step-ca;
   stepCaSettings = stepCa.settings;
   provisioner = builtins.head stepCaSettings.authority.provisioners;
   authVhost = authConfig.services.nginx.virtualHosts.${authServer.authHost};
@@ -175,6 +180,18 @@ in
       message = "step-ca firewall opening should be enabled";
     }
     {
+      condition = stepCa.intermediatePasswordFile == null;
+      message = "step-ca should not use an intermediate key password file";
+    }
+    {
+      condition = lib.all (path: lib.elem path stepCaService.unitConfig.ConditionPathExists) [
+        "/var/lib/step-ca/certs/root_ca.crt"
+        "/var/lib/step-ca/certs/intermediate_ca.crt"
+        "/var/lib/step-ca/secrets/intermediate_ca.key"
+      ];
+      message = "step-ca should require root, intermediate cert, and intermediate key files";
+    }
+    {
       condition = stepCaSettings.db == {
         type = "badger";
         dataSource = "/var/lib/step-ca/db";
@@ -242,6 +259,22 @@ in
       message = "auth vhost should proxy to the configured upstream";
     }
     {
+      condition = lib.elem "pseudo-design-ca-create-intermediate-csr" authPackageNames;
+      message = "auth server should install the online intermediate CSR command";
+    }
+    {
+      condition = lib.elem "pseudo-design-ca-install-intermediate-cert" authPackageNames;
+      message = "auth server should install the online intermediate certificate install command";
+    }
+    {
+      condition = rootCertService.serviceConfig.Type == "oneshot";
+      message = "auth server should install the configured root certificate with a one-shot service";
+    }
+    {
+      condition = hasInfix "/var/lib/step-ca/certs/root_ca.crt" rootCertService.script;
+      message = "root certificate install service should target step-ca root certificate path";
+    }
+    {
       condition = hasInfix "proxy_set_header X-Pseudo-Design-Client-Fingerprint $ssl_client_fingerprint;" authLocation.extraConfig;
       message = "auth vhost should pass client fingerprint to upstreams";
     }
@@ -285,8 +318,77 @@ in
       message = "offline CA export command should be installed";
     }
     {
+      condition = lib.elem "pseudo-design-ca-sign-intermediate" offlineCaPackageNames;
+      message = "offline CA intermediate signing command should be installed";
+    }
+    {
       condition = lib.elem "pseudo-design-ca-mint-token" offlineCaPackageNames;
       message = "offline CA token command should be installed";
     }
   ];
+
+  pseudo-design-ca-tools-split-intermediate-workflow =
+    pkgs.runCommandLocal "pseudo-design-ca-tools-split-intermediate-workflow"
+      {
+        nativeBuildInputs = [
+          caTools
+          pkgs.coreutils
+          pkgs.openssl
+          pkgs.step-cli
+        ];
+      }
+      ''
+        set -euo pipefail
+
+        export HOME="$TMPDIR/home"
+        export PSEUDO_DESIGN_REPO_ROOT=/not-the-ca-state
+        mkdir -p "$HOME"
+
+        offline_dir="$TMPDIR/offline-ca"
+        online_dir="$TMPDIR/online-ca"
+        export_dir="$TMPDIR/export"
+        signed_dir="$TMPDIR/signed"
+        signed_cert="$signed_dir/intermediate_ca.crt"
+        mkdir -p "$signed_dir"
+
+        pseudo-design-ca-bootstrap "$offline_dir"
+        test -s "$offline_dir/root_ca.crt"
+        test -s "$offline_dir/root_ca.key"
+        test -s "$offline_dir/root-password"
+        test -s "$offline_dir/device-enrollment.pub.json"
+        test -s "$offline_dir/device-enrollment.key.json"
+        test -s "$offline_dir/provisioner-password"
+        test -s "$offline_dir/root_ca.fingerprint"
+        test ! -e "$offline_dir/intermediate_ca.key"
+        test ! -e "$offline_dir/intermediate-password"
+
+        pseudo-design-ca-export "$offline_dir" "$export_dir"
+        test -s "$export_dir/public/root_ca.crt"
+        test -s "$export_dir/public/root_ca.fingerprint"
+        test -s "$export_dir/public/device-enrollment.pub.json"
+        test -z "$(find "$export_dir" -name 'intermediate_ca.*' -o -name 'intermediate-password')"
+
+        install -d -m 0750 "$online_dir/certs" "$online_dir/secrets"
+        install -m 0644 "$offline_dir/root_ca.crt" "$online_dir/certs/root_ca.crt"
+
+        pseudo-design-ca-create-intermediate-csr "$online_dir"
+        test -s "$online_dir/certs/intermediate_ca.csr"
+        test -s "$online_dir/secrets/intermediate_ca.key"
+        test ! -e "$online_dir/certs/intermediate_ca.crt"
+
+        pseudo-design-ca-sign-intermediate \
+          "$online_dir/certs/intermediate_ca.csr" \
+          "$signed_cert" \
+          "$offline_dir"
+        test -s "$signed_cert"
+
+        pseudo-design-ca-install-intermediate-cert "$signed_cert" "$online_dir"
+        test -s "$online_dir/certs/intermediate_ca.crt"
+        openssl verify -CAfile "$online_dir/certs/root_ca.crt" "$online_dir/certs/intermediate_ca.crt"
+        openssl x509 -in "$online_dir/certs/intermediate_ca.crt" -noout -pubkey > "$TMPDIR/cert.pub"
+        openssl pkey -in "$online_dir/secrets/intermediate_ca.key" -pubout > "$TMPDIR/key.pub"
+        cmp -s "$TMPDIR/cert.pub" "$TMPDIR/key.pub"
+
+        touch "$out"
+      '';
 }

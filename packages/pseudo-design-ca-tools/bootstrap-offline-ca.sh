@@ -16,8 +16,8 @@ usage() {
   cat <<'EOF'
 Usage: pseudo-design-ca-bootstrap CA_DIR
 
-Create the pseudo.design root CA, online intermediate CA, and device enrollment
-JWK provisioner in CA_DIR. CA_DIR must be outside this repository.
+Create the pseudo.design root CA and device enrollment JWK provisioner in
+CA_DIR. CA_DIR must be outside this repository.
 
 The script is idempotent: existing complete artifacts are kept.
 EOF
@@ -83,7 +83,6 @@ esac
 umask 077
 
 create_password_file "$ca_dir/root-password"
-create_password_file "$ca_dir/intermediate-password"
 create_password_file "$ca_dir/provisioner-password"
 
 if ensure_complete_pair "$ca_dir/root_ca.crt" "$ca_dir/root_ca.key"; then
@@ -99,24 +98,6 @@ else
     --password-file "$ca_dir/root-password"
   chmod 0644 "$ca_dir/root_ca.crt"
   chmod 0600 "$ca_dir/root_ca.key"
-fi
-
-if ensure_complete_pair "$ca_dir/intermediate_ca.crt" "$ca_dir/intermediate_ca.key"; then
-  printf 'Keeping existing intermediate CA: %s\n' "$ca_dir/intermediate_ca.crt"
-else
-  step certificate create \
-    "$PSEUDO_DESIGN_CA_INTERMEDIATE_NAME" \
-    "$ca_dir/intermediate_ca.crt" \
-    "$ca_dir/intermediate_ca.key" \
-    --profile intermediate-ca \
-    --ca "$ca_dir/root_ca.crt" \
-    --ca-key "$ca_dir/root_ca.key" \
-    --ca-password-file "$ca_dir/root-password" \
-    --password-file "$ca_dir/intermediate-password" \
-    --kty "$PSEUDO_DESIGN_CA_KEY_TYPE" \
-    --curve "$PSEUDO_DESIGN_CA_CURVE"
-  chmod 0644 "$ca_dir/intermediate_ca.crt"
-  chmod 0600 "$ca_dir/intermediate_ca.key"
 fi
 
 if ensure_complete_pair "$ca_dir/device-enrollment.pub.json" "$ca_dir/device-enrollment.key.json"; then
@@ -155,16 +136,15 @@ Private/offline files:
   device-enrollment.key.json
   provisioner-password
 
-Online CA files to stage onto mako:
-  root_ca.crt
-  intermediate_ca.crt
-  intermediate_ca.key
-  intermediate-password
-
 Public files to install into this repository:
   root_ca.crt
   root_ca.fingerprint
   device-enrollment.pub.json
+
+Next online/offline CA exchange:
+  1. Generate intermediate_ca.csr and intermediate_ca.key on the online CA host.
+  2. Sign intermediate_ca.csr on the offline CA host.
+  3. Install only the signed intermediate_ca.crt back onto the online CA host.
 
 Next:
   $next_command

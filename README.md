@@ -113,8 +113,8 @@ nix build --no-link .#nixosConfigurations.rootca.config.system.build.toplevel
 nix develop --command nixos-anywhere --flake .#rootca root@nixos-installer.local
 ```
 
-On `rootca`, create the root CA, online intermediate CA, and one-time-token
-provisioner in the fixed root-only state directory:
+On `rootca`, create the root CA and one-time-token provisioner in the fixed
+root-only state directory:
 
 ```shell
 sudo pseudo-design-ca-bootstrap
@@ -125,7 +125,7 @@ The non-secret CA settings are in
 commands. Override them in the script before deploying `rootca` if the domain,
 names, or durations ever need to change.
 
-Export artifacts for removable-media transfer:
+Export public artifacts for removable-media transfer:
 
 ```shell
 sudo pseudo-design-ca-export
@@ -135,8 +135,6 @@ This writes:
 
 - `/var/lib/pseudo-design/offline-ca/export/public/` for commit-safe public
   artifacts.
-- `/var/lib/pseudo-design/offline-ca/export/mako/` for online CA material to
-  stage onto `mako`.
 
 Install the public artifacts into this repository and commit them:
 
@@ -146,38 +144,47 @@ nix run .#ca-install-public-artifacts -- "$EXPORT_PUBLIC"
 
 git add ca/public/root_ca.crt \
   ca/public/root_ca.fingerprint \
-  hosts/mako/device-enrollment.pub.json
+  ca/public/device-enrollment.pub.json
 ```
 
 Once committed, `hosts/mako/default.nix` automatically configures the public
-enrollment JWK and `modules/profiles/base-rpi.nix` automatically pins the root
-fingerprint for device enrollment.
+root certificate and enrollment JWK. `modules/profiles/base-rpi.nix`
+automatically pins the root fingerprint for device enrollment.
 
-Copy only the online CA material to `mako`:
+Generate the online intermediate key and CSR on `mako`. The key is created under
+`/var/lib/step-ca/secrets/intermediate_ca.key` and must never leave `mako`:
 
 ```shell
-EXPORT_MAKO=/path/to/removable-media/mako
-scp "$EXPORT_MAKO"/root_ca.crt \
-  "$EXPORT_MAKO"/intermediate_ca.crt \
-  "$EXPORT_MAKO"/intermediate_ca.key \
-  "$EXPORT_MAKO"/intermediate-password \
-  root@mako.local:/root/
 ssh root@mako.local
+pseudo-design-ca-create-intermediate-csr
+exit
 
-install -d -o step-ca -g step-ca -m 0750 /var/lib/step-ca/certs /var/lib/step-ca/secrets
-install -o step-ca -g step-ca -m 0644 /root/root_ca.crt /var/lib/step-ca/certs/root_ca.crt
-install -o step-ca -g step-ca -m 0644 /root/intermediate_ca.crt /var/lib/step-ca/certs/intermediate_ca.crt
-install -o step-ca -g step-ca -m 0600 /root/intermediate_ca.key /var/lib/step-ca/secrets/intermediate_ca.key
+scp root@mako.local:/var/lib/step-ca/certs/intermediate_ca.csr \
+  /path/to/removable-media/intermediate_ca.csr
+```
 
-install -d -m 0700 /run/keys
-install -m 0600 /root/intermediate-password /run/keys/pseudo-design-step-ca-intermediate-password
-rm -f /root/root_ca.crt /root/intermediate_ca.crt /root/intermediate_ca.key /root/intermediate-password
+Sign that CSR on `rootca` using the offline root key:
+
+```shell
+sudo pseudo-design-ca-sign-intermediate \
+  /path/to/removable-media/intermediate_ca.csr \
+  /path/to/removable-media/intermediate_ca.crt
+```
+
+Copy only the signed intermediate certificate back to `mako`:
+
+```shell
+scp /path/to/removable-media/intermediate_ca.crt root@mako.local:/root/
+ssh root@mako.local
+pseudo-design-ca-install-intermediate-cert /root/intermediate_ca.crt
+rm -f /root/intermediate_ca.crt
 systemctl restart step-ca.service pseudo-design-auth-ca-bundle.service nginx.service
 ```
 
 Keep `root_ca.key`, `root-password`, `device-enrollment.key.json`, and
-`provisioner-password` offline. The encrypted intermediate key is online CA
-material and belongs only on `mako`.
+`provisioner-password` offline on `rootca`. Keep `intermediate_ca.key` on
+`mako`; it is online CA private material and is protected by file permissions and
+the encrypted root filesystem.
 
 ### Enroll a device
 

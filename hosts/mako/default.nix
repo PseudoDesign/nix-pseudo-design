@@ -1,7 +1,8 @@
 { lib, ... }:
 
 let
-  enrollmentProvisionerPublicKeyFile = ./device-enrollment.pub.json;
+  enrollmentProvisionerPublicKeyFile = ../../ca/public/device-enrollment.pub.json;
+  rootCertificateFile = ../../ca/public/root_ca.crt;
 in
 {
   networking = {
@@ -19,9 +20,12 @@ in
 
   services.pseudoDesign.authServer = {
     enable = true;
-  } // lib.optionalAttrs (builtins.pathExists enrollmentProvisionerPublicKeyFile) {
-    enrollmentProvisionerPublicKey =
-      builtins.fromJSON (builtins.readFile enrollmentProvisionerPublicKeyFile);
+  }
+  // lib.optionalAttrs (builtins.pathExists rootCertificateFile) {
+    rootCertificateSourceFile = rootCertificateFile;
+  }
+  // lib.optionalAttrs (builtins.pathExists enrollmentProvisionerPublicKeyFile) {
+    enrollmentProvisionerPublicKey = builtins.fromJSON (builtins.readFile enrollmentProvisionerPublicKeyFile);
   };
 
   services.nginx = {

@@ -65,6 +65,30 @@ let
     '';
   };
 
+  caSignIntermediate = pkgs.writeShellApplication {
+    name = "pseudo-design-ca-sign-intermediate";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.openssl
+      pkgs.step-cli
+    ];
+    text = ''
+      if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
+        printf 'Usage: sudo pseudo-design-ca-sign-intermediate CSR OUT_CERT\n'
+        exit 0
+      fi
+
+      if [ "$#" -ne 2 ]; then
+        printf 'Usage: sudo pseudo-design-ca-sign-intermediate CSR OUT_CERT\n' >&2
+        exit 2
+      fi
+
+      ${requireRoot}
+
+      exec ${caTools}/libexec/pseudo-design-ca/sign-intermediate.sh "$1" "$2" ${stateDirArg}
+    '';
+  };
+
   caMintToken = pkgs.writeShellApplication {
     name = "pseudo-design-ca-mint-token";
     runtimeInputs = [
@@ -111,6 +135,7 @@ in
       pkgs.step-cli
       caBootstrap
       caExport
+      caSignIntermediate
       caMintToken
     ];
 

@@ -28,8 +28,10 @@ TLS identity uses a separate per-device P-256 private key stored under
 
 The root CA is expected to stay offline on the `rootca` host under
 `/var/lib/pseudo-design/offline-ca`. `mako` only needs the public root
-certificate, the online intermediate certificate, the encrypted intermediate
-private key, and the intermediate key password supplied at runtime.
+certificate, the online intermediate certificate, and the unencrypted
+intermediate private key generated locally on `mako`. The intermediate private
+key never leaves `mako` and is protected by file permissions and the encrypted
+root filesystem.
 
 The enrollment provisioner has two halves:
 
@@ -68,13 +70,15 @@ intermediate private material are stored in the Nix store by this configuration.
 
 - installs `step-cli`, `openssl`, and fixed-path CA operation commands;
 - creates `/var/lib/pseudo-design/offline-ca` as root-only state;
-- exports public artifacts and `mako` staging material for removable-media
-  transfer.
+- exports public artifacts for removable-media transfer;
+- signs a `mako`-generated intermediate CSR without receiving the intermediate
+  private key.
 
 `modules/profiles/base-rpi.nix` enables device identity for every Raspberry Pi
 host and pins `ca/public/root_ca.fingerprint` when that public artifact is
-present. `hosts/mako/default.nix` enables the auth server on `mako` and imports
-`hosts/mako/device-enrollment.pub.json` when that public artifact is present.
+present. `hosts/mako/default.nix` enables the auth server on `mako`, installs
+`ca/public/root_ca.crt` when present, and imports
+`ca/public/device-enrollment.pub.json` when that public artifact is present.
 
 ## Certificate Shape
 
@@ -95,9 +99,9 @@ kept mainly for logs and operator readability.
 On `mako`:
 
 - `/var/lib/step-ca/certs/root_ca.crt`
+- `/var/lib/step-ca/certs/intermediate_ca.csr` until the CSR is signed
 - `/var/lib/step-ca/certs/intermediate_ca.crt`
 - `/var/lib/step-ca/secrets/intermediate_ca.key`
-- `/run/keys/pseudo-design-step-ca-intermediate-password`
 - `/var/lib/pseudo-design/auth/device-root-ca.crt`
 - `/var/lib/pseudo-design/auth/deny-fingerprints.map`
 
@@ -122,20 +126,28 @@ The offline CA tooling is packaged under `packages/pseudo-design-ca-tools/`:
 - `config.sh` stores non-secret CA names, domain, durations, and provisioner
   settings.
 - `bootstrap-offline-ca.sh` creates or reuses the offline CA working directory.
-- `export-artifacts.sh` prepares public and `mako` staging directories for
-  removable-media transfer.
+- `create-intermediate-csr.sh` creates the online intermediate key and CSR on
+  `mako`.
+- `sign-intermediate.sh` signs a validated `mako` CSR with the offline root CA.
+- `install-intermediate-cert.sh` verifies and installs the signed intermediate
+  certificate on `mako`.
+- `export-artifacts.sh` prepares public artifacts for removable-media transfer.
 - `install-public-artifacts.sh` copies commit-safe public artifacts into the
   repo.
 - `mint-device-token.sh` creates short-lived, identity-bound enrollment tokens.
 
 The `rootca` NixOS configuration installs fixed-path wrappers around those
-scripts: `pseudo-design-ca-bootstrap`, `pseudo-design-ca-export`, and
-`pseudo-design-ca-mint-token`.
+scripts: `pseudo-design-ca-bootstrap`, `pseudo-design-ca-export`,
+`pseudo-design-ca-sign-intermediate`, and `pseudo-design-ca-mint-token`.
+The `mako` auth-server configuration installs
+`pseudo-design-ca-create-intermediate-csr` and
+`pseudo-design-ca-install-intermediate-cert`.
 
 The remaining required setup before enrolling real devices is to deploy
 `rootca`, run the bootstrap and export commands there, commit the public
-artifacts, deploy the updated NixOS configuration, and stage the online CA
-material onto `mako`.
+artifacts, deploy the updated NixOS configuration, generate the intermediate CSR
+on `mako`, sign it on `rootca`, and install only the signed intermediate
+certificate back onto `mako`.
 
 After that, enrollment is intentionally token-based and host-bound:
 `mint-device-token.sh` includes the exact subject and SANs for the target
@@ -156,5 +168,5 @@ git diff --cached --check
 `nix flake check` includes targeted module checks for the generated device
 enrollment/renewal units and the auth-server `step-ca`/nginx configuration.
 
-The current `mako` build warns until `hosts/mako/device-enrollment.pub.json` is
+The current `mako` build warns until `ca/public/device-enrollment.pub.json` is
 committed. That warning is expected before public CA artifacts are installed.

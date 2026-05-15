@@ -90,10 +90,16 @@
         in
         {
           ca-bootstrap = mkCaApp "pseudo-design-ca-bootstrap" "Bootstrap the pseudo.design offline CA state";
+          ca-create-intermediate-csr =
+            mkCaApp "pseudo-design-ca-create-intermediate-csr" "Generate an online intermediate CA CSR and private key";
           ca-export = mkCaApp "pseudo-design-ca-export" "Export pseudo.design CA artifacts for transfer";
+          ca-install-intermediate-cert =
+            mkCaApp "pseudo-design-ca-install-intermediate-cert" "Install a signed online intermediate CA certificate";
           ca-install-public-artifacts =
             mkCaApp "pseudo-design-ca-install-public-artifacts" "Install pseudo.design public CA artifacts into the repo";
           ca-mint-token = mkCaApp "pseudo-design-ca-mint-token" "Mint a pseudo.design device enrollment token";
+          ca-sign-intermediate =
+            mkCaApp "pseudo-design-ca-sign-intermediate" "Sign an online intermediate CA CSR with the offline root";
         }
       );
 

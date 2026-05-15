@@ -7,7 +7,11 @@
 
 let
   cfg = config.services.pseudoDesign.authServer;
-  inherit (lib) mkEnableOption mkIf mkOption optional optionalString types;
+  inherit (lib) escapeShellArg mkEnableOption mkIf mkOption optional optionalString types;
+
+  caTools = pkgs.callPackage ../../packages/pseudo-design-ca-tools { };
+  caStateDirArg = escapeShellArg cfg.caStateDir;
+  rootCertificateInstallService = "pseudo-design-step-ca-root-cert.service";
 
   deviceLeafTemplate = ''
     {
@@ -27,6 +31,61 @@ let
     proxy_set_header X-Pseudo-Design-Client-Fingerprint $ssl_client_fingerprint;
     proxy_set_header X-Pseudo-Design-Client-Cert $ssl_client_escaped_cert;
   '';
+
+  requireRoot = ''
+    if [ "$(${pkgs.coreutils}/bin/id -u)" -ne 0 ]; then
+      printf 'error: run this command with sudo\n' >&2
+      exit 1
+    fi
+  '';
+
+  caCreateIntermediateCsr = pkgs.writeShellApplication {
+    name = "pseudo-design-ca-create-intermediate-csr";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.step-cli
+    ];
+    text = ''
+      if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
+        printf 'Usage: sudo pseudo-design-ca-create-intermediate-csr\n'
+        exit 0
+      fi
+
+      if [ "$#" -ne 0 ]; then
+        printf 'Usage: sudo pseudo-design-ca-create-intermediate-csr\n' >&2
+        exit 2
+      fi
+
+      ${requireRoot}
+
+      export PSEUDO_DESIGN_STEP_CA_OWNER=step-ca:step-ca
+      exec ${caTools}/libexec/pseudo-design-ca/create-intermediate-csr.sh ${caStateDirArg}
+    '';
+  };
+
+  caInstallIntermediateCert = pkgs.writeShellApplication {
+    name = "pseudo-design-ca-install-intermediate-cert";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.openssl
+    ];
+    text = ''
+      if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
+        printf 'Usage: sudo pseudo-design-ca-install-intermediate-cert CERT\n'
+        exit 0
+      fi
+
+      if [ "$#" -ne 1 ]; then
+        printf 'Usage: sudo pseudo-design-ca-install-intermediate-cert CERT\n' >&2
+        exit 2
+      fi
+
+      ${requireRoot}
+
+      export PSEUDO_DESIGN_STEP_CA_OWNER=step-ca:step-ca
+      exec ${caTools}/libexec/pseudo-design-ca/install-intermediate-cert.sh "$1" ${caStateDirArg}
+    '';
+  };
 in
 {
   options.services.pseudoDesign.authServer = {
@@ -69,15 +128,21 @@ in
     };
 
     intermediatePasswordFile = mkOption {
-      type = types.str;
-      default = "/run/keys/pseudo-design-step-ca-intermediate-password";
-      description = "Runtime-only path containing the password for the encrypted intermediate CA key.";
+      type = types.nullOr types.str;
+      default = null;
+      description = "Optional runtime-only path containing the password for an encrypted intermediate CA key.";
     };
 
     rootCertificateFile = mkOption {
       type = types.str;
       default = "${cfg.caStateDir}/certs/root_ca.crt";
       description = "Path to the public root CA certificate used by step-ca.";
+    };
+
+    rootCertificateSourceFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Optional public root CA certificate source to install into rootCertificateFile.";
     };
 
     intermediateCertificateFile = mkOption {
@@ -89,7 +154,7 @@ in
     intermediateKeyFile = mkOption {
       type = types.str;
       default = "${cfg.caStateDir}/secrets/intermediate_ca.key";
-      description = "Path to the encrypted online intermediate CA private key.";
+      description = "Path to the online intermediate CA private key.";
     };
 
     authStateDir = mkOption {
@@ -143,7 +208,11 @@ in
       be validated until the public JWK is configured.
     '';
 
-    environment.systemPackages = [ pkgs.step-cli ];
+    environment.systemPackages = [
+      pkgs.step-cli
+      caCreateIntermediateCsr
+      caInstallIntermediateCert
+    ];
 
     systemd.tmpfiles.rules = [
       "d ${cfg.caStateDir}/certs 0750 step-ca step-ca -"
@@ -196,16 +265,44 @@ in
       };
     };
 
+    systemd.services.step-ca = {
+      unitConfig.ConditionPathExists = [
+        cfg.rootCertificateFile
+        cfg.intermediateCertificateFile
+        cfg.intermediateKeyFile
+      ];
+      after = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
+      wants = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
+    };
+
     networking.firewall.allowedTCPPorts = [
       80
       443
       cfg.caPort
     ];
 
+    systemd.services.pseudo-design-step-ca-root-cert = mkIf (cfg.rootCertificateSourceFile != null) {
+      description = "Install pseudo.design root CA certificate for step-ca";
+      wantedBy = [ "multi-user.target" ];
+      before = [
+        "step-ca.service"
+        "pseudo-design-auth-ca-bundle.service"
+      ];
+      after = [ "systemd-tmpfiles-setup.service" ];
+      serviceConfig.Type = "oneshot";
+      script = ''
+        ${pkgs.coreutils}/bin/install -D -o step-ca -g step-ca -m 0644 \
+          ${cfg.rootCertificateSourceFile} \
+          ${cfg.rootCertificateFile}
+      '';
+    };
+
     systemd.services.pseudo-design-auth-ca-bundle = {
       description = "Install pseudo.design device root CA bundle for nginx";
       wantedBy = [ "multi-user.target" ];
       before = [ "nginx.service" ];
+      after = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
+      wants = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
       unitConfig.ConditionPathExists = cfg.rootCertificateFile;
       serviceConfig.Type = "oneshot";
       script = ''

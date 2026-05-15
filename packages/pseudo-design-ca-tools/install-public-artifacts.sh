@@ -46,14 +46,14 @@ require_file "$ca_dir/root_ca.crt"
 require_file "$ca_dir/root_ca.fingerprint"
 require_file "$ca_dir/device-enrollment.pub.json"
 
-install -d -m 0755 "$repo_root/ca/public" "$repo_root/hosts/mako"
+install -d -m 0755 "$repo_root/ca/public"
 install -m 0644 "$ca_dir/root_ca.crt" "$repo_root/ca/public/root_ca.crt"
 install -m 0644 "$ca_dir/root_ca.fingerprint" "$repo_root/ca/public/root_ca.fingerprint"
-install -m 0644 "$ca_dir/device-enrollment.pub.json" "$repo_root/hosts/mako/device-enrollment.pub.json"
+install -m 0644 "$ca_dir/device-enrollment.pub.json" "$repo_root/ca/public/device-enrollment.pub.json"
 
 cat <<EOF
 Installed public CA artifacts:
   ca/public/root_ca.crt
   ca/public/root_ca.fingerprint
-  hosts/mako/device-enrollment.pub.json
+  ca/public/device-enrollment.pub.json
 EOF
