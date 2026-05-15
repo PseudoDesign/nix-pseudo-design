@@ -7,7 +7,13 @@
 
 let
   cfg = config.services.pseudoDesign.offlineCa;
-  inherit (lib) escapeShellArg mkEnableOption mkIf mkOption types;
+  inherit (lib)
+    escapeShellArg
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   caTools = pkgs.callPackage ../../packages/pseudo-design-ca-tools { };
   stateDirArg = escapeShellArg cfg.stateDir;
@@ -26,6 +32,7 @@ let
       pkgs.coreutils
       pkgs.openssl
       pkgs.step-cli
+      pkgs.step-kms-plugin
     ];
     text = ''
       if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
@@ -71,6 +78,7 @@ let
       pkgs.coreutils
       pkgs.openssl
       pkgs.step-cli
+      pkgs.step-kms-plugin
     ];
     text = ''
       if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
@@ -133,6 +141,7 @@ in
     environment.systemPackages = [
       pkgs.openssl
       pkgs.step-cli
+      pkgs.step-kms-plugin
       caBootstrap
       caExport
       caSignIntermediate

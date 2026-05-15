@@ -74,10 +74,26 @@ out_dir="$(dirname -- "$out_cert")"
 
 require_file "$csr_file"
 require_file "$ca_dir/root_ca.crt"
-require_file "$ca_dir/root_ca.key"
-require_file "$ca_dir/root-password"
 [ ! -e "$out_cert" ] || die "refusing to overwrite existing file: $out_cert"
 [ -d "$out_dir" ] || die "missing output directory: $out_dir"
+
+root_uses_kms=0
+case "${PSEUDO_DESIGN_CA_ROOT_KMS:-}:${PSEUDO_DESIGN_CA_ROOT_KEY:-}" in
+  :)
+    require_file "$ca_dir/root_ca.key"
+    require_file "$ca_dir/root-password"
+    ;;
+  *:)
+    die "PSEUDO_DESIGN_CA_ROOT_KEY must be set when PSEUDO_DESIGN_CA_ROOT_KMS is set"
+    ;;
+  :*)
+    die "PSEUDO_DESIGN_CA_ROOT_KMS must be set when PSEUDO_DESIGN_CA_ROOT_KEY is set"
+    ;;
+  *)
+    root_uses_kms=1
+    root_cert_uri="${PSEUDO_DESIGN_CA_ROOT_CERT:-$PSEUDO_DESIGN_CA_ROOT_KEY}"
+    ;;
+esac
 
 openssl req -in "$csr_file" -noout -verify >/dev/null 2>&1 \
   || die "CSR self-signature verification failed"
@@ -94,13 +110,37 @@ trap 'rm -f "$csr_text" "$signed_cert"' EXIT
 openssl req -in "$csr_file" -noout -text > "$csr_text"
 validate_csr_key "$csr_text"
 
-step certificate sign \
-  --profile intermediate-ca \
-  --path-len 0 \
-  --password-file "$ca_dir/root-password" \
-  "$csr_file" \
-  "$ca_dir/root_ca.crt" \
-  "$ca_dir/root_ca.key" > "$signed_cert"
+if [ "$root_uses_kms" -eq 1 ]; then
+  sign_error="$(mktemp)"
+  trap 'rm -f "$csr_text" "$signed_cert" "${sign_error:-}"' EXIT
+  if ! step certificate sign \
+    --profile intermediate-ca \
+    --path-len 0 \
+    --kms "$PSEUDO_DESIGN_CA_ROOT_KMS" \
+    "$csr_file" \
+    "$ca_dir/root_ca.crt" \
+    "$PSEUDO_DESIGN_CA_ROOT_KEY" > "$signed_cert" 2>"$sign_error"; then
+    rm -f "$signed_cert"
+    if ! step certificate sign \
+      --profile intermediate-ca \
+      --path-len 0 \
+      --kms "$PSEUDO_DESIGN_CA_ROOT_KMS" \
+      "$csr_file" \
+      "$root_cert_uri" \
+      "$PSEUDO_DESIGN_CA_ROOT_KEY" > "$signed_cert" 2>>"$sign_error"; then
+      cat "$sign_error" >&2
+      exit 1
+    fi
+  fi
+else
+  step certificate sign \
+    --profile intermediate-ca \
+    --path-len 0 \
+    --password-file "$ca_dir/root-password" \
+    "$csr_file" \
+    "$ca_dir/root_ca.crt" \
+    "$ca_dir/root_ca.key" > "$signed_cert"
+fi
 
 openssl verify -CAfile "$ca_dir/root_ca.crt" "$signed_cert" >/dev/null
 install -m 0644 "$signed_cert" "$out_cert"

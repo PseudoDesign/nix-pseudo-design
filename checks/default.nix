@@ -32,12 +32,11 @@ let
   mkCheck =
     name: assertions:
     let
-      checked =
-        lib.foldl' (
-          acc: assertion:
-          assert lib.assertMsg assertion.condition "${name}: ${assertion.message}";
-          acc
-        ) true assertions;
+      checked = lib.foldl' (
+        acc: assertion:
+        assert lib.assertMsg assertion.condition "${name}: ${assertion.message}";
+        acc
+      ) true assertions;
     in
     assert checked;
     pkgs.runCommandLocal name { } ''
@@ -85,12 +84,42 @@ let
   authServer = authConfig.services.pseudoDesign.authServer;
   authPackageNames = map lib.getName authConfig.environment.systemPackages;
   rootCertService = authConfig.systemd.services.pseudo-design-step-ca-root-cert;
+  authBundleService = authConfig.systemd.services.pseudo-design-auth-ca-bundle;
   stepCa = authConfig.services.step-ca;
   stepCaService = authConfig.systemd.services.step-ca;
   stepCaSettings = stepCa.settings;
   provisioner = builtins.head stepCaSettings.authority.provisioners;
   authVhost = authConfig.services.nginx.virtualHosts.${authServer.authHost};
   authLocation = authVhost.locations."/";
+
+  runtimeEnrollmentProvisionerPublicKeyFile = "/var/lib/step-ca/certs/device-enrollment.pub.json";
+  runtimeAuthTlsCertificateFile = "/var/lib/pseudo-design/auth/server.crt";
+  runtimeAuthTlsKeyFile = "/var/lib/pseudo-design/auth/server.key";
+
+  runtimeAuthConfig = mkConfig [
+    self.nixosModules.pseudo-design-auth-server
+    {
+      networking.hostName = "intermediateca";
+
+      services.pseudoDesign.authServer = {
+        enable = true;
+        domain = "test";
+        caHost = "intermediateca";
+        authHost = "intermediateca";
+        enrollmentProvisionerPublicKeyFile = runtimeEnrollmentProvisionerPublicKeyFile;
+        enableAcme = false;
+        authTlsCertificateFile = runtimeAuthTlsCertificateFile;
+        authTlsKeyFile = runtimeAuthTlsKeyFile;
+      };
+    }
+  ];
+
+  runtimeAuthServer = runtimeAuthConfig.services.pseudoDesign.authServer;
+  runtimeStepCaSettings = runtimeAuthConfig.services.step-ca.settings;
+  runtimeStepCaService = runtimeAuthConfig.systemd.services.step-ca;
+  runtimeStepCaConfigService = runtimeAuthConfig.systemd.services.pseudo-design-step-ca-config;
+  runtimeNginxService = runtimeAuthConfig.systemd.services.nginx;
+  runtimeAuthVhost = runtimeAuthConfig.services.nginx.virtualHosts.${runtimeAuthServer.authHost};
 
   offlineCaConfig = mkConfig [
     self.nixosModules.pseudo-design-offline-ca
@@ -192,10 +221,11 @@ in
       message = "step-ca should require root, intermediate cert, and intermediate key files";
     }
     {
-      condition = stepCaSettings.db == {
-        type = "badger";
-        dataSource = "/var/lib/step-ca/db";
-      };
+      condition =
+        stepCaSettings.db == {
+          type = "badger";
+          dataSource = "/var/lib/step-ca/db";
+        };
       message = "step-ca should use the configured badger database path";
     }
     {
@@ -283,8 +313,63 @@ in
       message = "auth vhost should pass escaped client certificate to upstreams";
     }
     {
+      condition = lib.all (path: lib.elem path authBundleService.unitConfig.ConditionPathExists) [
+        "/var/lib/step-ca/certs/root_ca.crt"
+        "/var/lib/step-ca/certs/intermediate_ca.crt"
+      ];
+      message = "auth CA bundle should wait for root and intermediate certificates";
+    }
+    {
+      condition = hasInfix "/var/lib/step-ca/certs/intermediate_ca.crt" authBundleService.script;
+      message = "auth CA bundle should include the intermediate certificate for nginx client verification";
+    }
+    {
       condition = !lib.any (hasInfix "enrollmentProvisionerPublicKey") authConfig.warnings;
       message = "configured public JWK should suppress the enrollment provisioner warning";
+    }
+    {
+      condition =
+        runtimeAuthServer.enrollmentProvisionerPublicKeyFile == runtimeEnrollmentProvisionerPublicKeyFile;
+      message = "auth server should accept a runtime enrollment public JWK file";
+    }
+    {
+      condition = runtimeStepCaSettings.authority.provisioners == [ ];
+      message = "runtime enrollment public JWK mode should not bake a provisioner into the Nix store ca.json";
+    }
+    {
+      condition = lib.any (hasInfix "/run/pseudo-design-step-ca/ca.json") runtimeStepCaService.serviceConfig.ExecStart;
+      message = "runtime enrollment public JWK mode should run step-ca with a rendered runtime config";
+    }
+    {
+      condition = runtimeStepCaConfigService.serviceConfig.Type == "oneshot";
+      message = "runtime step-ca config renderer should be a one-shot service";
+    }
+    {
+      condition = hasInfix runtimeEnrollmentProvisionerPublicKeyFile runtimeStepCaConfigService.script;
+      message = "runtime step-ca config renderer should read the configured public JWK file";
+    }
+    {
+      condition = runtimeAuthVhost.enableACME == false;
+      message = "auth vhost should allow ACME to be disabled for tests";
+    }
+    {
+      condition = runtimeAuthVhost.sslCertificate == runtimeAuthTlsCertificateFile;
+      message = "auth vhost should use the configured runtime TLS certificate when ACME is disabled";
+    }
+    {
+      condition = runtimeAuthVhost.sslCertificateKey == runtimeAuthTlsKeyFile;
+      message = "auth vhost should use the configured runtime TLS key when ACME is disabled";
+    }
+    {
+      condition = lib.all (path: lib.elem path runtimeNginxService.unitConfig.ConditionPathExists) [
+        runtimeAuthTlsCertificateFile
+        runtimeAuthTlsKeyFile
+      ];
+      message = "nginx should wait for runtime TLS files when ACME is disabled";
+    }
+    {
+      condition = !lib.any (hasInfix "enrollmentProvisionerPublicKey") runtimeAuthConfig.warnings;
+      message = "runtime public JWK file should suppress the enrollment provisioner warning";
     }
   ];
 
@@ -324,6 +409,10 @@ in
     {
       condition = lib.elem "pseudo-design-ca-mint-token" offlineCaPackageNames;
       message = "offline CA token command should be installed";
+    }
+    {
+      condition = lib.elem "step-kms-plugin" offlineCaPackageNames;
+      message = "offline CA module should install step-kms-plugin for KMS-backed root operations";
     }
   ];
 
@@ -391,4 +480,13 @@ in
 
         touch "$out"
       '';
+
+  pseudo-design-pki-e2e-vm = import ./pseudo-design-pki-e2e-vm.nix {
+    inherit
+      lib
+      pkgs
+      self
+      system
+      ;
+  };
 }

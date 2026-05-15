@@ -20,6 +20,11 @@ Create the pseudo.design root CA and device enrollment JWK provisioner in
 CA_DIR. CA_DIR must be outside this repository.
 
 The script is idempotent: existing complete artifacts are kept.
+
+Set PSEUDO_DESIGN_CA_ROOT_KMS and PSEUDO_DESIGN_CA_ROOT_KEY to create and use
+the offline root CA certificate with an existing KMS/HSM key. In that mode no
+root_ca.key or root-password file is created. PSEUDO_DESIGN_CA_ROOT_CERT may be
+set to a separate KMS certificate URI; it defaults to PSEUDO_DESIGN_CA_ROOT_KEY.
 EOF
 }
 
@@ -82,22 +87,69 @@ esac
 
 umask 077
 
-create_password_file "$ca_dir/root-password"
+root_uses_kms=0
+case "${PSEUDO_DESIGN_CA_ROOT_KMS:-}:${PSEUDO_DESIGN_CA_ROOT_KEY:-}" in
+  :)
+    ;;
+  *:)
+    die "PSEUDO_DESIGN_CA_ROOT_KEY must be set when PSEUDO_DESIGN_CA_ROOT_KMS is set"
+    ;;
+  :*)
+    die "PSEUDO_DESIGN_CA_ROOT_KMS must be set when PSEUDO_DESIGN_CA_ROOT_KEY is set"
+    ;;
+  *)
+    root_uses_kms=1
+    ;;
+esac
+
+if [ "$root_uses_kms" -eq 1 ]; then
+  root_cert_uri="${PSEUDO_DESIGN_CA_ROOT_CERT:-$PSEUDO_DESIGN_CA_ROOT_KEY}"
+  [ ! -e "$ca_dir/root_ca.key" ] || die "found file-backed root key in KMS mode: $ca_dir/root_ca.key"
+  [ ! -e "$ca_dir/root-password" ] || die "found file-backed root password in KMS mode: $ca_dir/root-password"
+else
+  create_password_file "$ca_dir/root-password"
+fi
+
 create_password_file "$ca_dir/provisioner-password"
 
-if ensure_complete_pair "$ca_dir/root_ca.crt" "$ca_dir/root_ca.key"; then
-  printf 'Keeping existing root CA: %s\n' "$ca_dir/root_ca.crt"
+if [ "$root_uses_kms" -eq 1 ]; then
+  if [ -s "$ca_dir/root_ca.crt" ]; then
+    printf 'Keeping existing KMS-backed root CA certificate: %s\n' "$ca_dir/root_ca.crt"
+  else
+    step certificate create \
+      "$PSEUDO_DESIGN_CA_ROOT_NAME" \
+      "$ca_dir/root_ca.crt" \
+      --profile root-ca \
+      --kms "$PSEUDO_DESIGN_CA_ROOT_KMS" \
+      --key "$PSEUDO_DESIGN_CA_ROOT_KEY"
+    chmod 0644 "$ca_dir/root_ca.crt"
+  fi
+
+  if step kms certificate \
+    --kms "$PSEUDO_DESIGN_CA_ROOT_KMS" \
+    "$root_cert_uri" >/dev/null 2>&1; then
+    printf 'Keeping existing KMS root CA certificate object: %s\n' "$root_cert_uri"
+  else
+    step kms certificate \
+      --import "$ca_dir/root_ca.crt" \
+      --kms "$PSEUDO_DESIGN_CA_ROOT_KMS" \
+      "$root_cert_uri" >/dev/null
+  fi
 else
-  step certificate create \
-    "$PSEUDO_DESIGN_CA_ROOT_NAME" \
-    "$ca_dir/root_ca.crt" \
-    "$ca_dir/root_ca.key" \
-    --profile root-ca \
-    --kty "$PSEUDO_DESIGN_CA_KEY_TYPE" \
-    --curve "$PSEUDO_DESIGN_CA_CURVE" \
-    --password-file "$ca_dir/root-password"
-  chmod 0644 "$ca_dir/root_ca.crt"
-  chmod 0600 "$ca_dir/root_ca.key"
+  if ensure_complete_pair "$ca_dir/root_ca.crt" "$ca_dir/root_ca.key"; then
+    printf 'Keeping existing root CA: %s\n' "$ca_dir/root_ca.crt"
+  else
+    step certificate create \
+      "$PSEUDO_DESIGN_CA_ROOT_NAME" \
+      "$ca_dir/root_ca.crt" \
+      "$ca_dir/root_ca.key" \
+      --profile root-ca \
+      --kty "$PSEUDO_DESIGN_CA_KEY_TYPE" \
+      --curve "$PSEUDO_DESIGN_CA_CURVE" \
+      --password-file "$ca_dir/root-password"
+    chmod 0644 "$ca_dir/root_ca.crt"
+    chmod 0600 "$ca_dir/root_ca.key"
+  fi
 fi
 
 if ensure_complete_pair "$ca_dir/device-enrollment.pub.json" "$ca_dir/device-enrollment.key.json"; then
@@ -131,10 +183,24 @@ Offline CA state is ready in:
   $ca_dir
 
 Private/offline files:
+EOF
+
+if [ "$root_uses_kms" -eq 1 ]; then
+  cat <<EOF
+  root signing key in configured KMS/HSM
+  device-enrollment.key.json
+  provisioner-password
+EOF
+else
+  cat <<EOF
   root_ca.key
   root-password
   device-enrollment.key.json
   provisioner-password
+EOF
+fi
+
+cat <<EOF
 
 Public files to install into this repository:
   root_ca.crt

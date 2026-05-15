@@ -5,6 +5,7 @@
   openssl,
   stdenvNoCC,
   step-cli,
+  step-kms-plugin,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -31,25 +32,54 @@ stdenvNoCC.mkDerivation {
 
     makeWrapper "$out/libexec/pseudo-design-ca/bootstrap-offline-ca.sh" \
       "$out/bin/pseudo-design-ca-bootstrap" \
-      --prefix PATH : "${lib.makeBinPath [ coreutils openssl step-cli ]}"
+      --prefix PATH : "${
+        lib.makeBinPath [
+          coreutils
+          openssl
+          step-cli
+          step-kms-plugin
+        ]
+      }"
     makeWrapper "$out/libexec/pseudo-design-ca/create-intermediate-csr.sh" \
       "$out/bin/pseudo-design-ca-create-intermediate-csr" \
-      --prefix PATH : "${lib.makeBinPath [ coreutils step-cli ]}"
+      --prefix PATH : "${
+        lib.makeBinPath [
+          coreutils
+          step-cli
+        ]
+      }"
     makeWrapper "$out/libexec/pseudo-design-ca/export-artifacts.sh" \
       "$out/bin/pseudo-design-ca-export" \
       --prefix PATH : "${lib.makeBinPath [ coreutils ]}"
     makeWrapper "$out/libexec/pseudo-design-ca/install-intermediate-cert.sh" \
       "$out/bin/pseudo-design-ca-install-intermediate-cert" \
-      --prefix PATH : "${lib.makeBinPath [ coreutils openssl ]}"
+      --prefix PATH : "${
+        lib.makeBinPath [
+          coreutils
+          openssl
+        ]
+      }"
     makeWrapper "$out/libexec/pseudo-design-ca/install-public-artifacts.sh" \
       "$out/bin/pseudo-design-ca-install-public-artifacts" \
       --prefix PATH : "${lib.makeBinPath [ coreutils ]}"
     makeWrapper "$out/libexec/pseudo-design-ca/mint-device-token.sh" \
       "$out/bin/pseudo-design-ca-mint-token" \
-      --prefix PATH : "${lib.makeBinPath [ coreutils step-cli ]}"
+      --prefix PATH : "${
+        lib.makeBinPath [
+          coreutils
+          step-cli
+        ]
+      }"
     makeWrapper "$out/libexec/pseudo-design-ca/sign-intermediate.sh" \
       "$out/bin/pseudo-design-ca-sign-intermediate" \
-      --prefix PATH : "${lib.makeBinPath [ coreutils openssl step-cli ]}"
+      --prefix PATH : "${
+        lib.makeBinPath [
+          coreutils
+          openssl
+          step-cli
+          step-kms-plugin
+        ]
+      }"
 
     runHook postInstall
   '';

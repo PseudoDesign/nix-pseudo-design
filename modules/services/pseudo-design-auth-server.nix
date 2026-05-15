@@ -7,11 +7,25 @@
 
 let
   cfg = config.services.pseudoDesign.authServer;
-  inherit (lib) escapeShellArg mkEnableOption mkIf mkOption optional optionalString types;
+  inherit (lib)
+    escapeShellArg
+    mkEnableOption
+    mkForce
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   caTools = pkgs.callPackage ../../packages/pseudo-design-ca-tools { };
   caStateDirArg = escapeShellArg cfg.caStateDir;
   rootCertificateInstallService = "pseudo-design-step-ca-root-cert.service";
+  stepCaConfigService = "pseudo-design-step-ca-config.service";
+  runtimeCaConfigFile = "/run/pseudo-design-step-ca/ca.json";
+  usesRuntimeEnrollmentProvisioner = cfg.enrollmentProvisionerPublicKeyFile != null;
+  usesStaticEnrollmentProvisioner = cfg.enrollmentProvisionerPublicKey != null;
 
   deviceLeafTemplate = ''
     {
@@ -23,6 +37,21 @@ let
       "extKeyUsage": ["clientAuth"]
     }
   '';
+
+  deviceLeafTemplateFile = pkgs.writeText "pseudo-design-device-leaf-template.json" deviceLeafTemplate;
+
+  mkEnrollmentProvisioner = key: {
+    type = "JWK";
+    name = cfg.enrollmentProvisionerName;
+    inherit key;
+    claims = {
+      minTLSCertDuration = "5m";
+      maxTLSCertDuration = cfg.leafDuration;
+      defaultTLSCertDuration = cfg.leafDuration;
+      disableRenewal = false;
+    };
+    options.x509.template = deviceLeafTemplate;
+  };
 
   identityHeaders = ''
     proxy_set_header X-Pseudo-Design-Client-Verify $ssl_client_verify;
@@ -187,10 +216,34 @@ in
       description = "Public JWK for the one-time enrollment provisioner. Keep the private JWK out of Git.";
     };
 
+    enrollmentProvisionerPublicKeyFile = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Runtime path to the public JWK for the one-time enrollment provisioner.";
+    };
+
     leafDuration = mkOption {
       type = types.str;
       default = "24h";
       description = "Default and maximum duration for device client certificates.";
+    };
+
+    enableAcme = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether the auth gateway nginx vhost should request a public ACME certificate.";
+    };
+
+    authTlsCertificateFile = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Runtime TLS certificate or fullchain used by the auth gateway when enableAcme is false.";
+    };
+
+    authTlsKeyFile = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Runtime TLS private key used by the auth gateway when enableAcme is false.";
     };
 
     authUpstream = mkOption {
@@ -202,10 +255,22 @@ in
   };
 
   config = mkIf cfg.enable {
-    warnings = optional (cfg.enrollmentProvisionerPublicKey == null) ''
+    assertions = [
+      {
+        assertion = !(usesStaticEnrollmentProvisioner && usesRuntimeEnrollmentProvisioner);
+        message = "services.pseudoDesign.authServer.enrollmentProvisionerPublicKey and enrollmentProvisionerPublicKeyFile are mutually exclusive.";
+      }
+      {
+        assertion = cfg.enableAcme || (cfg.authTlsCertificateFile != null && cfg.authTlsKeyFile != null);
+        message = "services.pseudoDesign.authServer.authTlsCertificateFile and authTlsKeyFile must be set when enableAcme is false.";
+      }
+    ];
+
+    warnings = optional (!usesStaticEnrollmentProvisioner && !usesRuntimeEnrollmentProvisioner) ''
       services.pseudoDesign.authServer is enabled without
-      enrollmentProvisionerPublicKey. One-time device enrollment tokens cannot
-      be validated until the public JWK is configured.
+      enrollmentProvisionerPublicKey or enrollmentProvisionerPublicKeyFile.
+      One-time device enrollment tokens cannot be validated until the public JWK
+      is configured.
     '';
 
     environment.systemPackages = [
@@ -219,7 +284,8 @@ in
       "d ${cfg.caStateDir}/secrets 0750 step-ca step-ca -"
       "d ${cfg.authStateDir} 0755 root root -"
       "f ${cfg.nginxDenylistFile} 0644 root root -"
-    ];
+    ]
+    ++ optional usesRuntimeEnrollmentProvisioner "d /run/pseudo-design-step-ca 0755 root root -";
 
     services.step-ca = {
       enable = true;
@@ -247,20 +313,9 @@ in
             defaultTLSCertDuration = cfg.leafDuration;
             disableRenewal = false;
           };
-          provisioners =
-            optional (cfg.enrollmentProvisionerPublicKey != null)
-              {
-                type = "JWK";
-                name = cfg.enrollmentProvisionerName;
-                key = cfg.enrollmentProvisionerPublicKey;
-                claims = {
-                  minTLSCertDuration = "5m";
-                  maxTLSCertDuration = cfg.leafDuration;
-                  defaultTLSCertDuration = cfg.leafDuration;
-                  disableRenewal = false;
-                };
-                options.x509.template = deviceLeafTemplate;
-              };
+          provisioners = optional usesStaticEnrollmentProvisioner (
+            mkEnrollmentProvisioner cfg.enrollmentProvisionerPublicKey
+          );
         };
       };
     };
@@ -270,9 +325,23 @@ in
         cfg.rootCertificateFile
         cfg.intermediateCertificateFile
         cfg.intermediateKeyFile
-      ];
-      after = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
-      wants = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
+      ]
+      ++ optional usesRuntimeEnrollmentProvisioner cfg.enrollmentProvisionerPublicKeyFile;
+      after =
+        optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService
+        ++ optional usesRuntimeEnrollmentProvisioner stepCaConfigService;
+      wants =
+        optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService
+        ++ optional usesRuntimeEnrollmentProvisioner stepCaConfigService;
+      serviceConfig.ExecStart = mkIf usesRuntimeEnrollmentProvisioner (mkForce [
+        ""
+        (
+          "${config.services.step-ca.package}/bin/step-ca ${runtimeCaConfigFile}"
+          + optionalString (
+            cfg.intermediatePasswordFile != null
+          ) " --password-file \${CREDENTIALS_DIRECTORY}/intermediate_password"
+        )
+      ]);
     };
 
     networking.firewall.allowedTCPPorts = [
@@ -297,24 +366,78 @@ in
       '';
     };
 
+    systemd.services.pseudo-design-step-ca-config = mkIf usesRuntimeEnrollmentProvisioner {
+      description = "Render pseudo.design step-ca runtime configuration";
+      before = [ "step-ca.service" ];
+      after = [ "systemd-tmpfiles-setup.service" ];
+      unitConfig.ConditionPathExists = cfg.enrollmentProvisionerPublicKeyFile;
+      serviceConfig.Type = "oneshot";
+      script = ''
+        ${pkgs.coreutils}/bin/install -d -m 0755 /run/pseudo-design-step-ca
+        ${pkgs.jq}/bin/jq \
+          --slurpfile key ${escapeShellArg cfg.enrollmentProvisionerPublicKeyFile} \
+          --rawfile template ${deviceLeafTemplateFile} \
+          --arg name ${escapeShellArg cfg.enrollmentProvisionerName} \
+          --arg leafDuration ${escapeShellArg cfg.leafDuration} \
+          '.authority.provisioners = [
+            {
+              type: "JWK",
+              name: $name,
+              key: $key[0],
+              claims: {
+                minTLSCertDuration: "5m",
+                maxTLSCertDuration: $leafDuration,
+                defaultTLSCertDuration: $leafDuration,
+                disableRenewal: false
+              },
+              options: {
+                x509: {
+                  template: $template
+                }
+              }
+            }
+          ]' \
+          /etc/smallstep/ca.json > ${runtimeCaConfigFile}.tmp
+        ${pkgs.coreutils}/bin/install -o step-ca -g step-ca -m 0644 \
+          ${runtimeCaConfigFile}.tmp \
+          ${runtimeCaConfigFile}
+        ${pkgs.coreutils}/bin/rm -f ${runtimeCaConfigFile}.tmp
+      '';
+    };
+
     systemd.services.pseudo-design-auth-ca-bundle = {
       description = "Install pseudo.design device root CA bundle for nginx";
       wantedBy = [ "multi-user.target" ];
       before = [ "nginx.service" ];
       after = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
       wants = optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService;
-      unitConfig.ConditionPathExists = cfg.rootCertificateFile;
+      unitConfig.ConditionPathExists = [
+        cfg.rootCertificateFile
+        cfg.intermediateCertificateFile
+      ];
       serviceConfig.Type = "oneshot";
       script = ''
-        ${pkgs.coreutils}/bin/install -D -m 0644 \
+        ${pkgs.coreutils}/bin/cat \
           ${cfg.rootCertificateFile} \
+          ${cfg.intermediateCertificateFile} \
+          > ${cfg.nginxClientCaFile}.tmp
+        ${pkgs.coreutils}/bin/install -D -m 0644 ${cfg.nginxClientCaFile}.tmp \
           ${cfg.nginxClientCaFile}
+        ${pkgs.coreutils}/bin/rm -f ${cfg.nginxClientCaFile}.tmp
       '';
     };
 
     systemd.services.nginx = {
       after = [ "pseudo-design-auth-ca-bundle.service" ];
       wants = [ "pseudo-design-auth-ca-bundle.service" ];
+      unitConfig =
+        optionalAttrs (!cfg.enableAcme && cfg.authTlsCertificateFile != null && cfg.authTlsKeyFile != null)
+          {
+            ConditionPathExists = [
+              cfg.authTlsCertificateFile
+              cfg.authTlsKeyFile
+            ];
+          };
     };
 
     services.nginx = {
@@ -329,7 +452,7 @@ in
       '';
 
       virtualHosts.${cfg.authHost} = {
-        enableACME = true;
+        enableACME = cfg.enableAcme;
         forceSSL = true;
 
         extraConfig = ''
@@ -348,24 +471,28 @@ in
           add_header X-Frame-Options "DENY" always;
         '';
 
-        locations =
-          {
-            "@pseudo_design_client_cert_error".return = "403";
+        locations = {
+          "@pseudo_design_client_cert_error".return = "403";
 
-            "/" =
-              {
-                extraConfig =
-                  identityHeaders
-                  + optionalString (cfg.authUpstream == null) ''
-                    default_type text/plain;
-                    return 200 "authenticated\n";
-                  '';
-              }
-              // lib.optionalAttrs (cfg.authUpstream != null) {
-                proxyPass = cfg.authUpstream;
-              };
+          "/" = {
+            extraConfig =
+              identityHeaders
+              + optionalString (cfg.authUpstream == null) ''
+                default_type text/plain;
+                return 200 "authenticated\n";
+              '';
+          }
+          // lib.optionalAttrs (cfg.authUpstream != null) {
+            proxyPass = cfg.authUpstream;
           };
-      };
+        };
+      }
+      //
+        optionalAttrs (!cfg.enableAcme && cfg.authTlsCertificateFile != null && cfg.authTlsKeyFile != null)
+          {
+            sslCertificate = cfg.authTlsCertificateFile;
+            sslCertificateKey = cfg.authTlsKeyFile;
+          };
     };
   };
 }
