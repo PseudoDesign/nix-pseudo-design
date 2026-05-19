@@ -21,6 +21,8 @@
       ...
     }:
     let
+      lib = nixpkgs.lib;
+
       forAllSystems = nixpkgs.lib.genAttrs [
         "x86_64-linux"
         "aarch64-linux"
@@ -37,7 +39,8 @@
           modules = [
             self.nixosModules.rpi5-luks-hardware
             ./modules/users/adam.nix
-          ] ++ modules;
+          ]
+          ++ modules;
         };
 
       mkRpi5Host =
@@ -56,6 +59,19 @@
           ./modules/profiles/rpi-common.nix
           hostModule
         ];
+
+      mkRootCaVm =
+        system:
+        lib.nixosSystem {
+          inherit specialArgs system;
+          modules = [
+            self.nixosModules.pseudo-design-offline-ca
+            ./modules/users/adam.nix
+            ./modules/profiles/rpi-common.nix
+            ./hosts/rootca
+            ./hosts/rootca/vm.nix
+          ];
+        };
     in
     {
       checks = forAllSystems (
@@ -80,26 +96,28 @@
         system:
         let
           caTools = self.packages.${system}.pseudo-design-ca-tools;
-          mkCaApp =
-            name: description:
-            {
-              type = "app";
-              program = "${caTools}/bin/${name}";
-              meta.description = description;
-            };
+          mkCaApp = name: description: {
+            type = "app";
+            program = "${caTools}/bin/${name}";
+            meta.description = description;
+          };
+          rootcaVm = self.nixosConfigurations.rootca-vm.config.system.build.vm;
         in
         {
           ca-bootstrap = mkCaApp "pseudo-design-ca-bootstrap" "Bootstrap the pseudo.design offline CA state";
-          ca-create-intermediate-csr =
-            mkCaApp "pseudo-design-ca-create-intermediate-csr" "Generate an online intermediate CA CSR and private key";
+          ca-create-intermediate-csr = mkCaApp "pseudo-design-ca-create-intermediate-csr" "Generate an online intermediate CA CSR and private key";
           ca-export = mkCaApp "pseudo-design-ca-export" "Export pseudo.design CA artifacts for transfer";
-          ca-install-intermediate-cert =
-            mkCaApp "pseudo-design-ca-install-intermediate-cert" "Install a signed online intermediate CA certificate";
-          ca-install-public-artifacts =
-            mkCaApp "pseudo-design-ca-install-public-artifacts" "Install pseudo.design public CA artifacts into the repo";
+          ca-install-intermediate-cert = mkCaApp "pseudo-design-ca-install-intermediate-cert" "Install a signed online intermediate CA certificate";
+          ca-install-public-artifacts = mkCaApp "pseudo-design-ca-install-public-artifacts" "Install pseudo.design public CA artifacts into the repo";
           ca-mint-token = mkCaApp "pseudo-design-ca-mint-token" "Mint a pseudo.design device enrollment token";
-          ca-sign-intermediate =
-            mkCaApp "pseudo-design-ca-sign-intermediate" "Sign an online intermediate CA CSR with the offline root";
+          ca-sign-intermediate = mkCaApp "pseudo-design-ca-sign-intermediate" "Sign an online intermediate CA CSR with the offline root";
+        }
+        // lib.optionalAttrs (system == "x86_64-linux") {
+          rootca-vm = {
+            type = "app";
+            program = lib.getExe rootcaVm;
+            meta.description = "Run the pseudo.design root CA NixOS VM";
+          };
         }
       );
 
@@ -132,6 +150,7 @@
         ace = mkRpi5Host ./hosts/ace;
         mako = mkRpi5Host ./hosts/mako;
         rootca = mkRpi5OfflineCaHost ./hosts/rootca;
+        rootca-vm = mkRootCaVm "x86_64-linux";
       };
     };
 }

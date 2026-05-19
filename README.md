@@ -1,10 +1,11 @@
 # nix-pseudo-design
 
-NixOS configurations for the `ace`, `mako`, and `rootca` Raspberry Pi 5 hosts.
+NixOS configurations for the `ace`, `mako`, and `rootca` Raspberry Pi 5 hosts,
+plus a local `rootca-vm` for running the root CA workflow in a VM.
 
-All three systems share a generic Raspberry Pi 5 hardware configuration that
-boots from NVMe and unlocks a LUKS encrypted root filesystem with a key derived
-from the Raspberry Pi OTP private key.
+The physical Pi systems share a generic Raspberry Pi 5 hardware configuration
+that boots from NVMe and unlocks a LUKS encrypted root filesystem with a key
+derived from the Raspberry Pi OTP private key.
 
 ## Systems
 
@@ -12,7 +13,46 @@ from the Raspberry Pi OTP private key.
 nix eval --raw .#nixosConfigurations.ace.config.networking.hostName
 nix eval --raw .#nixosConfigurations.mako.config.networking.hostName
 nix eval --raw .#nixosConfigurations.rootca.config.networking.hostName
+nix eval --raw .#nixosConfigurations.rootca-vm.config.networking.hostName
 ```
+
+## Root CA VM
+
+On an `x86_64-linux` host, run the offline root CA machine as a local NixOS VM:
+
+```shell
+nix run .#rootca-vm
+```
+
+The VM reuses the same `rootca` host module and stores its writable state in
+`./rootca.qcow2` by default. The offline CA state therefore persists inside the
+VM disk at `/var/lib/pseudo-design/offline-ca`.
+
+The QEMU terminal logs in as `root` automatically. The VM also initializes a
+VM-local SoftHSM PKCS#11 token at boot and configures the root CA tools to use
+that emulated token for the root signing key. The physical `rootca` host does
+not use these VM conveniences.
+
+SSH is forwarded from the host to the VM on port `2222`:
+
+```shell
+ssh -p 2222 adam@localhost
+```
+
+From inside the VM, use the same root CA commands as the physical `rootca`
+host:
+
+```shell
+sudo pseudo-design-ca-bootstrap
+sudo pseudo-design-ca-export
+sudo pseudo-design-ca-sign-intermediate /path/to/intermediate_ca.csr /path/to/intermediate_ca.crt
+sudo pseudo-design-ca-mint-token ace
+```
+
+For production root CA custody, prefer the physical offline `rootca` host or an
+HSM-backed setup. The VM is useful for local operations and rehearsal, but its
+private CA material and emulated PKCS#11 token live wherever the `rootca.qcow2`
+disk is stored.
 
 ## Installation
 
