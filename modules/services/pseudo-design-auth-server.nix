@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pdPki,
   pkgs,
   ...
 }:
@@ -19,10 +20,23 @@ let
     types
     ;
 
-  caTools = pkgs.callPackage ../../packages/pseudo-design-ca-tools { };
-  caStateDirArg = escapeShellArg cfg.caStateDir;
+  pdPkiIntermediateStateDirArg = escapeShellArg cfg.pdPkiIntermediateStateDir;
+  pdPkiSigningTools = pdPki.packages.${pkgs.stdenv.hostPlatform.system}.pd-pki-signing-tools;
   rootCertificateInstallService = "pseudo-design-step-ca-root-cert.service";
   stepCaConfigService = "pseudo-design-step-ca-config.service";
+  pdPkiIntermediateInitService = "pd-pki-intermediate-signing-authority-init.service";
+  pdPkiIntermediateAccessService = "pseudo-design-step-ca-intermediate-access.service";
+  pdPkiIntermediateParentDir = builtins.dirOf cfg.pdPkiIntermediateStateDir;
+  pdPkiBaseStateDir = builtins.dirOf pdPkiIntermediateParentDir;
+  pdPkiIntermediateParentDirArg = escapeShellArg pdPkiIntermediateParentDir;
+  pdPkiBaseStateDirArg = escapeShellArg pdPkiBaseStateDir;
+  pdPkiIntermediateKeyFileArg = escapeShellArg cfg.intermediateKeyFile;
+  pdPkiIntermediateCsrFileArg = escapeShellArg "${cfg.pdPkiIntermediateStateDir}/intermediate-ca.csr.pem";
+  pdPkiIntermediateRequestFileArg = escapeShellArg "${cfg.pdPkiIntermediateStateDir}/signing-request.json";
+  pdPkiIntermediateCertFileArg = escapeShellArg cfg.intermediateCertificateFile;
+  pdPkiIntermediateChainFileArg = escapeShellArg "${cfg.pdPkiIntermediateStateDir}/chain.pem";
+  pdPkiIntermediateCrlFileArg = escapeShellArg "${cfg.pdPkiIntermediateStateDir}/crl.pem";
+  pdPkiIntermediateMetadataFileArg = escapeShellArg "${cfg.pdPkiIntermediateStateDir}/signer-metadata.json";
   runtimeCaConfigFile = "/run/pseudo-design-step-ca/ca.json";
   usesRuntimeEnrollmentProvisioner = cfg.enrollmentProvisionerPublicKeyFile != null;
   usesStaticEnrollmentProvisioner = cfg.enrollmentProvisionerPublicKey != null;
@@ -68,51 +82,91 @@ let
     fi
   '';
 
-  caCreateIntermediateCsr = pkgs.writeShellApplication {
-    name = "pseudo-design-ca-create-intermediate-csr";
+  fixPdPkiIntermediateAccess = ''
+    for dir in ${pdPkiBaseStateDirArg} ${pdPkiIntermediateParentDirArg}; do
+      if [ -d "$dir" ]; then
+        chown root:root "$dir"
+        chmod 0755 "$dir"
+      fi
+    done
+
+    if [ -d ${pdPkiIntermediateStateDirArg} ]; then
+      chown root:step-ca ${pdPkiIntermediateStateDirArg}
+      chmod 0750 ${pdPkiIntermediateStateDirArg}
+    fi
+
+    if [ -e ${pdPkiIntermediateKeyFileArg} ]; then
+      chown root:step-ca ${pdPkiIntermediateKeyFileArg}
+      chmod 0640 ${pdPkiIntermediateKeyFileArg}
+    fi
+
+    for path in \
+      ${pdPkiIntermediateCsrFileArg} \
+      ${pdPkiIntermediateRequestFileArg} \
+      ${pdPkiIntermediateCertFileArg} \
+      ${pdPkiIntermediateChainFileArg} \
+      ${pdPkiIntermediateCrlFileArg} \
+      ${pdPkiIntermediateMetadataFileArg}; do
+      if [ -e "$path" ]; then
+        chown root:step-ca "$path"
+        chmod 0644 "$path"
+      fi
+    done
+  '';
+
+  caExportIntermediateRequest = pkgs.writeShellApplication {
+    name = "pseudo-design-ca-export-intermediate-request";
     runtimeInputs = [
       pkgs.coreutils
-      pkgs.step-cli
+      pdPkiSigningTools
     ];
     text = ''
       if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
-        printf 'Usage: sudo pseudo-design-ca-create-intermediate-csr\n'
-        exit 0
-      fi
-
-      if [ "$#" -ne 0 ]; then
-        printf 'Usage: sudo pseudo-design-ca-create-intermediate-csr\n' >&2
-        exit 2
-      fi
-
-      ${requireRoot}
-
-      export PSEUDO_DESIGN_STEP_CA_OWNER=step-ca:step-ca
-      exec ${caTools}/libexec/pseudo-design-ca/create-intermediate-csr.sh ${caStateDirArg}
-    '';
-  };
-
-  caInstallIntermediateCert = pkgs.writeShellApplication {
-    name = "pseudo-design-ca-install-intermediate-cert";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.openssl
-    ];
-    text = ''
-      if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
-        printf 'Usage: sudo pseudo-design-ca-install-intermediate-cert CERT\n'
+        printf 'Usage: sudo pseudo-design-ca-export-intermediate-request OUT_DIR\n'
         exit 0
       fi
 
       if [ "$#" -ne 1 ]; then
-        printf 'Usage: sudo pseudo-design-ca-install-intermediate-cert CERT\n' >&2
+        printf 'Usage: sudo pseudo-design-ca-export-intermediate-request OUT_DIR\n' >&2
         exit 2
       fi
 
       ${requireRoot}
 
-      export PSEUDO_DESIGN_STEP_CA_OWNER=step-ca:step-ca
-      exec ${caTools}/libexec/pseudo-design-ca/install-intermediate-cert.sh "$1" ${caStateDirArg}
+      systemctl start ${pdPkiIntermediateInitService}
+      systemctl start ${pdPkiIntermediateAccessService}
+      exec pd-pki-signing-tools export-request \
+        --role intermediate-signing-authority \
+        --state-dir ${pdPkiIntermediateStateDirArg} \
+        --out-dir "$1"
+    '';
+  };
+
+  caImportSignedIntermediate = pkgs.writeShellApplication {
+    name = "pseudo-design-ca-import-signed-intermediate";
+    runtimeInputs = [
+      pkgs.coreutils
+      pdPkiSigningTools
+    ];
+    text = ''
+      if [ "''${1:-}" = "-h" ] || [ "''${1:-}" = "--help" ]; then
+        printf 'Usage: sudo pseudo-design-ca-import-signed-intermediate SIGNED_DIR\n'
+        exit 0
+      fi
+
+      if [ "$#" -ne 1 ]; then
+        printf 'Usage: sudo pseudo-design-ca-import-signed-intermediate SIGNED_DIR\n' >&2
+        exit 2
+      fi
+
+      ${requireRoot}
+
+      pd-pki-signing-tools import-signed \
+        --role intermediate-signing-authority \
+        --state-dir ${pdPkiIntermediateStateDirArg} \
+        --signed-dir "$1"
+
+      ${fixPdPkiIntermediateAccess}
     '';
   };
 in
@@ -176,14 +230,20 @@ in
 
     intermediateCertificateFile = mkOption {
       type = types.str;
-      default = "${cfg.caStateDir}/certs/intermediate_ca.crt";
+      default = "${cfg.pdPkiIntermediateStateDir}/intermediate-ca.cert.pem";
       description = "Path to the online intermediate CA certificate.";
     };
 
     intermediateKeyFile = mkOption {
       type = types.str;
-      default = "${cfg.caStateDir}/secrets/intermediate_ca.key";
+      default = "${cfg.pdPkiIntermediateStateDir}/intermediate-ca.key.pem";
       description = "Path to the online intermediate CA private key.";
+    };
+
+    pdPkiIntermediateStateDir = mkOption {
+      type = types.str;
+      default = "/var/lib/pd-pki/authorities/intermediate";
+      description = "pd-pki runtime state directory for the online intermediate CA.";
     };
 
     authStateDir = mkOption {
@@ -275,8 +335,9 @@ in
 
     environment.systemPackages = [
       pkgs.step-cli
-      caCreateIntermediateCsr
-      caInstallIntermediateCert
+      pdPkiSigningTools
+      caExportIntermediateRequest
+      caImportSignedIntermediate
     ];
 
     systemd.tmpfiles.rules = [
@@ -327,12 +388,18 @@ in
         cfg.intermediateKeyFile
       ]
       ++ optional usesRuntimeEnrollmentProvisioner cfg.enrollmentProvisionerPublicKeyFile;
-      after =
-        optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService
-        ++ optional usesRuntimeEnrollmentProvisioner stepCaConfigService;
-      wants =
-        optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService
-        ++ optional usesRuntimeEnrollmentProvisioner stepCaConfigService;
+      after = [
+        pdPkiIntermediateInitService
+        pdPkiIntermediateAccessService
+      ]
+      ++ optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService
+      ++ optional usesRuntimeEnrollmentProvisioner stepCaConfigService;
+      wants = [
+        pdPkiIntermediateInitService
+        pdPkiIntermediateAccessService
+      ]
+      ++ optional (cfg.rootCertificateSourceFile != null) rootCertificateInstallService
+      ++ optional usesRuntimeEnrollmentProvisioner stepCaConfigService;
       serviceConfig.ExecStart = mkIf usesRuntimeEnrollmentProvisioner (mkForce [
         ""
         (
@@ -364,6 +431,21 @@ in
           ${cfg.rootCertificateSourceFile} \
           ${cfg.rootCertificateFile}
       '';
+    };
+
+    systemd.services.pseudo-design-step-ca-intermediate-access = {
+      description = "Grant step-ca access to pd-pki intermediate runtime files";
+      before = [ "step-ca.service" ];
+      after = [
+        "systemd-tmpfiles-setup.service"
+        pdPkiIntermediateInitService
+      ];
+      path = [ pkgs.coreutils ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = fixPdPkiIntermediateAccess;
     };
 
     systemd.services.pseudo-design-step-ca-config = mkIf usesRuntimeEnrollmentProvisioner {

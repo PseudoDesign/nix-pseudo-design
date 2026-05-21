@@ -10,6 +10,8 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
+
+    pd-pki.url = "github:PseudoDesign/nix-pd-pki";
   };
 
   outputs =
@@ -18,6 +20,7 @@
       disko,
       nixos-raspberrypi,
       nixpkgs,
+      pd-pki,
       ...
     }:
     let
@@ -30,6 +33,7 @@
 
       specialArgs = {
         inherit disko nixos-raspberrypi;
+        pdPki = pd-pki;
       };
 
       mkRpi5LuksSystem =
@@ -38,17 +42,6 @@
           inherit specialArgs;
           modules = [
             self.nixosModules.rpi5-luks-hardware
-            ./modules/users/adam.nix
-          ]
-          ++ modules;
-        };
-
-      mkRpi5SdSystem =
-        modules:
-        nixos-raspberrypi.lib.nixosSystemFull {
-          inherit specialArgs;
-          modules = [
-            self.nixosModules.rpi5-sd-image-hardware
             ./modules/users/adam.nix
           ]
           ++ modules;
@@ -63,77 +56,23 @@
           hostModule
         ];
 
-      mkRpi5OfflineCaHost =
-        hostModule:
-        mkRpi5SdSystem [
-          self.nixosModules.pseudo-design-offline-ca
-          ./modules/profiles/rpi-common.nix
-          hostModule
-        ];
-
-      mkRootCaVm =
-        system:
-        lib.nixosSystem {
-          inherit specialArgs system;
-          modules = [
-            self.nixosModules.pseudo-design-offline-ca
-            ./modules/users/adam.nix
-            ./modules/profiles/rpi-common.nix
-            ./hosts/rootca
-            ./hosts/rootca/vm.nix
-          ];
-        };
     in
     {
       checks = forAllSystems (
         system:
         import ./checks/default.nix {
-          inherit nixpkgs self system;
+          inherit
+            nixpkgs
+            pd-pki
+            self
+            system
+            ;
         }
       );
 
-      packages = forAllSystems (
-        system:
-        let
-          pkgs = import nixpkgs { inherit system; };
-        in
-        rec {
-          pseudo-design-ca-tools = pkgs.callPackage ./packages/pseudo-design-ca-tools { };
-          default = pseudo-design-ca-tools;
-        }
-        // lib.optionalAttrs (system == "aarch64-linux") {
-          rootca-sd-image = self.nixosConfigurations.rootca.config.system.build.sdImage;
-        }
-      );
+      packages = forAllSystems (_system: { });
 
-      apps = forAllSystems (
-        system:
-        let
-          caTools = self.packages.${system}.pseudo-design-ca-tools;
-          mkCaApp = name: description: {
-            type = "app";
-            program = "${caTools}/bin/${name}";
-            meta.description = description;
-          };
-          rootcaVm = self.nixosConfigurations.rootca-vm.config.system.build.vm;
-        in
-        {
-          ca-bootstrap = mkCaApp "pseudo-design-ca-bootstrap" "Bootstrap the pseudo.design offline CA state";
-          ca-create-intermediate-csr = mkCaApp "pseudo-design-ca-create-intermediate-csr" "Generate an online intermediate CA CSR and private key";
-          ca-export = mkCaApp "pseudo-design-ca-export" "Export pseudo.design CA artifacts for transfer";
-          ca-install-intermediate-cert = mkCaApp "pseudo-design-ca-install-intermediate-cert" "Install a signed online intermediate CA certificate";
-          ca-install-public-artifacts = mkCaApp "pseudo-design-ca-install-public-artifacts" "Install pseudo.design public CA artifacts into the repo";
-          ca-mint-token = mkCaApp "pseudo-design-ca-mint-token" "Mint a pseudo.design device enrollment token";
-          ca-sign-intermediate = mkCaApp "pseudo-design-ca-sign-intermediate" "Sign an online intermediate CA CSR with the offline root";
-        }
-        // lib.optionalAttrs (system == "x86_64-linux") {
-          rootca-vm = {
-            type = "app";
-            program = lib.getExe rootcaVm;
-            meta.description = "Run the pseudo.design root CA NixOS VM";
-          };
-        }
-      );
+      apps = forAllSystems (_system: { });
 
       devShells = forAllSystems (
         system:
@@ -147,7 +86,8 @@
               pkgs.openssl
               pkgs.openssh
               pkgs.step-cli
-              self.packages.${system}.pseudo-design-ca-tools
+              pd-pki.packages.${system}.pd-pki-operator
+              pd-pki.packages.${system}.pd-pki-signing-tools
             ];
           };
         }
@@ -155,17 +95,13 @@
 
       nixosModules = {
         rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
-        rpi5-sd-image-hardware = ./modules/hardware/rpi5-sd-image.nix;
         pseudo-design-auth-server = ./modules/services/pseudo-design-auth-server.nix;
         pseudo-design-device-identity = ./modules/services/pseudo-design-device-identity.nix;
-        pseudo-design-offline-ca = ./modules/services/pseudo-design-offline-ca.nix;
       };
 
       nixosConfigurations = {
         ace = mkRpi5Host ./hosts/ace;
         mako = mkRpi5Host ./hosts/mako;
-        rootca = mkRpi5OfflineCaHost ./hosts/rootca;
-        rootca-vm = mkRootCaVm "x86_64-linux";
       };
     };
 }

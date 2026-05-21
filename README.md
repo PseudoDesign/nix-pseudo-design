@@ -1,59 +1,32 @@
 # nix-pseudo-design
 
-NixOS configurations for the `ace`, `mako`, and `rootca` Raspberry Pi 5 hosts,
-plus a local `rootca-vm` for running the root CA workflow in a VM.
+NixOS configurations for the online `ace` and `mako` Raspberry Pi 5 hosts.
+Offline root PKI images, root inventory, intermediate signing, and enrollment
+token custody live in the separate
+[`PseudoDesign/nix-pd-pki`](https://github.com/PseudoDesign/nix-pd-pki)
+flake, which this repo pins as the `pd-pki` input.
 
-The `ace` and `mako` Pi systems share a generic Raspberry Pi 5 hardware
-configuration that boots from NVMe and unlocks a LUKS encrypted root filesystem
-with a key derived from the Raspberry Pi OTP private key. The physical `rootca`
-host is built as a dedicated plain SD-card image for offline CA operations.
+The `ace` and `mako` Pi systems share a Raspberry Pi 5 hardware configuration
+that boots from NVMe and unlocks a LUKS encrypted root filesystem with a key
+derived from the Raspberry Pi OTP private key. `mako` runs the online
+Smallstep intermediate CA, the device enrollment endpoint, and the nginx mTLS
+auth gateway.
 
 ## Systems
 
 ```shell
 nix eval --raw .#nixosConfigurations.ace.config.networking.hostName
 nix eval --raw .#nixosConfigurations.mako.config.networking.hostName
-nix eval --raw .#nixosConfigurations.rootca.config.networking.hostName
-nix eval --raw .#nixosConfigurations.rootca-vm.config.networking.hostName
 ```
 
-## Root CA VM
-
-On an `x86_64-linux` host, run the offline root CA machine as a local NixOS VM:
+The development shell includes the `pd-pki` operator and signing tools from the
+pinned flake:
 
 ```shell
-nix run .#rootca-vm
+nix develop
+pd-pki-signing-tools --help
+pd-pki-operator --help
 ```
-
-The VM reuses the same `rootca` host module and stores its writable state in
-`./rootca.qcow2` by default. The offline CA state therefore persists inside the
-VM disk at `/var/lib/pseudo-design/offline-ca`.
-
-The QEMU terminal logs in as `root` automatically. The VM also initializes a
-VM-local SoftHSM PKCS#11 token at boot and configures the root CA tools to use
-that emulated token for the root signing key. The physical `rootca` host does
-not use these VM conveniences.
-
-SSH is forwarded from the host to the VM on port `2222`:
-
-```shell
-ssh -p 2222 adam@localhost
-```
-
-From inside the VM, use the same root CA commands as the physical `rootca`
-host:
-
-```shell
-sudo pseudo-design-ca-bootstrap
-sudo pseudo-design-ca-export
-sudo pseudo-design-ca-sign-intermediate /path/to/intermediate_ca.csr /path/to/intermediate_ca.crt
-sudo pseudo-design-ca-mint-token ace
-```
-
-For production root CA custody, prefer the physical offline `rootca` host or an
-HSM-backed setup. The VM is useful for local operations and rehearsal, but its
-private CA material and emulated PKCS#11 token live wherever the `rootca.qcow2`
-disk is stored.
 
 ## Installation
 
@@ -126,34 +99,7 @@ derived LUKS key under `/run`, formats the encrypted root filesystem, then
 installs the salt into `/var/lib/rpi-otp-derived-key/salt/luks-key` on the
 target system.
 
-### Install rootca on an SD card
-
-Build the physical offline CA image:
-
-```shell
-nix build .#packages.aarch64-linux.rootca-sd-image
-```
-
-The canonical configuration build target is also available:
-
-```shell
-nix build .#nixosConfigurations.rootca.config.system.build.sdImage
-```
-
-Write the image to an SD card, replacing `/dev/sdX` with the whole card device:
-
-```shell
-zstdcat result/sd-image/pseudo-design-rootca-rpi5-sd-*.img.zst \
-  | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
-sync
-```
-
-Boot the Raspberry Pi 5 from that SD card. The `rootca` image uses an
-unencrypted ext4 root filesystem on the SD card; protect the card itself as the
-offline CA custody boundary because `/var/lib/pseudo-design/offline-ca` stores
-root CA private material after bootstrap.
-
-## Device certificate auth
+## Device Certificate Auth
 
 `mako` is configured as the `pseudo.design` certificate authority and mTLS auth
 gateway:
@@ -164,103 +110,59 @@ gateway:
   local P-256 key, create a CSR, enroll with a one-time token, and renew the
   certificate automatically.
 
-The offline `rootca` host stores the CA private material and enrollment signing
-key under `/var/lib/pseudo-design/offline-ca`. Private material is intentionally
-not stored in this repository or the Nix store. The non-secret CA workflow and
-public artifacts live under `packages/pseudo-design-ca-tools/` and `ca/public/`.
-
-See [docs/device-certificate-auth.md](docs/device-certificate-auth.md) for the
-architecture, trust model, runtime files, and module-level change summary.
-
-### Bootstrap the CA
-
-Build and boot the offline CA SD-card image:
+Offline CA operations are intentionally outside this repo. Build and operate
+the root CA images from `nix-pd-pki`:
 
 ```shell
-nix build --no-link .#nixosConfigurations.rootca.config.system.build.sdImage
+nix build github:PseudoDesign/nix-pd-pki#packages.aarch64-linux.rpi5-root-ca-sd-image
 ```
 
-On `rootca`, create the root CA and one-time-token provisioner in the fixed
-root-only state directory:
+Commit the public root inventory and public device enrollment JWK in
+`nix-pd-pki`, then update this repo's `pd-pki` lock to that commit:
 
 ```shell
-sudo pseudo-design-ca-bootstrap
+nix flake lock --update-input pd-pki
 ```
 
-The non-secret CA settings are in
-`packages/pseudo-design-ca-tools/config.sh` and are baked into the installed CA
-commands. Override them in the script before deploying `rootca` if the domain,
-names, or durations ever need to change.
+Deploy `mako`. It creates the online intermediate key and request under
+`/var/lib/pd-pki/authorities/intermediate`; the private key stays on `mako`.
 
-Export public artifacts for removable-media transfer:
-
-```shell
-sudo pseudo-design-ca-export
-```
-
-This writes:
-
-- `/var/lib/pseudo-design/offline-ca/export/public/` for commit-safe public
-  artifacts.
-
-Install the public artifacts into this repository and commit them:
-
-```shell
-EXPORT_PUBLIC=/path/to/removable-media/public
-nix run .#ca-install-public-artifacts -- "$EXPORT_PUBLIC"
-
-git add ca/public/root_ca.crt \
-  ca/public/root_ca.fingerprint \
-  ca/public/device-enrollment.pub.json
-```
-
-Once committed, `hosts/mako/default.nix` automatically configures the public
-root certificate and enrollment JWK. `modules/profiles/base-rpi.nix`
-automatically pins the root fingerprint for device enrollment.
-
-Generate the online intermediate key and CSR on `mako`. The key is created under
-`/var/lib/step-ca/secrets/intermediate_ca.key` and must never leave `mako`:
+Export the request bundle from `mako`:
 
 ```shell
 ssh root@mako.local
-pseudo-design-ca-create-intermediate-csr
+pseudo-design-ca-export-intermediate-request /path/to/removable-media/request
 exit
-
-scp root@mako.local:/var/lib/step-ca/certs/intermediate_ca.csr \
-  /path/to/removable-media/intermediate_ca.csr
 ```
 
-Sign that CSR on `rootca` using the offline root key:
+Sign that request on the offline `nix-pd-pki` appliance with
+`pd-pki-signing-tools sign-request`, then import the signed bundle back on
+`mako`:
 
 ```shell
-sudo pseudo-design-ca-sign-intermediate \
-  /path/to/removable-media/intermediate_ca.csr \
-  /path/to/removable-media/intermediate_ca.crt
-```
-
-Copy only the signed intermediate certificate back to `mako`:
-
-```shell
-scp /path/to/removable-media/intermediate_ca.crt root@mako.local:/root/
+scp -r /path/to/removable-media/signed root@mako.local:/root/signed-intermediate
 ssh root@mako.local
-pseudo-design-ca-install-intermediate-cert /root/intermediate_ca.crt
-rm -f /root/intermediate_ca.crt
+pseudo-design-ca-import-signed-intermediate /root/signed-intermediate
+rm -rf /root/signed-intermediate
 systemctl restart step-ca.service pseudo-design-auth-ca-bundle.service nginx.service
 ```
 
-Keep `root_ca.key`, `root-password`, `device-enrollment.key.json`, and
-`provisioner-password` offline on `rootca`. Keep `intermediate_ca.key` on
-`mako`; it is online CA private material and is protected by file permissions and
-the encrypted root filesystem.
+Keep root keys, enrollment private JWKs, provisioner passwords, and minted
+tokens offline in the `nix-pd-pki` appliance workflow. Keep the intermediate CA
+private key on `mako`; it is online CA private material protected by file
+permissions and the encrypted root filesystem.
 
-### Enroll a device
+### Enroll a Device
 
-Generate a short-lived, identity-bound token for the host you are enrolling:
+Mint a short-lived, identity-bound token on the offline `nix-pd-pki` appliance:
 
 ```shell
 HOST=ace
 TOKEN="$(
-  sudo pseudo-design-ca-mint-token "$HOST"
+  sudo pd-pki-signing-tools mint-device-enrollment-token \
+    --state-dir /var/lib/pd-pki/device-enrollment \
+    --root-cert /var/lib/pd-pki/root/root-ca.cert.pem \
+    --host "$HOST"
 )"
 ```
 
@@ -275,16 +177,12 @@ ssh root@$HOST.local systemctl start pseudo-design-device-enroll.service
 ssh root@$HOST.local systemctl status pseudo-design-device-renew.timer
 ```
 
-If the deployed host configuration does not yet include
-`ca/public/root_ca.fingerprint`, also copy the exported `root_ca.fingerprint` to
-`/run/keys/pseudo-design-ca-fingerprint` before starting enrollment.
-
 The Pi stores its client key and certificate under
 `/var/lib/pseudo-design/device-identity/`. The enrollment token is removed after
 successful enrollment. Renewal checks run hourly and renew when less than eight
 hours remain on the 24-hour certificate.
 
-### Use and revoke certificates
+### Use and Revoke Certificates
 
 From an enrolled Pi:
 
@@ -302,3 +200,6 @@ certificate immediately, add its nginx `$ssl_client_fingerprint` value to
 ```nginx
 ABCD1234... 1;
 ```
+
+See [docs/device-certificate-auth.md](docs/device-certificate-auth.md) for the
+architecture, trust model, runtime files, and module-level change summary.

@@ -1,19 +1,22 @@
-{ lib, ... }:
+{ lib, pdPki, ... }:
 
 let
-  rootFingerprintFile = ../../ca/public/root_ca.fingerprint;
-  readFingerprint =
-    path: builtins.replaceStrings [ "\n" "\r" " " "\t" ] [ "" "" "" "" ] (builtins.readFile path);
+  rootInventoryRoot = pdPki + "/inventory/root-ca";
+  rootInventoryEntries = builtins.attrNames (builtins.readDir rootInventoryRoot);
+  rootFingerprint =
+    if rootInventoryEntries == [ ] then
+      null
+    else
+      builtins.head (lib.sort (left: right: left < right) rootInventoryEntries);
 in
 {
   imports = [ ./rpi-common.nix ];
 
-  services.pseudoDesign.deviceIdentity =
-    {
-      enable = true;
-    }
-    // lib.optionalAttrs (builtins.pathExists rootFingerprintFile) {
-      rootFingerprint = readFingerprint rootFingerprintFile;
-    };
+  services.pseudoDesign.deviceIdentity = {
+    enable = true;
+  }
+  // lib.optionalAttrs (rootFingerprint != null) {
+    inherit rootFingerprint;
+  };
 
 }

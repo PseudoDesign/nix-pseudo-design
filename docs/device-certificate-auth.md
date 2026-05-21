@@ -1,12 +1,11 @@
 # Device Certificate Auth
 
-This document describes the device certificate authentication changes for the
+This document describes the device certificate authentication setup for the
 `pseudo.design` Raspberry Pi fleet.
 
 ## Overview
 
-The repo now defines a small private PKI and mTLS auth gateway around
-Smallstep `step-ca`:
+This repo now owns only the online side of the PKI:
 
 - `mako` runs `step-ca` on `ca.pseudo.design:8443`.
 - `mako` serves `auth.pseudo.design` through nginx with client certificate
@@ -16,9 +15,9 @@ Smallstep `step-ca`:
 - Device certificates are valid for 24 hours and renew automatically before
   expiry.
 
-The implementation avoids a custom CA protocol. It relies on `step-ca` for
-certificate issuance and renewal, nginx for mTLS enforcement, and NixOS
-systemd units for device enrollment and recurring renewal.
+Offline root CA images, root inventory, intermediate signing, and enrollment
+token custody live in the pinned `pd-pki` flake input from
+`PseudoDesign/nix-pd-pki`.
 
 ## Trust Model
 
@@ -27,24 +26,22 @@ The Raspberry Pi OTP-derived secret remains scoped to local disk unlock on
 key stored under `/var/lib/pseudo-design/device-identity/` on the encrypted root
 filesystem.
 
-The root CA is expected to stay offline on the `rootca` host under
-`/var/lib/pseudo-design/offline-ca`. The physical `rootca` host boots from a
-plain, unencrypted SD-card image, so physical custody of that SD card is the
-protection boundary for offline CA private material. `mako` only needs the
-public root certificate, the online intermediate certificate, and the
-unencrypted intermediate private key generated locally on `mako`. The
-intermediate private key never leaves `mako` and is protected by file
-permissions and the encrypted root filesystem.
+The root CA private key, root signing policy, enrollment private JWK, and token
+minting password stay offline in the `nix-pd-pki` appliance workflow. This repo
+reads only public artifacts from the pinned flake input:
 
-The enrollment provisioner has two halves:
+- public root inventory under `inventory/root-ca/`;
+- public device enrollment JWK under `inventory/device-enrollment/`;
+- `pd-pki-signing-tools` and NixOS modules used for the intermediate handoff.
 
-- `device-enrollment.pub.json` is public and can be committed after generation.
-- `device-enrollment.key.json` and its password stay offline and are used only
-  to mint short-lived enrollment tokens.
+`mako` creates and stores the online intermediate private key locally under
+`/var/lib/pd-pki/authorities/intermediate/intermediate-ca.key.pem`. That key
+never leaves `mako` and is protected by file permissions and the encrypted root
+filesystem.
 
-The public root certificate, root fingerprint, and public enrollment JWK can be
-committed. No CA passwords, enrollment tokens, private keys, or online
-intermediate private material are stored in the Nix store by this configuration.
+No CA passwords, enrollment tokens, root private keys, enrollment private JWKs,
+or online intermediate private material are stored in the Nix store by this
+configuration.
 
 ## Host Changes
 
@@ -57,7 +54,14 @@ intermediate private material are stored in the Nix store by this configuration.
 - forwards verified certificate identity to an upstream through
   `X-Pseudo-Design-Client-*` headers;
 - maintains an nginx fingerprint denylist at
-  `/var/lib/pseudo-design/auth/deny-fingerprints.map`.
+  `/var/lib/pseudo-design/auth/deny-fingerprints.map`;
+- installs wrappers to export the pd-pki intermediate request bundle and import
+  the signed intermediate bundle.
+
+`hosts/mako/default.nix` imports
+`pd-pki.nixosModules.intermediate-signing-authority`, installs the pinned public
+root certificate for `step-ca`, reads the public enrollment JWK when present,
+and configures the pd-pki intermediate request role.
 
 `modules/services/pseudo-design-device-identity.nix` adds the device side:
 
@@ -69,21 +73,8 @@ intermediate private material are stored in the Nix store by this configuration.
 - runs a renewal timer that checks hourly and renews when less than eight hours
   remain.
 
-`modules/services/pseudo-design-offline-ca.nix` adds the offline root CA side:
-
-- installs `step-cli`, `openssl`, and fixed-path CA operation commands;
-- creates `/var/lib/pseudo-design/offline-ca` as root-only state;
-- exports public artifacts for removable-media transfer;
-- signs a `mako`-generated intermediate CSR without receiving the intermediate
-  private key.
-
-`modules/hardware/rpi5-sd-image.nix` builds the physical `rootca` host as a
-plain Raspberry Pi 5 SD-card image. `modules/profiles/base-rpi.nix` enables
-device identity for every non-root-CA Raspberry Pi host and pins
-`ca/public/root_ca.fingerprint` when that public artifact is present.
-`hosts/mako/default.nix` enables the auth server on `mako`, installs
-`ca/public/root_ca.crt` when present, and imports
-`ca/public/device-enrollment.pub.json` when that public artifact is present.
+`modules/profiles/base-rpi.nix` enables device identity on Raspberry Pi hosts
+and pins the root fingerprint from the pd-pki root inventory.
 
 ## Certificate Shape
 
@@ -104,9 +95,11 @@ kept mainly for logs and operator readability.
 On `mako`:
 
 - `/var/lib/step-ca/certs/root_ca.crt`
-- `/var/lib/step-ca/certs/intermediate_ca.csr` until the CSR is signed
-- `/var/lib/step-ca/certs/intermediate_ca.crt`
-- `/var/lib/step-ca/secrets/intermediate_ca.key`
+- `/var/lib/pd-pki/authorities/intermediate/intermediate-ca.key.pem`
+- `/var/lib/pd-pki/authorities/intermediate/intermediate-ca.csr.pem`
+- `/var/lib/pd-pki/authorities/intermediate/signing-request.json`
+- `/var/lib/pd-pki/authorities/intermediate/intermediate-ca.cert.pem`
+- `/var/lib/pd-pki/authorities/intermediate/chain.pem`
 - `/var/lib/pseudo-design/auth/device-root-ca.crt`
 - `/var/lib/pseudo-design/auth/deny-fingerprints.map`
 
@@ -123,56 +116,54 @@ The enrollment token is removed after successful enrollment.
 
 ## Operations
 
-The README contains the runbook for CA bootstrap, device enrollment, test
-requests, and emergency certificate blocking.
+Build offline root/provisioner/signer images from `nix-pd-pki`, not this repo.
+After the public root inventory and public enrollment JWK are committed there,
+update this repo's `pd-pki` lock and deploy `mako`.
 
-The offline CA tooling is packaged under `packages/pseudo-design-ca-tools/`:
+The `mako` auth-server configuration installs:
 
-- `config.sh` stores non-secret CA names, domain, durations, and provisioner
-  settings.
-- `bootstrap-offline-ca.sh` creates or reuses the offline CA working directory.
-- `create-intermediate-csr.sh` creates the online intermediate key and CSR on
-  `mako`.
-- `sign-intermediate.sh` signs a validated `mako` CSR with the offline root CA.
-- `install-intermediate-cert.sh` verifies and installs the signed intermediate
-  certificate on `mako`.
-- `export-artifacts.sh` prepares public artifacts for removable-media transfer.
-- `install-public-artifacts.sh` copies commit-safe public artifacts into the
-  repo.
-- `mint-device-token.sh` creates short-lived, identity-bound enrollment tokens.
+- `pseudo-design-ca-export-intermediate-request`;
+- `pseudo-design-ca-import-signed-intermediate`;
+- `pd-pki-signing-tools`.
 
-The `rootca` NixOS configuration installs fixed-path wrappers around those
-scripts: `pseudo-design-ca-bootstrap`, `pseudo-design-ca-export`,
-`pseudo-design-ca-sign-intermediate`, and `pseudo-design-ca-mint-token`.
-The `mako` auth-server configuration installs
-`pseudo-design-ca-create-intermediate-csr` and
-`pseudo-design-ca-install-intermediate-cert`.
+The intermediate handoff is bundle-based:
 
-The remaining required setup before enrolling real devices is to build and boot
-the `rootca` SD-card image, run the bootstrap and export commands there, commit
-the public artifacts, deploy the updated NixOS configuration, generate the
-intermediate CSR on `mako`, sign it on `rootca`, and install only the signed
-intermediate certificate back onto `mako`.
+1. `mako` creates the online intermediate private key and pd-pki signing request.
+2. `pseudo-design-ca-export-intermediate-request OUT_DIR` exports the request
+   bundle for removable-media transfer.
+3. The offline pd-pki appliance signs the request with
+   `pd-pki-signing-tools sign-request`.
+4. `pseudo-design-ca-import-signed-intermediate SIGNED_DIR` imports the signed
+   bundle on `mako`.
+5. Restart `step-ca.service`, `pseudo-design-auth-ca-bundle.service`, and
+   `nginx.service`.
 
-After that, enrollment is intentionally token-based and host-bound:
-`mint-device-token.sh` includes the exact subject and SANs for the target
-device and defaults tokens to a 15-minute lifetime.
+Enrollment is intentionally token-based and host-bound. The offline pd-pki
+appliance mints tokens with:
+
+```shell
+pd-pki-signing-tools mint-device-enrollment-token \
+  --state-dir /var/lib/pd-pki/device-enrollment \
+  --root-cert /var/lib/pd-pki/root/root-ca.cert.pem \
+  --host ace
+```
+
+The token subject and SANs are bound to the requested host and default to a
+short lifetime.
 
 ## Verification
 
-The implementation was checked with:
+The flake checks cover:
+
+- generated device enrollment and renewal units;
+- auth-server `step-ca` and nginx configuration;
+- removal of local offline root CA images, apps, modules, and packages;
+- `mako` integration with the pinned pd-pki intermediate role;
+- a VM PKI handoff test that uses pd-pki signing tools for request export,
+  offline signing, signed import, and enrollment token minting.
+
+Run:
 
 ```shell
 nix flake check
-nix build --no-link .#nixosConfigurations.rootca.config.system.build.sdImage
-nix build --no-link .#nixosConfigurations.ace.config.system.build.toplevel
-nix build --no-link .#nixosConfigurations.mako.config.system.build.toplevel
-git diff --cached --check
 ```
-
-`nix flake check` includes targeted module checks for the generated device
-enrollment/renewal units, the auth-server `step-ca`/nginx configuration, and
-the physical `rootca` SD-card image shape.
-
-The current `mako` build warns until `ca/public/device-enrollment.pub.json` is
-committed. That warning is expected before public CA artifacts are installed.

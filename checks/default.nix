@@ -1,5 +1,6 @@
 {
   nixpkgs,
+  pd-pki,
   self,
   system,
 }:
@@ -7,7 +8,6 @@
 let
   lib = nixpkgs.lib;
   pkgs = import nixpkgs { inherit system; };
-  caTools = self.packages.${system}.pseudo-design-ca-tools;
 
   enrollmentProvisionerPublicKey = {
     kty = "EC";
@@ -22,6 +22,9 @@ let
     modules:
     (lib.nixosSystem {
       inherit system;
+      specialArgs = {
+        pdPki = pd-pki;
+      };
       modules = modules ++ [
         {
           system.stateVersion = "25.11";
@@ -76,7 +79,7 @@ let
         enable = true;
         enrollmentProvisionerPublicKey = enrollmentProvisionerPublicKey;
         authUpstream = "http://127.0.0.1:8080";
-        rootCertificateSourceFile = ../ca/public/README.md;
+        rootCertificateSourceFile = ../README.md;
       };
     }
   ];
@@ -84,6 +87,8 @@ let
   authServer = authConfig.services.pseudoDesign.authServer;
   authPackageNames = map lib.getName authConfig.environment.systemPackages;
   rootCertService = authConfig.systemd.services.pseudo-design-step-ca-root-cert;
+  authIntermediateAccessService =
+    authConfig.systemd.services.pseudo-design-step-ca-intermediate-access;
   authBundleService = authConfig.systemd.services.pseudo-design-auth-ca-bundle;
   stepCa = authConfig.services.step-ca;
   stepCaService = authConfig.systemd.services.step-ca;
@@ -121,19 +126,8 @@ let
   runtimeNginxService = runtimeAuthConfig.systemd.services.nginx;
   runtimeAuthVhost = runtimeAuthConfig.services.nginx.virtualHosts.${runtimeAuthServer.authHost};
 
-  offlineCaConfig = mkConfig [
-    self.nixosModules.pseudo-design-offline-ca
-    {
-      services.pseudoDesign.offlineCa.enable = true;
-    }
-  ];
-
-  offlineCa = offlineCaConfig.services.pseudoDesign.offlineCa;
-  offlineCaPackageNames = map lib.getName offlineCaConfig.environment.systemPackages;
-
-  rootcaConfig = self.nixosConfigurations.rootca.config;
-  rootcaBuild = rootcaConfig.system.build;
-  rootcaBuildAttrNames = builtins.attrNames rootcaBuild;
+  makoConfig = self.nixosConfigurations.mako.config;
+  makoIntermediate = makoConfig.services.pd-pki.roles.intermediateSigningAuthority;
 in
 {
   pseudo-design-device-identity-module = mkCheck "pseudo-design-device-identity-module" [
@@ -219,8 +213,8 @@ in
     {
       condition = lib.all (path: lib.elem path stepCaService.unitConfig.ConditionPathExists) [
         "/var/lib/step-ca/certs/root_ca.crt"
-        "/var/lib/step-ca/certs/intermediate_ca.crt"
-        "/var/lib/step-ca/secrets/intermediate_ca.key"
+        "/var/lib/pd-pki/authorities/intermediate/intermediate-ca.cert.pem"
+        "/var/lib/pd-pki/authorities/intermediate/intermediate-ca.key.pem"
       ];
       message = "step-ca should require root, intermediate cert, and intermediate key files";
     }
@@ -293,12 +287,32 @@ in
       message = "auth vhost should proxy to the configured upstream";
     }
     {
-      condition = lib.elem "pseudo-design-ca-create-intermediate-csr" authPackageNames;
-      message = "auth server should install the online intermediate CSR command";
+      condition = lib.elem "pseudo-design-ca-export-intermediate-request" authPackageNames;
+      message = "auth server should install the pd-pki intermediate request export command";
     }
     {
-      condition = lib.elem "pseudo-design-ca-install-intermediate-cert" authPackageNames;
-      message = "auth server should install the online intermediate certificate install command";
+      condition = lib.elem "pseudo-design-ca-import-signed-intermediate" authPackageNames;
+      message = "auth server should install the pd-pki signed intermediate import command";
+    }
+    {
+      condition = lib.elem "pd-pki-signing-tools" authPackageNames;
+      message = "auth server should install pd-pki signing tools";
+    }
+    {
+      condition = authIntermediateAccessService.serviceConfig.Type == "oneshot";
+      message = "auth server should normalize pd-pki intermediate permissions with a one-shot service";
+    }
+    {
+      condition = lib.elem "pseudo-design-step-ca-intermediate-access.service" stepCaService.after;
+      message = "step-ca should wait for pd-pki intermediate runtime permissions";
+    }
+    {
+      condition = hasInfix "chmod 0750 /var/lib/pd-pki/authorities/intermediate" authIntermediateAccessService.script;
+      message = "pd-pki intermediate state dir should be traversable only by root and step-ca";
+    }
+    {
+      condition = hasInfix "chmod 0640 /var/lib/pd-pki/authorities/intermediate/intermediate-ca.key.pem" authIntermediateAccessService.script;
+      message = "pd-pki intermediate private key should be group-readable only by step-ca";
     }
     {
       condition = rootCertService.serviceConfig.Type == "oneshot";
@@ -319,12 +333,12 @@ in
     {
       condition = lib.all (path: lib.elem path authBundleService.unitConfig.ConditionPathExists) [
         "/var/lib/step-ca/certs/root_ca.crt"
-        "/var/lib/step-ca/certs/intermediate_ca.crt"
+        "/var/lib/pd-pki/authorities/intermediate/intermediate-ca.cert.pem"
       ];
       message = "auth CA bundle should wait for root and intermediate certificates";
     }
     {
-      condition = hasInfix "/var/lib/step-ca/certs/intermediate_ca.crt" authBundleService.script;
+      condition = hasInfix "/var/lib/pd-pki/authorities/intermediate/intermediate-ca.cert.pem" authBundleService.script;
       message = "auth CA bundle should include the intermediate certificate for nginx client verification";
     }
     {
@@ -377,151 +391,52 @@ in
     }
   ];
 
-  pseudo-design-offline-ca-module = mkCheck "pseudo-design-offline-ca-module" [
+  pseudo-design-offline-pki-removed = mkCheck "pseudo-design-offline-pki-removed" [
     {
-      condition = offlineCa.enable;
-      message = "offline CA module should be enabled";
+      condition = !(builtins.hasAttr "rootca" self.nixosConfigurations);
+      message = "this repo should not export a rootca NixOS configuration";
     }
     {
-      condition = offlineCa.stateDir == "/var/lib/pseudo-design/offline-ca";
-      message = "offline CA state directory should use the fixed default";
+      condition = !(builtins.hasAttr "rootca-vm" self.nixosConfigurations);
+      message = "this repo should not export a rootca VM";
     }
     {
-      condition = offlineCa.exportDir == "/var/lib/pseudo-design/offline-ca/export";
-      message = "offline CA export directory should default under the state directory";
+      condition = !(builtins.hasAttr "pseudo-design-offline-ca" self.nixosModules);
+      message = "this repo should not export the offline CA module";
     }
     {
-      condition = lib.elem "d /var/lib/pseudo-design/offline-ca 0700 root root -" offlineCaConfig.systemd.tmpfiles.rules;
-      message = "offline CA state directory should be root-only";
+      condition = !(builtins.hasAttr "rootca-sd-image" self.packages.aarch64-linux);
+      message = "this repo should not export a rootca SD image package";
     }
     {
-      condition = lib.elem "d /var/lib/pseudo-design/offline-ca/export 0700 root root -" offlineCaConfig.systemd.tmpfiles.rules;
-      message = "offline CA export directory should be root-only";
-    }
-    {
-      condition = lib.elem "pseudo-design-ca-bootstrap" offlineCaPackageNames;
-      message = "offline CA bootstrap command should be installed";
-    }
-    {
-      condition = lib.elem "pseudo-design-ca-export" offlineCaPackageNames;
-      message = "offline CA export command should be installed";
-    }
-    {
-      condition = lib.elem "pseudo-design-ca-sign-intermediate" offlineCaPackageNames;
-      message = "offline CA intermediate signing command should be installed";
-    }
-    {
-      condition = lib.elem "pseudo-design-ca-mint-token" offlineCaPackageNames;
-      message = "offline CA token command should be installed";
-    }
-    {
-      condition = lib.elem "step-kms-plugin" offlineCaPackageNames;
-      message = "offline CA module should install step-kms-plugin for KMS-backed root operations";
+      condition = !(builtins.hasAttr "ca-bootstrap" self.apps.x86_64-linux);
+      message = "this repo should not export local offline CA apps";
     }
   ];
 
-  pseudo-design-rootca-sd-image = mkCheck "pseudo-design-rootca-sd-image" [
+  pseudo-design-mako-pd-pki-integration = mkCheck "pseudo-design-mako-pd-pki-integration" [
     {
-      condition = rootcaConfig.services.pseudoDesign.offlineCa.enable;
-      message = "physical rootca should enable the offline CA service";
+      condition = makoIntermediate.enable;
+      message = "mako should enable the pd-pki intermediate signing authority role";
     }
     {
-      condition = builtins.hasAttr "sdImage" rootcaBuild;
-      message = "physical rootca should expose an SD-card image build";
+      condition = makoIntermediate.stateDir == "/var/lib/pd-pki/authorities/intermediate";
+      message = "mako should use the canonical pd-pki intermediate state dir";
     }
     {
-      condition = builtins.hasAttr "rootca-sd-image" self.packages.aarch64-linux;
-      message = "physical rootca SD image should have an aarch64 package alias";
+      condition = makoIntermediate.request.commonName == "Pseudo Design Intermediate CA";
+      message = "mako should request the pseudo.design intermediate subject";
     }
     {
-      condition = rootcaConfig.fileSystems."/".device == "/dev/disk/by-label/NIXOS_SD";
-      message = "physical rootca root filesystem should use the SD-card root label";
-    }
-    {
-      condition = rootcaConfig.fileSystems."/boot/firmware".device == "/dev/disk/by-label/FIRMWARE";
-      message = "physical rootca firmware filesystem should use the SD-card firmware label";
-    }
-    {
-      condition =
-        !lib.any (name: lib.elem name rootcaBuildAttrNames) [
-          "disko"
-          "diskoImages"
-          "diskoScript"
-          "formatScript"
-          "mountScript"
-        ];
-      message = "physical rootca should not expose disko build products";
+      condition = makoIntermediate.request.key.algorithm == "ec-p256";
+      message = "mako should use the existing P-256 intermediate key shape";
     }
   ];
-
-  pseudo-design-ca-tools-split-intermediate-workflow =
-    pkgs.runCommandLocal "pseudo-design-ca-tools-split-intermediate-workflow"
-      {
-        nativeBuildInputs = [
-          caTools
-          pkgs.coreutils
-          pkgs.openssl
-          pkgs.step-cli
-        ];
-      }
-      ''
-        set -euo pipefail
-
-        export HOME="$TMPDIR/home"
-        export PSEUDO_DESIGN_REPO_ROOT=/not-the-ca-state
-        mkdir -p "$HOME"
-
-        offline_dir="$TMPDIR/offline-ca"
-        online_dir="$TMPDIR/online-ca"
-        export_dir="$TMPDIR/export"
-        signed_dir="$TMPDIR/signed"
-        signed_cert="$signed_dir/intermediate_ca.crt"
-        mkdir -p "$signed_dir"
-
-        pseudo-design-ca-bootstrap "$offline_dir"
-        test -s "$offline_dir/root_ca.crt"
-        test -s "$offline_dir/root_ca.key"
-        test -s "$offline_dir/root-password"
-        test -s "$offline_dir/device-enrollment.pub.json"
-        test -s "$offline_dir/device-enrollment.key.json"
-        test -s "$offline_dir/provisioner-password"
-        test -s "$offline_dir/root_ca.fingerprint"
-        test ! -e "$offline_dir/intermediate_ca.key"
-        test ! -e "$offline_dir/intermediate-password"
-
-        pseudo-design-ca-export "$offline_dir" "$export_dir"
-        test -s "$export_dir/public/root_ca.crt"
-        test -s "$export_dir/public/root_ca.fingerprint"
-        test -s "$export_dir/public/device-enrollment.pub.json"
-        test -z "$(find "$export_dir" -name 'intermediate_ca.*' -o -name 'intermediate-password')"
-
-        install -d -m 0750 "$online_dir/certs" "$online_dir/secrets"
-        install -m 0644 "$offline_dir/root_ca.crt" "$online_dir/certs/root_ca.crt"
-
-        pseudo-design-ca-create-intermediate-csr "$online_dir"
-        test -s "$online_dir/certs/intermediate_ca.csr"
-        test -s "$online_dir/secrets/intermediate_ca.key"
-        test ! -e "$online_dir/certs/intermediate_ca.crt"
-
-        pseudo-design-ca-sign-intermediate \
-          "$online_dir/certs/intermediate_ca.csr" \
-          "$signed_cert" \
-          "$offline_dir"
-        test -s "$signed_cert"
-
-        pseudo-design-ca-install-intermediate-cert "$signed_cert" "$online_dir"
-        test -s "$online_dir/certs/intermediate_ca.crt"
-        openssl verify -CAfile "$online_dir/certs/root_ca.crt" "$online_dir/certs/intermediate_ca.crt"
-        openssl x509 -in "$online_dir/certs/intermediate_ca.crt" -noout -pubkey > "$TMPDIR/cert.pub"
-        openssl pkey -in "$online_dir/secrets/intermediate_ca.key" -pubout > "$TMPDIR/key.pub"
-        cmp -s "$TMPDIR/cert.pub" "$TMPDIR/key.pub"
-
-        touch "$out"
-      '';
 
   pseudo-design-pki-e2e-vm = import ./pseudo-design-pki-e2e-vm.nix {
     inherit
       lib
+      pd-pki
       pkgs
       self
       system
