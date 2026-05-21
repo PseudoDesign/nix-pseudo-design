@@ -3,9 +3,10 @@
 NixOS configurations for the `ace`, `mako`, and `rootca` Raspberry Pi 5 hosts,
 plus a local `rootca-vm` for running the root CA workflow in a VM.
 
-The physical Pi systems share a generic Raspberry Pi 5 hardware configuration
-that boots from NVMe and unlocks a LUKS encrypted root filesystem with a key
-derived from the Raspberry Pi OTP private key.
+The `ace` and `mako` Pi systems share a generic Raspberry Pi 5 hardware
+configuration that boots from NVMe and unlocks a LUKS encrypted root filesystem
+with a key derived from the Raspberry Pi OTP private key. The physical `rootca`
+host is built as a dedicated plain SD-card image for offline CA operations.
 
 ## Systems
 
@@ -56,6 +57,8 @@ disk is stored.
 
 ## Installation
 
+### Install ace or mako on NVMe
+
 Build or use the Raspberry Pi 5 installer image from the same
 `nixos-raspberrypi` branch used by this flake:
 
@@ -76,7 +79,7 @@ sync
 Boot the Raspberry Pi 5 from the installer SD card with the NVMe drive attached.
 The target disk defaults to `/dev/nvme0n1`.
 
-> Warning: installing either host destroys `/dev/nvme0n1`.
+> Warning: installing either `ace` or `mako` destroys `/dev/nvme0n1`.
 
 Check whether the board already has an OTP private key:
 
@@ -104,12 +107,11 @@ rmdir "$OTP_KEYDIR"
 unset OTP_KEYDIR
 ```
 
-Install one of the hosts with `nixos-anywhere`:
+Install `ace` or `mako` with `nixos-anywhere`:
 
 ```shell
 nix develop --command nixos-anywhere --flake .#ace root@nixos-installer.local
 nix develop --command nixos-anywhere --flake .#mako root@nixos-installer.local
-nix develop --command nixos-anywhere --flake .#rootca root@nixos-installer.local
 ```
 
 Or run `nixos-anywhere` directly from its upstream flake:
@@ -117,13 +119,39 @@ Or run `nixos-anywhere` directly from its upstream flake:
 ```shell
 nix run github:nix-community/nixos-anywhere -- --flake .#ace root@nixos-installer.local
 nix run github:nix-community/nixos-anywhere -- --flake .#mako root@nixos-installer.local
-nix run github:nix-community/nixos-anywhere -- --flake .#rootca root@nixos-installer.local
 ```
 
 During install, the disko configuration stages a per-install random salt and
 derived LUKS key under `/run`, formats the encrypted root filesystem, then
 installs the salt into `/var/lib/rpi-otp-derived-key/salt/luks-key` on the
 target system.
+
+### Install rootca on an SD card
+
+Build the physical offline CA image:
+
+```shell
+nix build .#packages.aarch64-linux.rootca-sd-image
+```
+
+The canonical configuration build target is also available:
+
+```shell
+nix build .#nixosConfigurations.rootca.config.system.build.sdImage
+```
+
+Write the image to an SD card, replacing `/dev/sdX` with the whole card device:
+
+```shell
+zstdcat result/sd-image/pseudo-design-rootca-rpi5-sd-*.img.zst \
+  | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+sync
+```
+
+Boot the Raspberry Pi 5 from that SD card. The `rootca` image uses an
+unencrypted ext4 root filesystem on the SD card; protect the card itself as the
+offline CA custody boundary because `/var/lib/pseudo-design/offline-ca` stores
+root CA private material after bootstrap.
 
 ## Device certificate auth
 
@@ -146,11 +174,10 @@ architecture, trust model, runtime files, and module-level change summary.
 
 ### Bootstrap the CA
 
-Install or build the offline CA host:
+Build and boot the offline CA SD-card image:
 
 ```shell
-nix build --no-link .#nixosConfigurations.rootca.config.system.build.toplevel
-nix develop --command nixos-anywhere --flake .#rootca root@nixos-installer.local
+nix build --no-link .#nixosConfigurations.rootca.config.system.build.sdImage
 ```
 
 On `rootca`, create the root CA and one-time-token provisioner in the fixed

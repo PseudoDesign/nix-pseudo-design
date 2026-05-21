@@ -130,6 +130,10 @@ let
 
   offlineCa = offlineCaConfig.services.pseudoDesign.offlineCa;
   offlineCaPackageNames = map lib.getName offlineCaConfig.environment.systemPackages;
+
+  rootcaConfig = self.nixosConfigurations.rootca.config;
+  rootcaBuild = rootcaConfig.system.build;
+  rootcaBuildAttrNames = builtins.attrNames rootcaBuild;
 in
 {
   pseudo-design-device-identity-module = mkCheck "pseudo-design-device-identity-module" [
@@ -413,6 +417,40 @@ in
     {
       condition = lib.elem "step-kms-plugin" offlineCaPackageNames;
       message = "offline CA module should install step-kms-plugin for KMS-backed root operations";
+    }
+  ];
+
+  pseudo-design-rootca-sd-image = mkCheck "pseudo-design-rootca-sd-image" [
+    {
+      condition = rootcaConfig.services.pseudoDesign.offlineCa.enable;
+      message = "physical rootca should enable the offline CA service";
+    }
+    {
+      condition = builtins.hasAttr "sdImage" rootcaBuild;
+      message = "physical rootca should expose an SD-card image build";
+    }
+    {
+      condition = builtins.hasAttr "rootca-sd-image" self.packages.aarch64-linux;
+      message = "physical rootca SD image should have an aarch64 package alias";
+    }
+    {
+      condition = rootcaConfig.fileSystems."/".device == "/dev/disk/by-label/NIXOS_SD";
+      message = "physical rootca root filesystem should use the SD-card root label";
+    }
+    {
+      condition = rootcaConfig.fileSystems."/boot/firmware".device == "/dev/disk/by-label/FIRMWARE";
+      message = "physical rootca firmware filesystem should use the SD-card firmware label";
+    }
+    {
+      condition =
+        !lib.any (name: lib.elem name rootcaBuildAttrNames) [
+          "disko"
+          "diskoImages"
+          "diskoScript"
+          "formatScript"
+          "mountScript"
+        ];
+      message = "physical rootca should not expose disko build products";
     }
   ];
 

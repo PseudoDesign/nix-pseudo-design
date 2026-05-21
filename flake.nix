@@ -32,7 +32,7 @@
         inherit disko nixos-raspberrypi;
       };
 
-      mkRpi5System =
+      mkRpi5LuksSystem =
         modules:
         nixos-raspberrypi.lib.nixosSystemFull {
           inherit specialArgs;
@@ -43,9 +43,20 @@
           ++ modules;
         };
 
+      mkRpi5SdSystem =
+        modules:
+        nixos-raspberrypi.lib.nixosSystemFull {
+          inherit specialArgs;
+          modules = [
+            self.nixosModules.rpi5-sd-image-hardware
+            ./modules/users/adam.nix
+          ]
+          ++ modules;
+        };
+
       mkRpi5Host =
         hostModule:
-        mkRpi5System [
+        mkRpi5LuksSystem [
           self.nixosModules.pseudo-design-device-identity
           self.nixosModules.pseudo-design-auth-server
           ./modules/profiles/base-rpi.nix
@@ -54,7 +65,7 @@
 
       mkRpi5OfflineCaHost =
         hostModule:
-        mkRpi5System [
+        mkRpi5SdSystem [
           self.nixosModules.pseudo-design-offline-ca
           ./modules/profiles/rpi-common.nix
           hostModule
@@ -89,6 +100,9 @@
         rec {
           pseudo-design-ca-tools = pkgs.callPackage ./packages/pseudo-design-ca-tools { };
           default = pseudo-design-ca-tools;
+        }
+        // lib.optionalAttrs (system == "aarch64-linux") {
+          rootca-sd-image = self.nixosConfigurations.rootca.config.system.build.sdImage;
         }
       );
 
@@ -141,6 +155,7 @@
 
       nixosModules = {
         rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
+        rpi5-sd-image-hardware = ./modules/hardware/rpi5-sd-image.nix;
         pseudo-design-auth-server = ./modules/services/pseudo-design-auth-server.nix;
         pseudo-design-device-identity = ./modules/services/pseudo-design-device-identity.nix;
         pseudo-design-offline-ca = ./modules/services/pseudo-design-offline-ca.nix;

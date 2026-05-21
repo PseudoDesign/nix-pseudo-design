@@ -22,16 +22,19 @@ systemd units for device enrollment and recurring renewal.
 
 ## Trust Model
 
-The Raspberry Pi OTP-derived secret remains scoped to local disk unlock. Device
-TLS identity uses a separate per-device P-256 private key stored under
-`/var/lib/pseudo-design/device-identity/` on the encrypted root filesystem.
+The Raspberry Pi OTP-derived secret remains scoped to local disk unlock on
+`ace` and `mako`. Device TLS identity uses a separate per-device P-256 private
+key stored under `/var/lib/pseudo-design/device-identity/` on the encrypted root
+filesystem.
 
 The root CA is expected to stay offline on the `rootca` host under
-`/var/lib/pseudo-design/offline-ca`. `mako` only needs the public root
-certificate, the online intermediate certificate, and the unencrypted
-intermediate private key generated locally on `mako`. The intermediate private
-key never leaves `mako` and is protected by file permissions and the encrypted
-root filesystem.
+`/var/lib/pseudo-design/offline-ca`. The physical `rootca` host boots from a
+plain, unencrypted SD-card image, so physical custody of that SD card is the
+protection boundary for offline CA private material. `mako` only needs the
+public root certificate, the online intermediate certificate, and the
+unencrypted intermediate private key generated locally on `mako`. The
+intermediate private key never leaves `mako` and is protected by file
+permissions and the encrypted root filesystem.
 
 The enrollment provisioner has two halves:
 
@@ -74,9 +77,11 @@ intermediate private material are stored in the Nix store by this configuration.
 - signs a `mako`-generated intermediate CSR without receiving the intermediate
   private key.
 
-`modules/profiles/base-rpi.nix` enables device identity for every Raspberry Pi
-host and pins `ca/public/root_ca.fingerprint` when that public artifact is
-present. `hosts/mako/default.nix` enables the auth server on `mako`, installs
+`modules/hardware/rpi5-sd-image.nix` builds the physical `rootca` host as a
+plain Raspberry Pi 5 SD-card image. `modules/profiles/base-rpi.nix` enables
+device identity for every non-root-CA Raspberry Pi host and pins
+`ca/public/root_ca.fingerprint` when that public artifact is present.
+`hosts/mako/default.nix` enables the auth server on `mako`, installs
 `ca/public/root_ca.crt` when present, and imports
 `ca/public/device-enrollment.pub.json` when that public artifact is present.
 
@@ -143,11 +148,11 @@ The `mako` auth-server configuration installs
 `pseudo-design-ca-create-intermediate-csr` and
 `pseudo-design-ca-install-intermediate-cert`.
 
-The remaining required setup before enrolling real devices is to deploy
-`rootca`, run the bootstrap and export commands there, commit the public
-artifacts, deploy the updated NixOS configuration, generate the intermediate CSR
-on `mako`, sign it on `rootca`, and install only the signed intermediate
-certificate back onto `mako`.
+The remaining required setup before enrolling real devices is to build and boot
+the `rootca` SD-card image, run the bootstrap and export commands there, commit
+the public artifacts, deploy the updated NixOS configuration, generate the
+intermediate CSR on `mako`, sign it on `rootca`, and install only the signed
+intermediate certificate back onto `mako`.
 
 After that, enrollment is intentionally token-based and host-bound:
 `mint-device-token.sh` includes the exact subject and SANs for the target
@@ -159,14 +164,15 @@ The implementation was checked with:
 
 ```shell
 nix flake check
+nix build --no-link .#nixosConfigurations.rootca.config.system.build.sdImage
 nix build --no-link .#nixosConfigurations.ace.config.system.build.toplevel
 nix build --no-link .#nixosConfigurations.mako.config.system.build.toplevel
-nix build --no-link .#nixosConfigurations.rootca.config.system.build.toplevel
 git diff --cached --check
 ```
 
 `nix flake check` includes targeted module checks for the generated device
-enrollment/renewal units and the auth-server `step-ca`/nginx configuration.
+enrollment/renewal units, the auth-server `step-ca`/nginx configuration, and
+the physical `rootca` SD-card image shape.
 
 The current `mako` build warns until `ca/public/device-enrollment.pub.json` is
 committed. That warning is expected before public CA artifacts are installed.
