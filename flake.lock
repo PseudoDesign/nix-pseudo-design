@@ -37,6 +37,26 @@
         "type": "github"
       }
     },
+    "dogsitting": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779401586,
+        "narHash": "sha256-Hay/2cXg9XWvOXFx/kvoCjfFEBRkqiuM1Wtex6u08nM=",
+        "owner": "PseudoDesign",
+        "repo": "dogsitting",
+        "rev": "d6eddd68ce44c598f19dd045c8e069a65606e241",
+        "type": "github"
+      },
+      "original": {
+        "owner": "PseudoDesign",
+        "repo": "dogsitting",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "locked": {
         "lastModified": 1767039857,
@@ -135,6 +155,7 @@
     "root": {
       "inputs": {
         "disko": "disko",
+        "dogsitting": "dogsitting",
         "nixos-raspberrypi": "nixos-raspberrypi",
         "nixpkgs": "nixpkgs_2"
       }

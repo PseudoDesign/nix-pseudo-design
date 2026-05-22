@@ -10,12 +10,18 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
+
+    dogsitting = {
+      url = "github:PseudoDesign/dogsitting";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     {
       self,
       disko,
+      dogsitting,
       nixos-raspberrypi,
       nixpkgs,
       ...
@@ -27,7 +33,7 @@
       ];
 
       specialArgs = {
-        inherit disko nixos-raspberrypi;
+        inherit disko dogsitting nixos-raspberrypi;
       };
 
       mkRpi5Host =

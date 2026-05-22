@@ -1,4 +1,8 @@
+{ dogsitting, pkgs, ... }:
+
 {
+  imports = [ dogsitting.nixosModules.default ];
+
   networking = {
     hostName = "mako";
     firewall.allowedTCPPorts = [
@@ -7,9 +11,24 @@
     ];
   };
 
+  time.timeZone = "America/Indiana/Indianapolis";
+
   security.acme = {
     acceptTerms = true;
     defaults.email = "admin@pseudo.design";
+  };
+
+  services.dogsitting = {
+    enable = true;
+    package = dogsitting.packages.${pkgs.stdenv.hostPlatform.system}.dogsitting;
+    port = 9080;
+
+    initialAdmin.passwordFile = "/run/keys/dogsitting-admin-password";
+
+    production = {
+      enable = true;
+      hostName = "dogsitting.pseudo.design";
+    };
   };
 
   services.nginx = {
