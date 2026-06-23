@@ -35,7 +35,31 @@
     enable = true;
     recommendedGzipSettings = true;
     recommendedOptimisation = true;
+    recommendedProxySettings = true;
     recommendedTlsSettings = true;
+
+    virtualHosts."code.pseudo.design" = {
+      enableACME = true;
+      forceSSL = true;
+
+      locations."/" = {
+        proxyPass = "http://192.168.8.249:1785";
+        proxyWebsockets = true;
+        extraConfig = ''
+          proxy_read_timeout 3600;
+          proxy_send_timeout 3600;
+          proxy_buffering off;
+        '';
+      };
+
+      extraConfig = ''
+        ssl_client_certificate /var/lib/nginx-mtls/code-server-client-ca.pem;
+        ssl_verify_client on;
+        ssl_verify_depth 2;
+
+        add_header Strict-Transport-Security "max-age=31536000" always;
+      '';
+    };
 
     virtualHosts."pseudo.design" = {
       root = ./site;
