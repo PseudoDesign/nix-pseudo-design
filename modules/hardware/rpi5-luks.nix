@@ -8,6 +8,7 @@
 }:
 
 let
+  otpScheme = config.services.rpiOtpDerivedKey.secrets.luks-key.scheme;
   stagedSaltDir = "/run/rpi-otp-derived-key/disko-install/salt";
   stagedSalt = "${stagedSaltDir}/luks-key";
   stagedKeyDir = "/run/secrets";
@@ -46,6 +47,7 @@ in
   services.rpiOtpDerivedKey = {
     enable = true;
     secrets.luks-key = {
+      scheme = lib.mkDefault "legacy-hkdf-v1";
       format = "hex";
       path = "/run/secrets/luks.key";
       neededForBoot = true;
@@ -93,6 +95,7 @@ in
                 fi
 
                 ${lib.getExe rpiOtpProvision} stage \
+                  --scheme ${lib.escapeShellArg otpScheme} \
                   --format hex \
                   --salt-file "${stagedSalt}" \
                   --out "${stagedKey}"

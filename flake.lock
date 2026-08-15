@@ -106,32 +106,32 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1777825367,
-        "narHash": "sha256-8xPxVcpDABlPd6wCH1kQiDP9gbriXbH4Rd9cmy+r3pw=",
+        "lastModified": 1786737479,
+        "narHash": "sha256-rR94nd2Ls9HfLd3i6nrtux6+J6lgGHr13o/QplHex00=",
         "owner": "ams-tech",
         "repo": "nixos-raspberrypi",
-        "rev": "44a13ae9b963b3f7859813fea2933a56a5f41687",
+        "rev": "d3360e0b4b9ed0f7ccba5120cecb36dc886864e2",
         "type": "github"
       },
       "original": {
         "owner": "ams-tech",
-        "ref": "topic/rpi-otp-private-key",
+        "ref": "codex/rpi-otp-upstream-improvements",
         "repo": "nixos-raspberrypi",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1777428379,
-        "narHash": "sha256-ypxFOeDz+CqADEQNL72haqGjvZQdBR5Vc7pyx2JDttI=",
+        "lastModified": 1786089803,
+        "narHash": "sha256-ZuvZfVW2tB5tXYEcpcfhVXB3N4OhdZLOqOviy4OD4b4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "755f5aa91337890c432639c60b6064bb7fe67769",
+        "rev": "ee48b147c18c7de1e6ec97dc74792be42724bed1",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-25.11",
+        "ref": "nixos-26.05",
         "repo": "nixpkgs",
         "type": "github"
       }

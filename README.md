@@ -19,7 +19,7 @@ Build or use the Raspberry Pi 5 installer image from the same
 `nixos-raspberrypi` branch used by this flake:
 
 ```shell
-NIXOS_RPI_FLAKE=github:ams-tech/nixos-raspberrypi/topic/rpi-otp-private-key
+NIXOS_RPI_FLAKE=github:ams-tech/nixos-raspberrypi/codex/rpi-otp-upstream-improvements
 nix build "$NIXOS_RPI_FLAKE#installerImages.rpi5"
 ```
 
@@ -81,3 +81,27 @@ During install, the disko configuration stages a per-install random salt and
 derived LUKS key under `/run`, formats the encrypted root filesystem, then
 installs the salt into `/var/lib/rpi-otp-derived-key/salt/luks-key` on the
 target system.
+
+## Encryption scheme upgrades
+
+Existing `ace` and `mako` volumes were enrolled with the original HKDF-based
+derivation. The shared hardware module therefore defaults to
+`legacy-hkdf-v1`, which reproduces their existing LUKS key. Preserve and back
+up each machine's `/var/lib/rpi-otp-derived-key/salt/luks-key`; changing or
+losing it changes the derived key.
+
+The disko provisioning hook reads the same final module option, so a fresh
+format and the installed initrd cannot accidentally use different schemes.
+For a destructive fresh install, override the host after confirming that the
+installer firmware supports the firmware HMAC API:
+
+```nix
+services.rpiOtpDerivedKey.secrets.luks-key.scheme = "firmware-hmac-v1";
+```
+
+Do not apply that override directly to an existing volume. First boot the new
+configuration with `legacy-hkdf-v1`, add and test a separate recovery
+credential, derive the firmware-HMAC key from the existing salt, and enroll it
+in another LUKS keyslot. Switch the host to `firmware-hmac-v1` only after that
+new keyslot has been tested; remove the legacy keyslot only after a successful
+cold boot and recovery test.
