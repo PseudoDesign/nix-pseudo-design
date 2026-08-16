@@ -15,11 +15,17 @@
       url = "github:PseudoDesign/dogsitting";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    crtvar = {
+      url = "github:ams-tech/crtvar";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     {
       self,
+      crtvar,
       disko,
       dogsitting,
       nixos-raspberrypi,
@@ -33,7 +39,7 @@
       ];
 
       specialArgs = {
-        inherit disko dogsitting nixos-raspberrypi;
+        inherit crtvar disko dogsitting nixos-raspberrypi;
       };
 
       mkRpi5Host =

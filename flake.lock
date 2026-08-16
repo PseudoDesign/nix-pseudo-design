@@ -16,6 +16,26 @@
         "type": "github"
       }
     },
+    "crtvar": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786900687,
+        "narHash": "sha256-xI3LDSRsAGv/ivdz95jaLG9fn0iTXisEL+DUaPkQfdE=",
+        "owner": "ams-tech",
+        "repo": "crtvar",
+        "rev": "43d105e152fea22e46efd9709164d86f6a90158c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ams-tech",
+        "repo": "crtvar",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -154,6 +174,7 @@
     },
     "root": {
       "inputs": {
+        "crtvar": "crtvar",
         "disko": "disko",
         "dogsitting": "dogsitting",
         "nixos-raspberrypi": "nixos-raspberrypi",

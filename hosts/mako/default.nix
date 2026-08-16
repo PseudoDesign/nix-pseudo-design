@@ -1,7 +1,15 @@
-{ dogsitting, pkgs, ... }:
+{
+  crtvar,
+  dogsitting,
+  pkgs,
+  ...
+}:
 
 {
-  imports = [ dogsitting.nixosModules.default ];
+  imports = [
+    crtvar.nixosModules.default
+    dogsitting.nixosModules.default
+  ];
 
   networking = {
     hostName = "mako";
@@ -29,6 +37,14 @@
       enable = true;
       hostName = "dogsitting.pseudo.design";
     };
+  };
+
+  services.crtvar = {
+    enable = true;
+    package = crtvar.packages.${pkgs.stdenv.hostPlatform.system}.crtvar;
+    hostName = "crtvar.pseudo.design";
+    enableACME = true;
+    forceSSL = true;
   };
 
   services.nginx = {
