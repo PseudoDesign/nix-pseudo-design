@@ -20,7 +20,9 @@
 
       <div class="case-study-links">
         <a class="button button-primary" href="{{ page.extra.repository_url }}">Repository <span aria-hidden="true">↗</span></a>
-        <a class="text-link" href="{{ page.extra.external_url }}">Delivered system <span aria-hidden="true">↗</span></a>
+        {% if page.extra.external_url %}
+          <a class="text-link" href="{{ page.extra.external_url }}">Delivered system <span aria-hidden="true">↗</span></a>
+        {% endif %}
       </div>
     </header>
 

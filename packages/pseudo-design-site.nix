@@ -34,6 +34,10 @@ stdenvNoCC.mkDerivation {
       robots.txt \
       styles.css \
       favicon.png \
+      work/index.html \
+      work/offline-pki-workflows/index.html \
+      work/encrypted-raspberry-pi-infrastructure/index.html \
+      work/dogsitting-delivery/index.html \
       fonts/space-grotesk-latin.woff2 \
       fonts/ibm-plex-mono-regular-latin.woff2 \
       fonts/ibm-plex-mono-semibold-latin.woff2 \
@@ -56,8 +60,38 @@ stdenvNoCC.mkDerivation {
     grep -Fq "Have a problem worth thinking about?" "$out/index.html"
     grep -Fq "mailto:info@pseudo.design?subject=Project%20inquiry" "$out/index.html"
     grep -Fq "https://github.com/PseudoDesign" "$out/index.html"
+    grep -Fq "href=#work" "$out/index.html"
+    grep -Fq "id=work" "$out/index.html"
+    grep -Fq "href=/work/" "$out/index.html"
     grep -Fq "href=/styles.css" "$out/index.html"
     grep -Fq "href=/favicon.png" "$out/index.html"
+
+    grep -Fq \
+      "https://github.com/PseudoDesign/nix-pd-pki" \
+      "$out/work/offline-pki-workflows/index.html"
+    grep -Fq \
+      "https://github.com/PseudoDesign/nix-pseudo-design" \
+      "$out/work/encrypted-raspberry-pi-infrastructure/index.html"
+    grep -Fq \
+      "https://github.com/PseudoDesign/dogsitting" \
+      "$out/work/dogsitting-delivery/index.html"
+
+    for case_study in \
+      work/offline-pki-workflows/index.html \
+      work/encrypted-raspberry-pi-infrastructure/index.html \
+      work/dogsitting-delivery/index.html
+    do
+      for section_heading in \
+        Problem \
+        Constraints \
+        Investigation \
+        "Delivered System" \
+        "Demonstrated Result" \
+        Handoff
+      do
+        grep -Fq "$section_heading" "$out/$case_study"
+      done
+    done
 
     if grep -Eq 'https://pseudo\.design/(styles\.css|favicon\.png)' "$out/index.html"; then
       echo "static asset URLs must remain same-origin on the www alias" >&2
@@ -82,11 +116,15 @@ stdenvNoCC.mkDerivation {
 
     grep -Fq "https://pseudo.design/" "$out/index.html"
     grep -Fq "https://pseudo.design/sitemap.xml" "$out/robots.txt"
+    grep -Fq "https://pseudo.design/work/" "$out/sitemap.xml"
+    grep -Fq "https://pseudo.design/work/offline-pki-workflows/" "$out/sitemap.xml"
+    grep -Fq "https://pseudo.design/work/encrypted-raspberry-pi-infrastructure/" "$out/sitemap.xml"
+    grep -Fq "https://pseudo.design/work/dogsitting-delivery/" "$out/sitemap.xml"
     grep -Fq ':focus-visible' "$out/styles.css"
     grep -Fq '@media (prefers-color-scheme: dark)' "$out/styles.css"
 
-    if [ -e "$out/work" ]; then
-      echo "draft work was rendered into the production site" >&2
+    if [ -e "$out/work/example-cross-layer-delivery" ]; then
+      echo "draft case study was rendered into the production site" >&2
       exit 1
     fi
 

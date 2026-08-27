@@ -32,13 +32,14 @@ host serves that immutable output directly from the Nix store.
 Draft case studies live below `hosts/mako/site/content/work`. Their front
 matter is the content-authoring contract: `title`, `description`, `date`, and
 `draft` are top-level fields; `order`, `deliverable`, `repository_url`, and
-`external_url` live below `[extra]`. Keep a case study as `draft = true` until
-its repository and public links are ready. The public ordering field is
-`extra.order`; future work-list templates should sort on it directly. If a
-Zola integration needs the built-in `weight` field, derive or duplicate it
-from `extra.order` instead of replacing that authoring contract. Zola omits
-drafts from production builds; `/work/` and Work navigation should remain
-disabled until the first case study is published.
+`external_url` live below `[extra]`. Published pages appear automatically on
+the homepage and `/work/`; keep a case study as `draft = true` until its
+repository and public claims are ready. The public ordering field is
+`extra.order`, which both listings sort directly. If a Zola integration needs
+the built-in `weight` field, derive or duplicate it from `extra.order` instead
+of replacing that authoring contract. Zola omits drafts from production
+builds, and the production derivation verifies that known draft slugs remain
+absent.
 
 ### Deploying `mako`
 

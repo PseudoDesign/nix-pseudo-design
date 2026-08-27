@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros/work.html" as work %}
 
 {% block content %}
   <section class="hero" aria-labelledby="hero-title">
@@ -8,9 +9,9 @@
       <p class="hero-lede">
         Cross-layer and inherited technical problems, followed wherever the evidence leads—from architecture and infrastructure to product code and delivery.
       </p>
-      <a class="button button-primary" href="{{ config.extra.contact_url }}">
-        Start with the problem
-        <span aria-hidden="true">↗</span>
+      <a class="button button-primary" href="#work">
+        Pick a problem
+        <span aria-hidden="true">↓</span>
       </a>
     </div>
 
@@ -23,6 +24,24 @@
         <li>Ambiguous failures that reward investigation</li>
       </ul>
     </aside>
+  </section>
+
+  {% set work_section = get_section(path="work/_index.md") %}
+  {% set projects = work_section.pages | sort(attribute="extra.order") %}
+  <section class="work-preview" id="work" aria-labelledby="work-title">
+    <div class="work-heading">
+      <div>
+        <p class="technical-label">Selected work</p>
+        <h2 id="work-title">Problems made concrete.</h2>
+      </div>
+      <a class="text-link" href="/work/">View all work <span aria-hidden="true">→</span></a>
+    </div>
+
+    <div class="work-grid">
+      {% for project in projects %}
+        {{ work::card(project=project, heading_level=3) }}
+      {% endfor %}
+    </div>
   </section>
 
   <section class="delivery" aria-labelledby="delivery-title">
@@ -64,7 +83,7 @@
       <h2 id="contact-title">Have a problem worth thinking about?</h2>
     </div>
     <a class="button button-contact" href="{{ config.extra.contact_url }}">
-      {{ config.extra.contact_email }}
+      Email {{ config.extra.contact_email }}
       <span aria-hidden="true">↗</span>
     </a>
   </section>

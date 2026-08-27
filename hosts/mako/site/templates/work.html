@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "macros/work.html" as work %}
+
+{% block content %}
+  <section class="work-index" aria-labelledby="work-index-title">
+    <header class="case-study-header">
+      <p class="overline">Delivered work</p>
+      <h1 id="work-index-title">Problems made concrete.</h1>
+      <p class="case-study-description">Systems investigated across boundaries, turned into operable deliverables, and left ready for the next change.</p>
+    </header>
+
+    {% set projects = section.pages | sort(attribute="extra.order") %}
+    <div class="work-grid">
+      {% for project in projects %}
+        {{ work::card(project=project, heading_level=2) }}
+      {% endfor %}
+    </div>
+  </section>
+{% endblock content %}

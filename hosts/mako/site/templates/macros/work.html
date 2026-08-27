@@ -1,0 +1,23 @@
+{% macro card(project, heading_level) %}
+  <article class="work-card">
+    <div class="work-card-meta">
+      <time datetime="{{ project.date | date(format="%Y-%m-%d") }}">{{ project.date | date(format="%Y") }}</time>
+      <span>Case study</span>
+    </div>
+
+    {% if heading_level == 2 %}
+      <h2 class="work-card-title"><a href="{{ project.permalink }}">{{ project.title }}</a></h2>
+    {% else %}
+      <h3 class="work-card-title"><a href="{{ project.permalink }}">{{ project.title }}</a></h3>
+    {% endif %}
+
+    <p class="work-card-description">{{ project.description }}</p>
+    <p class="work-card-deliverable">
+      <span>Deliverable</span>
+      {{ project.extra.deliverable }}
+    </p>
+    <a class="work-card-link" href="{{ project.permalink }}">
+      Read the case study <span aria-hidden="true">→</span>
+    </a>
+  </article>
+{% endmacro card %}
