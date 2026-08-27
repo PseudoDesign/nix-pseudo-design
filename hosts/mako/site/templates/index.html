@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="overline">BUILD / REPAIR / SHIP</p>
+      <h1 id="hero-title">Engineering for the hard parts.</h1>
+      <p class="hero-lede">
+        Cross-layer and inherited technical problems, followed wherever the evidence leads—from architecture and infrastructure to product code and delivery.
+      </p>
+      <a class="button button-primary" href="{{ config.extra.contact_url }}">
+        Start with the problem
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+
+    <aside class="focus-card" aria-labelledby="focus-title">
+      <p class="technical-label" id="focus-title">Engagement focus</p>
+      <p class="focus-statement">Difficult systems questions with a concrete outcome on the other side.</p>
+      <ul class="focus-list">
+        <li>Problems that cross technical boundaries</li>
+        <li>Inherited systems that need a clear path forward</li>
+        <li>Ambiguous failures that reward investigation</li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="delivery" aria-labelledby="delivery-title">
+    <div class="section-heading">
+      <p class="technical-label">Delivery model</p>
+      <h2 id="delivery-title">Investigate → Deliver → Hand off</h2>
+    </div>
+
+    <ol class="delivery-steps">
+      <li>
+        <span class="step-number" aria-hidden="true">01</span>
+        <h3>Investigate</h3>
+        <p>Trace the real problem across layers. Test assumptions, narrow uncertainty, and find the leverage point.</p>
+      </li>
+      <li>
+        <span class="step-number" aria-hidden="true">02</span>
+        <h3>Deliver</h3>
+        <p>Turn the useful answer into working software, infrastructure, tooling, or a repaired workflow.</p>
+      </li>
+      <li>
+        <span class="step-number" aria-hidden="true">03</span>
+        <h3>Hand off</h3>
+        <p>Leave behind an operable system, clear decisions, and enough context for the next change to be straightforward.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="principle" aria-labelledby="principle-title">
+    <p class="technical-label">Working principle</p>
+    <h2 id="principle-title">Inherited systems are welcome. Frozen assumptions are not.</h2>
+    <p>
+      Legacy technology can be understood, stabilized, and improved. Progress starts with permission to change what the investigation proves should change.
+    </p>
+  </section>
+
+  <section class="contact" aria-labelledby="contact-title">
+    <div>
+      <p class="technical-label">Project inquiry</p>
+      <h2 id="contact-title">Have a problem worth thinking about?</h2>
+    </div>
+    <a class="button button-contact" href="{{ config.extra.contact_url }}">
+      {{ config.extra.contact_email }}
+      <span aria-hidden="true">↗</span>
+    </a>
+  </section>
+{% endblock content %}

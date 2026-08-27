@@ -1,0 +1,63 @@
+{% import "macros/seo.html" as seo %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+
+    {% if page is defined %}
+      {{ seo::metadata(
+        title=page.title ~ " — " ~ config.title,
+        description=page.description | default(value=config.description),
+        canonical=page.permalink,
+        site_name=config.title
+      ) }}
+    {% elif section is defined %}
+      {{ seo::metadata(
+        title=section.title,
+        description=section.description | default(value=config.description),
+        canonical=section.permalink,
+        site_name=config.title
+      ) }}
+    {% else %}
+      {{ seo::metadata(
+        title="Page not found — " ~ config.title,
+        description="The requested page is not part of the delivered system.",
+        canonical=config.base_url ~ "/404.html",
+        site_name=config.title
+      ) }}
+    {% endif %}
+
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <div class="site-frame">
+      <header class="site-header">
+        <a class="brand" href="/" aria-label="Pseudo Design home">
+          <span class="brand-mark" aria-hidden="true">P/D</span>
+          <span class="brand-name">Pseudo Design</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="{{ config.extra.github_url }}">GitHub</a>
+        </nav>
+      </header>
+
+      <main id="main-content">
+        {% block content %}{% endblock content %}
+      </main>
+
+      <footer class="site-footer">
+        <p class="technical-label">Pseudo Design / Engineering</p>
+        <div class="footer-links">
+          <a href="{{ config.extra.contact_url }}">{{ config.extra.contact_email }}</a>
+          <a href="{{ config.extra.github_url }}">GitHub</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

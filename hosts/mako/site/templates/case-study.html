@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <article class="case-study">
+    <header class="case-study-header">
+      <p class="overline">Delivered work</p>
+      <h1>{{ page.title }}</h1>
+      <p class="case-study-description">{{ page.description }}</p>
+
+      <dl class="case-study-facts">
+        <div>
+          <dt>Date</dt>
+          <dd>{{ page.date | date(format="%Y") }}</dd>
+        </div>
+        <div>
+          <dt>Deliverable</dt>
+          <dd>{{ page.extra.deliverable }}</dd>
+        </div>
+      </dl>
+
+      <div class="case-study-links">
+        <a class="button button-primary" href="{{ page.extra.repository_url }}">Repository <span aria-hidden="true">↗</span></a>
+        <a class="text-link" href="{{ page.extra.external_url }}">Delivered system <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+
+    <div class="prose">
+      {{ page.content | safe }}
+    </div>
+  </article>
+{% endblock content %}

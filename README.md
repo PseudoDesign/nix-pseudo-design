@@ -6,6 +6,82 @@ Both systems share a generic Raspberry Pi 5 hardware configuration that boots
 from NVMe and unlocks a LUKS encrypted root filesystem with a key derived from
 the Raspberry Pi OTP private key.
 
+## Pseudo Design website
+
+The `pseudo.design` website is a scriptless [Zola](https://www.getzola.org/)
+site in `hosts/mako/site`. Enter the development shell and start a local
+preview from the repository root:
+
+```shell
+nix develop
+zola --root hosts/mako/site serve
+```
+
+Build the production site into the `result` symlink, or run all flake checks:
+
+```shell
+nix build .#pseudo-design-site
+nix flake check
+```
+
+The production derivation runs `zola check --skip-external-links` followed by
+`zola build`; skipping remote fetches keeps the sandboxed build reproducible
+while still validating templates and internal links. The `mako` nginx virtual
+host serves that immutable output directly from the Nix store.
+
+Draft case studies live below `hosts/mako/site/content/work`. Their front
+matter is the content-authoring contract: `title`, `description`, `date`, and
+`draft` are top-level fields; `order`, `deliverable`, `repository_url`, and
+`external_url` live below `[extra]`. Keep a case study as `draft = true` until
+its repository and public links are ready. The public ordering field is
+`extra.order`; future work-list templates should sort on it directly. If a
+Zola integration needs the built-in `weight` field, derive or duplicate it
+from `extra.order` instead of replacing that authoring contract. Zola omits
+drafts from production builds; `/work/` and Work navigation should remain
+disabled until the first case study is published.
+
+### Deploying `mako`
+
+Build and activate a candidate generation without changing the boot default:
+
+```shell
+nix develop --command nixos-rebuild \
+  --flake .#mako \
+  --build-host adam@mako.local \
+  --target-host adam@mako.local \
+  --sudo --use-substitutes test
+```
+
+Verify the service, content, aliases, TLS headers, and the unrelated virtual
+hosts before making the generation persistent:
+
+```shell
+ssh adam@mako.local systemctl is-active nginx
+curl --fail --silent --show-error https://pseudo.design/ | grep -F 'Engineering for the hard parts.'
+curl --fail --silent --show-error --head https://www.pseudo.design/
+curl --fail --silent --show-error --head https://pseudo.design/ \
+  | grep -Ei 'strict-transport-security|content-security-policy|permissions-policy|x-content-type-options|referrer-policy|x-frame-options'
+ssh adam@mako.local sudo nginx -T \
+  | grep -E 'server_name (code|crtvar|dogsitting)\.pseudo\.design|pseudo\.design|www\.pseudo\.design'
+```
+
+If those checks pass, repeat the activation with `switch`:
+
+```shell
+nix develop --command nixos-rebuild \
+  --flake .#mako \
+  --build-host adam@mako.local \
+  --target-host adam@mako.local \
+  --sudo --use-substitutes switch
+```
+
+If activation fails, restore the prior generation and then repeat the health
+checks:
+
+```shell
+ssh adam@mako.local sudo nixos-rebuild switch --rollback
+```
+
 ## Systems
 
 ```shell

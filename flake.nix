@@ -39,7 +39,7 @@
       ];
 
       specialArgs = {
-        inherit crtvar disko dogsitting nixos-raspberrypi;
+        inherit crtvar disko dogsitting nixos-raspberrypi self;
       };
 
       mkRpi5Host =
@@ -55,16 +55,37 @@
         };
     in
     {
-      devShells = forAllSystems (
+      packages = forAllSystems (
         system:
         let
           pkgs = import nixpkgs { inherit system; };
         in
         {
+          pseudo-design-site = pkgs.callPackage ./packages/pseudo-design-site.nix { };
+          default = self.packages.${system}.pseudo-design-site;
+        }
+      );
+
+      checks = forAllSystems (system: {
+        pseudo-design-site = self.packages.${system}.pseudo-design-site;
+      });
+
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+          nixosRebuild = pkgs.writeShellScriptBin "nixos-rebuild" ''
+            exec ${pkgs.nixos-rebuild-ng}/bin/nixos-rebuild-ng "$@"
+          '';
+        in
+        {
           default = pkgs.mkShell {
             packages = [
               pkgs.nixos-anywhere
+              pkgs.nixos-rebuild-ng
               pkgs.openssh
+              pkgs.zola
+              nixosRebuild
             ];
           };
         }

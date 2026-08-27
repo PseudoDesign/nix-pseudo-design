@@ -2,9 +2,13 @@
   crtvar,
   dogsitting,
   pkgs,
+  self,
   ...
 }:
 
+let
+  pseudoDesignSite = self.packages.${pkgs.stdenv.hostPlatform.system}.pseudo-design-site;
+in
 {
   imports = [
     crtvar.nixosModules.default
@@ -78,7 +82,7 @@
     };
 
     virtualHosts."pseudo.design" = {
-      root = ./site;
+      root = pseudoDesignSite;
       serverAliases = [ "www.pseudo.design" ];
       enableACME = true;
       forceSSL = true;
@@ -86,11 +90,14 @@
       locations."/".tryFiles = "$uri $uri/ =404";
 
       extraConfig = ''
+        error_page 404 /404.html;
+
         add_header Strict-Transport-Security "max-age=31536000" always;
-        add_header Content-Security-Policy "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; style-src 'self'; img-src 'self'; object-src 'none'; script-src 'none'; upgrade-insecure-requests" always;
+        add_header Content-Security-Policy "default-src 'none'; base-uri 'none'; child-src 'none'; connect-src 'none'; font-src 'self'; form-action 'none'; frame-ancestors 'none'; frame-src 'none'; img-src 'self'; media-src 'none'; object-src 'none'; script-src 'none'; style-src 'self'; worker-src 'none'; upgrade-insecure-requests" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         add_header X-Frame-Options "DENY" always;
+        add_header Permissions-Policy "accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), web-share=(), xr-spatial-tracking=()" always;
       '';
     };
   };
