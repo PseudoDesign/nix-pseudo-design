@@ -39,7 +39,13 @@
       ];
 
       specialArgs = {
-        inherit crtvar disko dogsitting nixos-raspberrypi self;
+        inherit
+          crtvar
+          disko
+          dogsitting
+          nixos-raspberrypi
+          self
+          ;
       };
 
       mkRpi5Host =
@@ -68,6 +74,9 @@
 
       checks = forAllSystems (system: {
         pseudo-design-site = self.packages.${system}.pseudo-design-site;
+        kaiba-pilot-device = import ./tests/kaiba-pilot-device.nix {
+          pkgs = import nixpkgs { inherit system; };
+        };
       });
 
       devShells = forAllSystems (
@@ -92,6 +101,7 @@
       );
 
       nixosModules.rpi5-luks-hardware = ./modules/hardware/rpi5-luks.nix;
+      nixosModules.kaiba-pilot-device = ./modules/services/kaiba-pilot-device.nix;
 
       nixosConfigurations = {
         ace = mkRpi5Host ./hosts/ace;
