@@ -182,3 +182,9 @@ credential, derive the firmware-HMAC key from the existing salt, and enroll it
 in another LUKS keyslot. Switch the host to `firmware-hmac-v1` only after that
 new keyslot has been tested; remove the legacy keyslot only after a successful
 cold boot and recovery test.
+
+## Existing pilot credential persistence
+
+Ace's existing pilot account and protected credential mount are declared in its
+host configuration. See [the persistence and deployment notes](docs/ace-pilot-persistence.md)
+for the focused VM check and the separate real-host acceptance procedure.
