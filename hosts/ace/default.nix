@@ -8,11 +8,13 @@
   services.kaibaHydra = {
     enable = true;
     proxyAddress = "192.168.8.247";
-    # Native sandbox smoke test passed on Ace, 2026-09-27 (kernel 6.12.47).
+    # Native sandbox smoke test passed on Ace, 2026-09-27 (kernel 6.18.42).
     # Requalify after changing the running kernel or virtualization stack.
     kvm = true;
     backup.enable = true;
     backup.host = "192.168.8.247";
+    github.enable = true;
+    cachePublish.enable = true;
   };
 
   # Use the same upstream Hydra package as the qualified infrastructure VMs.
