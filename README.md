@@ -85,6 +85,9 @@ ssh adam@mako.local sudo nixos-rebuild switch --rollback
 
 ## Systems
 
+See [Hydra host integration](docs/hydra.md) for Ace's builder, Mako's HTTPS and
+backup receiver, and the required deployment-baseline comparison.
+
 ```shell
 nix eval --raw .#nixosConfigurations.ace.config.networking.hostName
 nix eval --raw .#nixosConfigurations.mako.config.networking.hostName

@@ -6,6 +6,11 @@
 
     nixos-raspberrypi.url = "github:ams-tech/nixos-raspberrypi/codex/rpi-otp-upstream-improvements";
 
+    kaiba-infra = {
+      url = "github:PseudoDesign/kaiba-infra";
+      inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
+    };
+
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
@@ -28,6 +33,7 @@
       crtvar,
       disko,
       dogsitting,
+      kaiba-infra,
       nixos-raspberrypi,
       nixpkgs,
       ...
@@ -43,6 +49,7 @@
           crtvar
           disko
           dogsitting
+          kaiba-infra
           nixos-raspberrypi
           self
           ;

@@ -1,6 +1,7 @@
 {
   crtvar,
   dogsitting,
+  kaiba-infra,
   pkgs,
   self,
   ...
@@ -13,6 +14,8 @@ in
   imports = [
     crtvar.nixosModules.default
     dogsitting.nixosModules.default
+    kaiba-infra.nixosModules.hydra-proxy
+    kaiba-infra.nixosModules.hydra-backup-receiver
   ];
 
   networking = {
@@ -24,6 +27,12 @@ in
   };
 
   time.timeZone = "America/Indiana/Indianapolis";
+
+  services.kaibaHydraProxy = {
+    enable = true;
+    upstream = "192.168.8.214:3000";
+  };
+  services.kaibaHydraBackupReceiver.enable = true;
 
   security.acme = {
     acceptTerms = true;
