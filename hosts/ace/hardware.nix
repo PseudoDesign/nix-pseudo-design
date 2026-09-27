@@ -93,9 +93,17 @@ in
     };
   };
   swapDevices = [ ];
-  hardware.raspberry-pi.config.all.dt-overlays = {
-    disable-bt.enable = true;
-    disable-wifi.enable = true;
+  # Preserve config.txt on the actual boot partition (disk-main-boot).
+  # The ESP contains an older, shadowed /firmware copy with different settings.
+  hardware.raspberry-pi.config.all.base-dt-params = {
+    pciex1 = {
+      enable = true;
+      value = "on";
+    };
+    pciex1_gen = {
+      enable = true;
+      value = "3";
+    };
   };
 
   # A runtime-only compatibility probe can pipe this to cryptsetup's

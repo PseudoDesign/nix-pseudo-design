@@ -37,3 +37,7 @@ then persist the host generations and enable provisioning after qualification.
 See the [concrete deployment review](hydra-deployment-review.md) for measured
 qualification, closure differences, preserved storage and the remaining
 OS-upgrade and recovery decision.
+
+The [test deployment report](hydra-test-deployment.md) records the running Hydra
+service, first successful infrastructure build, restored backup and firmware
+correction required before persistent switching and reboot.
