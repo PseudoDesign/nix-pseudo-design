@@ -3,8 +3,11 @@
 The pinned `kaiba-infra` flake supplies the Hydra, HTTPS proxy and restricted
 backup receiver modules. Ace imports Hydra alongside its existing pilot
 credential-persistence module and a hardware module preserving its installed
-partition labels, mounts and legacy disk-unlock recipe. Mako adds the `hydra.pseudo.design` virtual host
-and backup receiver alongside its existing services.
+partition labels, mounts and legacy disk-unlock recipe. Mako adds the
+`hydra.pseudo.design` virtual host and backup receiver alongside its existing
+services. It also enables the same pilot-persistence module with its existing
+UID 991/GID 985; Ace retains UID 994/GID 988. Neither host initializes or replaces
+the enrolled credential.
 
 The reserved LAN addresses are Ace `192.168.8.214` and Mako `192.168.8.247`.
 Ace permits Hydra's port 3000 only from Mako. Mako uses the existing ACME contact

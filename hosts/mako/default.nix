@@ -12,6 +12,7 @@ let
 in
 {
   imports = [
+    ../../modules/services/kaiba-pilot-device.nix
     crtvar.nixosModules.default
     dogsitting.nixosModules.default
     kaiba-infra.nixosModules.hydra-proxy
@@ -33,6 +34,13 @@ in
     upstream = "192.168.8.214:3000";
   };
   services.kaibaHydraBackupReceiver.enable = true;
+
+  services.kaibaPilotDevice = {
+    enable = true;
+    # Preserve the IDs that own Mako's existing enrolled key.
+    uid = 991;
+    gid = 985;
+  };
 
   security.acme = {
     acceptTerms = true;

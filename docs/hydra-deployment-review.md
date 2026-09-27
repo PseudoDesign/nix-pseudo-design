@@ -21,9 +21,29 @@ key was consumed through a pipe entirely on Ace; it was not printed, persisted,
 returned to the deployment machine, or added to Nix outputs. This validates the
 recipe on the running kernel, not a reboot into the proposed kernel.
 
-The pilot state remains UID 994/GID 988, directory mode 0700, single-link state
-file mode 0600, and an active `rw,nosuid,nodev,noexec` self-bind mount. The
-credential was not read, copied, regenerated, or re-enrolled.
+Fresh metadata-only inspection after Mako's enrollment confirmed these accounts
+and protected state directories:
+
+| Host | UID | GID | Directory mode | State-file mode / links |
+| --- | --- | --- | --- | --- |
+| Ace | 994 | 988 | 0700 | 0600 / 1 |
+| Mako | 991 | 985 | 0700 | 0600 / 1 |
+
+Both have an active `rw,nosuid,nodev,noexec` self-bind mount. Mako's live mount
+has no systemd unit file; the refreshed candidate declares its existing account
+and protected mount through the same persistence module as Ace. Neither
+credential was read, copied, regenerated, or re-enrolled.
+
+The refreshed Mako candidate's metadata guard passed against the real enrolled
+state without activation. Configuration evaluation confirms both hosts' numeric
+IDs, protected mount flags and required metadata-check dependency. The existing
+generic persistence VM check and all 16 infrastructure Python tests pass.
+
+The provisioning draft incorporates `main` at
+`39f51b118f05b776f014043da43f79a90e85fea1`. Its Hydra export still evaluates to
+exactly the ten inventoried ARM64 derivations, each identical to the corresponding
+application check. All pre-existing input locks remain unchanged. Full execution
+of those ten jobs through live Hydra remains pending.
 
 ## Preserved storage
 
@@ -59,15 +79,21 @@ this rollout does not claim they are unrelated or harmless.
 
 The full package comparisons are [Ace](hydra-rollout/ace-closure-diff.txt) and
 [Mako](hydra-rollout/mako-closure-diff.txt). Mako's changes are limited to the
-Hydra ACME/proxy and backup receiver dependencies. Its existing application
-packages, kernel and initrd are unchanged.
+Hydra ACME/proxy, backup receiver dependencies and enrolled pilot persistence.
+Its existing application packages, kernel and initrd are unchanged.
 
 ## Built candidates
 
 These exact closures were built on Ace and match local evaluation:
 
 - Ace: `/nix/store/66nynvy3zl94fr3q05ivkwyg4p1wl35g-nixos-system-ace-26.05.20260807.ee48b14`
-- Mako: `/nix/store/7xq7faj7msr14xrj9hmdpnyjmfpk8815-nixos-system-mako-26.05.20260807.ee48b14`
+- Mako: `/nix/store/3snf55q7cp2mxwzqlhmxzsbcx3xpn450-nixos-system-mako-26.05.20260807.ee48b14`
+
+The refreshed Mako closure includes its enrolled account and protected mount.
+It is copied to Mako and GC-rooted on both hosts as
+`/nix/var/nix/gcroots/kaiba-hydra-20260927-mako-enrollment-candidate`. Earlier
+running-generation and candidate roots are retained. Ace's candidate is
+unchanged. Neither host has been activated.
 
 The final Ace initrd was inspected for the legacy helper, OTP helper and
 `vcgencmd`; shell-script dependencies are included explicitly.
@@ -83,7 +109,8 @@ The final Ace initrd was inspected for the legacy helper, OTP helper and
    ensure console/recovery access is available before changing its boot files.
    Do not archive the pilot state, OTP private key or a derived unlock key.
 4. Use `nixos-rebuild test` for Mako, then Ace. Verify existing applications,
-   pilot mount metadata, PostgreSQL, Hydra, HTTPS and source-restricted port 3000.
+   both hosts' pilot account IDs and mount metadata, PostgreSQL, Hydra, HTTPS
+   and source-restricted port 3000.
    A test activation does not install a new boot entry. If it fails, run the
    recorded old generation's `bin/switch-to-configuration test` on that host.
 5. Create the runtime-only administrator and backup SSH credentials. Reconcile
