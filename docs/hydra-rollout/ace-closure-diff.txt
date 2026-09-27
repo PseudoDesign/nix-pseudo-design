@@ -1,0 +1,820 @@
+55-nixos-aslr-entropy.conf: ∅ → ε
+X-Restart-Triggers-dbus: ∅ → ε
+X-Restart-Triggers-hydra: ∅ → ε
+X-Restart-Triggers-hydra-queue: ∅ → ε
+abseil-cpp: ∅ → 20260107.1, +7387.6 KiB
+acl: 2.3.2 → 2.4.0
+apr: ∅ → 1.7.6, +384.3 KiB
+apr-util: ∅ → 1.6.3, +514.7 KiB
+attr: 2.5.2 → 2.6.0
+audit: 4.1.2-unstable-2025-09-06 → 4.2.1
+aws-c-event-stream: 0.5.7 → 0.7.0
+aws-c-http: 0.10.4 → 0.11.0, +9.1 KiB
+aws-c-io: 0.22.0 → 0.27.2
+aws-sdk-cpp: 1.11.647 → ∅, -7607.1 KiB
+bash: 5.3p3 → 5.3p9
+bash-interactive: 5.3p3 → 5.3p9
+bash_profile: ε → ∅
+bashrc: ε → ∅
+bind: 9.20.18 → 9.20.26
+binutils: ∅ → 2.46, +41128.6 KiB
+binutils-wrapper: ∅ → 2.46, +55.3 KiB
+boehm-gc: 8.2.8 → 8.2.12, -127.0 KiB
+boost: 1.87.0 → 1.89.0
+brotli: 1.1.0 → 1.2.0, +129.0 KiB
+btrfs-progs: 6.17.1 → 6.19.1, -247.5 KiB
+busybox: 1.36.1 → 1.37.0
+c-dvar: ∅ → 1.2.0, +147.8 KiB
+c-ini: ∅ → 1.1.0, +100.3 KiB
+c-rbtree: ∅ → 3.2.0, +105.3 KiB
+c-shquote: ∅ → 1.1.0, +86.4 KiB
+c-utf8: ∅ → 1.1.0, +72.8 KiB
+ccid: 1.6.2 → ∅, -362.0 KiB
+cdrkit: ∅ → 1.1.11-4, +3552.1 KiB
+check-link-targets.sh: ε → ∅
+civetweb: ∅ → 1.16, +365.4 KiB
+cleanup: ε → ∅
+coreutils: 9.8 → 9.11, +200.9 KiB
+coreutils-full: 9.8 → 9.11, -61.9 KiB
+cryptsetup: 2.8.4 → 2.8.6, +12.9 KiB
+curl: 8.18.0 → 8.21.0, +210.7 KiB
+cyrus-sasl: ∅ → 2.1.28, +960.7 KiB
+darcs: ∅ → 2.18.5, +16204.7 KiB
+dash: 0.5.13.1 → 0.5.13.3
+dav1d: ∅ → 1.5.3, +951.4 KiB
+db: +65.9 KiB
+dbus: 1.14.10 → 1.16.2, +26.0 KiB
+dbus-broker: ∅ → 37, +464.2 KiB
+dhcpcd: 10.2.4 → 10.3.1
+dpkg: ∅ → 1.23.7, +9065.1 KiB
+e2fsprogs: 1.47.3 → 1.47.4
+ed: 1.22.2 → 1.22.5
+etc-environment.d: ∅ → 50-systemd-path.conf
+etc-nix: ∅ → ε
+expand-response: ∅ → ε, +69.9 KiB
+expat: 2.7.4 → 2.8.2, +12.0 KiB
+file: 5.45 → 5.47, +2095.3 KiB
+firmware: +35.7 KiB
+freetype: 2.13.3 → 2.14.3, +87.2 KiB
+gawk: 5.3.2 → 5.4.1, +540.6 KiB
+gcc: ∅ → 15.2.0, +263083.9 KiB
+gcc-wrapper: ∅ → 15.2.0, +68.1 KiB
+gd: ∅ → 2.3.3, +546.8 KiB
+gdk-pixbuf: ∅ → 2.44.6, +3398.5 KiB
+getent-glibc: 2.40-218 → 2.42-67
+gettext: 0.25.1 → 1.0, +5536.2 KiB
+giflib: ∅ → 5.2.2, +590.0 KiB
+git: 2.51.2 → 2.54.0, +2253.3 KiB
+glib: 2.86.3 → 2.88.1, +276.6 KiB
+glibc: 2.40-218 → 2.42-67, +7139.3 KiB
+glibc-locales: 2.40-218 → 2.42-67
+gmp: ∅ → 6.3.0, +575.0 KiB
+gnumake: ∅ → 4.4.1, +1621.4 KiB
+gnupg: +12720.5 KiB
+gnused: 4.9 → 4.10, +71.8 KiB
+gnutar: +2745.3 KiB
+gnutls: 3.8.12 → 3.8.13, +280.3 KiB
+gpm-unstable: -103.0 KiB
+groff: 1.23.0 → 1.24.1, +332.5 KiB
+gtest: ∅ → 1.17.0, +925.6 KiB
+hm-modules: ε → ∅, -97.9 KiB
+hm-session-vars.sh: ε → ∅
+hm-setup: ε → ∅
+hm_environment.d10homemanager.conf: ε → ∅
+hm_fontconfigconf.d10hmfonts.conf: ε → ∅
+hm_fontconfigconf.d52hmdefaultfonts.conf: ε → ∅
+hm_gitconfig: ε → ∅
+hm_homeadam.cache.keep: ε → ∅
+hm_homeadam.localstate.keep: ε → ∅
+home-configuration-reference: ε → ∅, -1843.1 KiB
+home-manager: ε → ∅, -3064.3 KiB
+home-manager.sh: ε → ∅
+hostname-hostname-debian: ∅ → 3.25
+hwdb.bin: +274.4 KiB
+hwloc: 2.12.2 → 2.13.0
+hydra: ∅ → 0-unstable-2026-03-13, ε, +28713.7 KiB
+hydra-perl: ∅ → ε, +559.0 KiB
+hydra.conf: ∅ → ε
+iana-etc: 20250505 → 20251215
+icu4c: -63.2 KiB
+initrd: ε → ∅
+initrd-linux_rpi-bcm2712: 6.12.47-stable_20250916 → 6.18.42-unstable_20260806, -8229.7 KiB
+intel2200BGFirmware: 3.1 → ∅, -242.2 KiB
+iproute2: 6.17.0 → 7.0.0, +396.2 KiB
+iptables: 1.8.11 → 1.8.13, +17.2 KiB
+ipw2200-firmware: ∅ → 3.1, +242.2 KiB
+isl: ∅ → 0.20, +2623.2 KiB
+jemalloc: 5.3.0-unstable-2025-09-12 → 5.3.1, -2583.6 KiB
+jq: 1.8.1 → 1.8.2, +64.6 KiB
+krb5: 1.22.1 → 1.22.2
+ld-library: ε → ∅, -32.7 KiB
+ldns: 1.8.4 → 1.9.2
+lerc: ∅ → 4.1.1, +814.7 KiB
+less: 679 → 692
+libaom: ∅ → 3.12.1, +7097.1 KiB
+libapparmor: 4.1.2 → 4.1.7
+libarchive: 3.8.4 → 3.8.8
+libavif: ∅ → 1.4.1, +1240.7 KiB
+libblake3: 1.8.2 → 1.8.5
+libbpf: 1.6.2 → 1.7.0, +185.4 KiB
+libcap: -72.5 KiB
+libcap-ng: 0.8.5 → 0.9.3, -62.2 KiB
+libdeflate: ∅ → 1.25, +540.9 KiB
+libevent: 2.1.12 → 2.1.13
+libffi: 3.5.2 → 3.7.1
+libfido2: 1.16.0 → 1.17.0, +162.2 KiB
+libgcrypt: 1.11.2 → 1.12.2
+libgit2: 1.9.2 → 1.9.3, +64.7 KiB
+libgpg-error: 1.55 → 1.59, +21.1 KiB
+libjpeg-turbo: ∅ → 3.1.4, +1830.8 KiB
+libksba: ∅ → 1.6.7, +351.1 KiB
+libmd: -56.5 KiB
+libmnl: -9.0 KiB
+libmpc: ∅ → 1.4.0, +355.2 KiB
+libnetfilter_conntrack: 1.1.0 → 1.1.1
+libnftnl: 1.3.0 → 1.3.1
+libnl: 3.11.0 → 3.12.0
+libpng-apng: 1.6.55 → 1.6.58
+libpq: ∅ → 18.4, +585.7 KiB
+libpqxx: ∅ → 7.10.7, +701.6 KiB
+libraspberrypi-unstable: 2024-12-23 → ∅, -35628.6 KiB
+libressl: +65.3 KiB
+libseccomp: 2.6.0 → 2.6.1
+libselinux: 3.8.1 → 3.10
+libsodium: 1.0.20-unstable-2025-12-31 → 1.0.22-unstable-2026-04-09, +137.9 KiB
+libssh: 0.11.3 → ∅, -663.9 KiB
+libtiff: ∅ → 4.7.2, +890.7 KiB
+libtool: ∅ → 2.5.4, +77.5 KiB
+libtpms: 0.10.1 → 0.10.2
+libunistring: 1.4.1 → 1.4.2
+liburcu: 0.15.5 → 0.15.6
+libuv: 1.51.0 → 1.52.1
+libvmaf: ∅ → 3.0.0, +2615.1 KiB
+libwebp: ∅ → 1.6.0, +3301.6 KiB
+libx11: 1.8.12 → 1.8.13, -64.1 KiB
+libxext: 1.3.6 → 1.3.7
+libxml2: 2.15.1 → 2.15.3
+libxmu: 1.2.1 → 1.3.1
+libxpm: ∅ → 3.5.19, +142.5 KiB
+libyuv: ∅ → 1908, +3396.3 KiB
+link: ε → ∅
+linux-firmware: 20260309 → 20260622, +33996.0 KiB
+linux-headers: ∅ → 6.18.7, +7033.5 KiB
+linux-headers-static: 6.16.7 → 6.18.7, +114.2 KiB
+linux-pam: 1.7.1 → 1.7.2, +13.7 KiB
+linux_rpi-bcm2712: 6.12.47-stable_20250916, 6.12.47-stable_20250916-modules → 6.18.42-unstable_20260806, +16053.2 KiB
+llhttp: 9.3.0 → 9.4.2
+logrotate: -9.8 KiB
+lowdown: 2.0.4 → 3.0.1
+lua: ∅ → 5.4.7, +1568.0 KiB
+lvm2: 2.03.35 → 2.03.39, -127.0 KiB
+lz4: +64.2 KiB
+lzo: -180.2 KiB
+make-initrd-ng: -51.5 KiB
+man-db: -213.1 KiB
+mercurial: ∅ → 7.1.2, +35436.6 KiB
+mkpasswd: 5.6.5 → 5.6.6
+mpfr: ∅ → 4.2.2, +797.4 KiB
+nano: 8.7 → 9.2, +180.1 KiB
+ncompress: ∅ → 5.0, +149.3 KiB
+ncurses: 6.5 → 6.6, +95.9 KiB
+nghttp2: 1.67.1 → 1.69.0
+nghttp3: 1.12.0 → 1.15.0
+ngtcp2: 1.17.0 → 1.22.1
+nix: 2.31.2 → 2.34.8, +529.3 KiB
+nix-cmd: 2.31.2 → 2.34.8, +98.7 KiB
+nix-eval-jobs: ∅ → 2.34.3, +751.4 KiB
+nix-expr: 2.31.2 → 2.34.8, +548.2 KiB
+nix-fetchers: 2.31.2 → 2.34.8, +175.6 KiB
+nix-flake: 2.31.2 → 2.34.8, +74.6 KiB
+nix-ld: 2.0.6 → ∅, -85.5 KiB
+nix-main: 2.31.2 → 2.34.8, +70.2 KiB
+nix-manual: 2.31.2 → 2.34.8, +4999.5 KiB
+nix-nswrapper: ∅ → 2.34.8, +160.4 KiB
+nix-perl: ∅ → 2.34.8, +252.5 KiB
+nix-store: 2.31.2 → 2.34.8, +951.5 KiB
+nix-util: 2.31.2 → 2.34.8, +448.9 KiB
+nixos-configuration-reference: +87.2 KiB
+nixos-init: +193.0 KiB
+nixos-manual: +2084.5 KiB
+nixos-rebuild-ng: 25.11 → 26.05, +40.9 KiB
+nixos-system-ace: 25.11.20260313.3e20095 → 26.05.20260807.ee48b14
+nsncd: +16.2 KiB
+nss-cacert: 3.121, 3.121-p11kit → 3.126, 3.126-p11kit, -104.5 KiB
+numactl: ∅ → 2.0.18, +520.5 KiB
+openldap: ∅ → 2.6.13, +5191.1 KiB
+openresolv: 3.17.0 → 3.17.4
+openssh: 10.2p1 → 10.4p1, +29.3 KiB
+openssl: 3.6.1 → 3.6.3, -1208.6 KiB
+p11-kit: 0.25.10 → 0.26.2, +713.5 KiB
+pcscd: ε → ∅
+pcsclite: 2.3.0 → 2.4.1, -232.7 KiB
+perl: 5.40.0 → 5.42.0, -1905.1 KiB
+perl5.40.0-Authen-SASL: 2.1900 → ∅, -84.5 KiB
+perl5.40.0-CGI: 4.59 → ∅, -316.7 KiB
+perl5.40.0-CGI-Fast: 2.16 → ∅, -13.1 KiB
+perl5.40.0-Clone: 0.46 → ∅, -74.8 KiB
+perl5.40.0-Config-IniFiles: 3.000003 → ∅, -91.2 KiB
+perl5.40.0-Crypt-URandom: 0.55 → ∅, -85.3 KiB
+perl5.40.0-Digest-HMAC: 1.05 → ∅, -9.2 KiB
+perl5.40.0-Encode-Locale: 1.05 → ∅, -15.1 KiB
+perl5.40.0-FCGI: 0.82 → ∅, -85.2 KiB
+perl5.40.0-FCGI-ProcManager: 0.28 → ∅, -27.6 KiB
+perl5.40.0-File-Listing: 6.16 → ∅, -17.2 KiB
+perl5.40.0-File-Slurp: 9999.32 → ∅, -33.5 KiB
+perl5.40.0-HTML-Parser: 3.81 → ∅, -162.9 KiB
+perl5.40.0-HTML-TagCloud: 0.38 → ∅, -12.8 KiB
+perl5.40.0-HTML-Tagset: 3.20 → ∅, -15.7 KiB
+perl5.40.0-HTTP-CookieJar: 0.014 → ∅, -25.5 KiB
+perl5.40.0-HTTP-Cookies: 6.10 → ∅, -40.4 KiB
+perl5.40.0-HTTP-Daemon: 6.16 → ∅, -33.6 KiB
+perl5.40.0-HTTP-Date: 6.06 → ∅, -15.1 KiB
+perl5.40.0-HTTP-Message: 6.45 → ∅, -141.9 KiB
+perl5.40.0-HTTP-Negotiate: 6.01 → ∅, -19.2 KiB
+perl5.40.0-IO-HTML: 1.004 → ∅, -22.2 KiB
+perl5.40.0-IO-Socket-SSL: 2.083 → ∅, -481.4 KiB
+perl5.40.0-IO-Stringy: 2.113 → ∅, -77.5 KiB
+perl5.40.0-JSON: 4.10 → ∅, -174.7 KiB
+perl5.40.0-LWP-MediaTypes: 6.04 → ∅, -58.8 KiB
+perl5.40.0-Mozilla-CA: 20230821 → ∅, -514.4 KiB
+perl5.40.0-Net-HTTP: 6.23 → ∅, -37.8 KiB
+perl5.40.0-Net-SMTP-SSL: 1.04 → ∅
+perl5.40.0-Net-SSLeay: 1.92 → ∅, -1179.2 KiB
+perl5.40.0-TermReadKey: 2.38 → ∅, -88.2 KiB
+perl5.40.0-Test-Fatal: 0.017 → ∅, -18.5 KiB
+perl5.40.0-Test-Needs: 0.002010 → ∅, -11.5 KiB
+perl5.40.0-Test-RequiresInternet: 0.05 → ∅
+perl5.40.0-TimeDate: 2.33 → ∅, -88.1 KiB
+perl5.40.0-Try-Tiny: 0.31 → ∅, -23.6 KiB
+perl5.40.0-URI: 5.21 → ∅, -158.1 KiB
+perl5.40.0-WWW-RobotRules: 6.02 → ∅, -18.5 KiB
+perl5.40.0-libnet: 3.15 → ∅, -211.0 KiB
+perl5.40.0-libwww-perl: 6.72 → ∅, -292.0 KiB
+perl5.42.0-Algorithm-C3: ∅ → 0.11, +12.9 KiB
+perl5.42.0-Algorithm-Diff: ∅ → 1.1903, +95.1 KiB
+perl5.42.0-Apache-LogFormat-Compiler: ∅ → 0.36, +12.3 KiB
+perl5.42.0-AppConfig: ∅ → 1.71, +136.8 KiB
+perl5.42.0-Authen-SASL: ∅ → 2.1900, +84.5 KiB
+perl5.42.0-Authen-Simple: ∅ → 0.5, +24.1 KiB
+perl5.42.0-Authen-Simple-Passwd: ∅ → 0.6
+perl5.42.0-B-Hooks-EndOfScope: ∅ → 0.26, +19.2 KiB
+perl5.42.0-B-Keywords: ∅ → 1.28, +15.7 KiB
+perl5.42.0-CGI: ∅ → 4.59, +316.7 KiB
+perl5.42.0-CGI-Emulate-PSGI: ∅ → 0.23, +12.9 KiB
+perl5.42.0-CGI-Fast: ∅ → 2.16, +13.1 KiB
+perl5.42.0-CGI-Simple: ∅ → 1.282, +174.3 KiB
+perl5.42.0-CGI-Struct: ∅ → 1.21, +18.4 KiB
+perl5.42.0-CPAN-Meta-Check: ∅ → 0.018
+perl5.42.0-Cache-FastMmap: ∅ → 1.60, +123.8 KiB
+perl5.42.0-Canary-Stability: ∅ → 2013, +9.9 KiB
+perl5.42.0-Capture-Tiny: ∅ → 0.48, +32.0 KiB
+perl5.42.0-Carp-Clan: ∅ → 6.08, +15.6 KiB
+perl5.42.0-Catalyst-Action-REST: ∅ → 1.21, +93.1 KiB
+perl5.42.0-Catalyst-Action-RenderView: ∅ → 0.16, +8.9 KiB
+perl5.42.0-Catalyst-Authentication-Store-DBIx-Class: ∅ → 0.1506, +44.5 KiB
+perl5.42.0-Catalyst-Authentication-Store-LDAP: ∅ → 1.017, +41.3 KiB
+perl5.42.0-Catalyst-Component-InstancePerContext: ∅ → 0.001001
+perl5.42.0-Catalyst-Devel: ∅ → 1.42, +102.3 KiB
+perl5.42.0-Catalyst-Model-DBIC-Schema: ∅ → 0.66, +67.2 KiB
+perl5.42.0-Catalyst-Plugin-AccessLog: ∅ → 1.10, +21.1 KiB
+perl5.42.0-Catalyst-Plugin-Authentication: ∅ → 0.10_027, +139.7 KiB
+perl5.42.0-Catalyst-Plugin-Authorization-Roles: ∅ → 0.09, +20.4 KiB
+perl5.42.0-Catalyst-Plugin-Captcha: ∅ → 0.04
+perl5.42.0-Catalyst-Plugin-ConfigLoader: ∅ → 0.35, +19.3 KiB
+perl5.42.0-Catalyst-Plugin-PrometheusTiny: ∅ → 0.006, +13.5 KiB
+perl5.42.0-Catalyst-Plugin-Session: ∅ → 0.44, +57.1 KiB
+perl5.42.0-Catalyst-Plugin-Session-State-Cookie: ∅ → 0.18, +12.9 KiB
+perl5.42.0-Catalyst-Plugin-Session-Store-FastMmap: ∅ → 0.16, +10.2 KiB
+perl5.42.0-Catalyst-Plugin-StackTrace: ∅ → 0.12, +12.4 KiB
+perl5.42.0-Catalyst-Plugin-Static-Simple: ∅ → 0.37, +45.5 KiB
+perl5.42.0-Catalyst-Runtime: ∅ → 5.90131, +645.6 KiB
+perl5.42.0-Catalyst-TraitFor-Request-ProxyBase: ∅ → 0.000005, +8.8 KiB
+perl5.42.0-Catalyst-View-Download: ∅ → 0.09, +29.3 KiB
+perl5.42.0-Catalyst-View-JSON: ∅ → 0.37, +21.0 KiB
+perl5.42.0-Catalyst-View-TT: ∅ → 0.46, +40.6 KiB
+perl5.42.0-CatalystX-Component-Traits: ∅ → 0.19, +10.6 KiB
+perl5.42.0-CatalystX-RoleApplicator: ∅ → 0.005
+perl5.42.0-CatalystX-Script-Server-Starman: ∅ → 0.03, +12.0 KiB
+perl5.42.0-Class-Accessor: ∅ → 0.51, +29.4 KiB
+perl5.42.0-Class-Accessor-Chained: ∅ → 0.01
+perl5.42.0-Class-Accessor-Grouped: ∅ → 0.10014, +32.5 KiB
+perl5.42.0-Class-C3: ∅ → 0.35, +24.2 KiB
+perl5.42.0-Class-C3-Adopt-NEXT: ∅ → 0.14, +15.8 KiB
+perl5.42.0-Class-C3-Componentised: ∅ → 1.001002, +14.0 KiB
+perl5.42.0-Class-Data-Inheritable: ∅ → 0.09
+perl5.42.0-Class-Inspector: ∅ → 1.36, +24.3 KiB
+perl5.42.0-Class-Load: ∅ → 0.25, +16.5 KiB
+perl5.42.0-Class-Load-XS: ∅ → 0.10, +74.9 KiB
+perl5.42.0-Class-Method-Modifiers: ∅ → 2.15, +20.1 KiB
+perl5.42.0-Class-MethodMaker: ∅ → 2.24, +21228.2 KiB
+perl5.42.0-Class-Singleton: ∅ → 1.6, +15.4 KiB
+perl5.42.0-Class-Tiny: ∅ → 1.008, +20.0 KiB
+perl5.42.0-Class-Unload: ∅ → 0.11
+perl5.42.0-Clone: ∅ → 0.46, +74.9 KiB
+perl5.42.0-Clone-Choose: ∅ → 0.010, +10.5 KiB
+perl5.42.0-Compress-Raw-Bzip2: ∅ → 2.218, +85.7 KiB
+perl5.42.0-Compress-Raw-Zlib: ∅ → 2.222, +127.4 KiB
+perl5.42.0-Config-Any: ∅ → 0.33, +32.3 KiB
+perl5.42.0-Config-General: ∅ → 2.65, +111.7 KiB
+perl5.42.0-Config-IniFiles: ∅ → 3.000003, +91.2 KiB
+perl5.42.0-Config-Tiny: ∅ → 2.29, +14.6 KiB
+perl5.42.0-Context-Preserve: ∅ → 0.03, +8.0 KiB
+perl5.42.0-Convert-ASN1: ∅ → 0.34, +86.6 KiB
+perl5.42.0-Cookie-Baker: ∅ → 0.11, +8.5 KiB
+perl5.42.0-Crypt-Argon2: ∅ → 0.019, +88.4 KiB
+perl5.42.0-Crypt-Passphrase: ∅ → 0.016, +45.1 KiB
+perl5.42.0-Crypt-Passphrase-Argon2: ∅ → 0.009, +15.7 KiB
+perl5.42.0-Crypt-PasswdMD5: ∅ → 1.42, +9.4 KiB
+perl5.42.0-Crypt-RandPasswd: ∅ → 0.07, +98.0 KiB
+perl5.42.0-Crypt-SysRandom: ∅ → 0.007
+perl5.42.0-Crypt-URandom: ∅ → 0.55, +85.4 KiB
+perl5.42.0-DBD-Pg: ∅ → 3.17.0, +480.1 KiB
+perl5.42.0-DBD-SQLite: ∅ → 1.74, +436.2 KiB
+perl5.42.0-DBI: ∅ → 1.648, +2136.7 KiB
+perl5.42.0-DBIx-Class: ∅ → 0.082843, +1512.6 KiB
+perl5.42.0-DBIx-Class-Candy: ∅ → 0.005003, +28.1 KiB
+perl5.42.0-DBIx-Class-Helpers: ∅ → 2.036000, +229.5 KiB
+perl5.42.0-DBIx-Class-Schema-Loader: ∅ → 0.07051, +432.9 KiB
+perl5.42.0-DBIx-Introspector: ∅ → 0.001005, +24.9 KiB
+perl5.42.0-Data-Dump: ∅ → 1.25, +38.7 KiB
+perl5.42.0-Data-Dumper-Concise: ∅ → 2.023, +15.7 KiB
+perl5.42.0-Data-OptList: ∅ → 0.114, +15.4 KiB
+perl5.42.0-Data-Page: ∅ → 2.03, +11.6 KiB
+perl5.42.0-Data-Stream-Bulk: ∅ → 0.11, +40.1 KiB
+perl5.42.0-Data-UUID: ∅ → 1.226, +78.7 KiB
+perl5.42.0-Data-Visitor: ∅ → 0.32, +32.1 KiB
+perl5.42.0-DateTime: ∅ → 1.59, +251.5 KiB
+perl5.42.0-DateTime-Event-ICal: ∅ → 0.13, +32.3 KiB
+perl5.42.0-DateTime-Event-Recurrence: ∅ → 0.19, +37.5 KiB
+perl5.42.0-DateTime-Format-Builder: ∅ → 0.83, +80.9 KiB
+perl5.42.0-DateTime-Format-Flexible: ∅ → 0.34, +82.3 KiB
+perl5.42.0-DateTime-Format-HTTP: ∅ → 0.42, +10.5 KiB
+perl5.42.0-DateTime-Format-ICal: ∅ → 0.09, +19.8 KiB
+perl5.42.0-DateTime-Format-Natural: ∅ → 1.18, +248.4 KiB
+perl5.42.0-DateTime-Format-Strptime: ∅ → 1.79, +50.3 KiB
+perl5.42.0-DateTime-HiRes: ∅ → 0.04
+perl5.42.0-DateTime-Locale: ∅ → 1.39, +19481.8 KiB
+perl5.42.0-DateTime-Set: ∅ → 0.3900, +90.7 KiB
+perl5.42.0-DateTime-TimeZone: ∅ → 2.60, +6412.1 KiB
+perl5.42.0-DateTimeX-Easy: ∅ → 0.091, +27.4 KiB
+perl5.42.0-Devel-GlobalDestruction: ∅ → 0.14
+perl5.42.0-Devel-Hide: ∅ → 0.0015, +16.0 KiB
+perl5.42.0-Devel-OverloadInfo: ∅ → 0.007, +12.0 KiB
+perl5.42.0-Devel-StackTrace: ∅ → 2.04, +26.5 KiB
+perl5.42.0-Devel-StackTrace-AsHTML: ∅ → 0.15, +11.5 KiB
+perl5.42.0-Digest-HMAC: ∅ → 1.05, +9.2 KiB
+perl5.42.0-Digest-MD5-File: ∅ → 0.08, +14.4 KiB
+perl5.42.0-Digest-SHA1: ∅ → 2.13, +79.8 KiB
+perl5.42.0-Dist-CheckConflicts: ∅ → 0.11, +13.0 KiB
+perl5.42.0-Email-Abstract: ∅ → 3.010, +31.4 KiB
+perl5.42.0-Email-Address-XS: ∅ → 1.05, +96.9 KiB
+perl5.42.0-Email-Date-Format: ∅ → 1.008, +8.1 KiB
+perl5.42.0-Email-MIME: ∅ → 1.953, +82.1 KiB
+perl5.42.0-Email-MIME-ContentType: ∅ → 1.028, +25.9 KiB
+perl5.42.0-Email-MIME-Encodings: ∅ → 1.317
+perl5.42.0-Email-MessageID: ∅ → 1.408, +9.0 KiB
+perl5.42.0-Email-Sender: ∅ → 2.600, +115.7 KiB
+perl5.42.0-Email-Simple: ∅ → 2.218, +39.8 KiB
+perl5.42.0-Encode-Locale: ∅ → 1.05, +15.1 KiB
+perl5.42.0-Eval-Closure: ∅ → 0.14, +12.7 KiB
+perl5.42.0-Exception-Class: ∅ → 1.45, +37.3 KiB
+perl5.42.0-Exporter-Lite: ∅ → 0.09, +10.7 KiB
+perl5.42.0-Exporter-Tiny: ∅ → 1.006002, +47.0 KiB
+perl5.42.0-ExtUtils-Config: ∅ → 0.008
+perl5.42.0-ExtUtils-Helpers: ∅ → 0.026, +12.5 KiB
+perl5.42.0-ExtUtils-InstallPaths: ∅ → 0.012, +23.0 KiB
+perl5.42.0-FCGI: ∅ → 0.82, +85.4 KiB
+perl5.42.0-FCGI-ProcManager: ∅ → 0.28, +27.6 KiB
+perl5.42.0-File-ChangeNotify: ∅ → 0.31, +46.1 KiB
+perl5.42.0-File-Copy-Recursive: ∅ → 0.45, +30.3 KiB
+perl5.42.0-File-Find-Rule: ∅ → 0.34, +35.6 KiB
+perl5.42.0-File-LibMagic: ∅ → 1.23, +95.0 KiB
+perl5.42.0-File-Listing: ∅ → 6.16, +17.2 KiB
+perl5.42.0-File-Remove: ∅ → 1.61, +16.3 KiB
+perl5.42.0-File-ShareDir: ∅ → 1.118, +23.9 KiB
+perl5.42.0-File-ShareDir-Install: ∅ → 0.14, +14.4 KiB
+perl5.42.0-File-Slurp: ∅ → 9999.32, +33.5 KiB
+perl5.42.0-File-Slurper: ∅ → 0.014, +9.2 KiB
+perl5.42.0-File-Which: ∅ → 1.27, +15.1 KiB
+perl5.42.0-Filesys-Notify-Simple: ∅ → 0.14, +11.4 KiB
+perl5.42.0-Function-Parameters: ∅ → 2.002004, +135.2 KiB
+perl5.42.0-GD: ∅ → 2.78, +363.1 KiB
+perl5.42.0-GD-SecurityImage: ∅ → 1.75, +62.1 KiB
+perl5.42.0-Getopt-Long: ∅ → 2.58, +91.4 KiB
+perl5.42.0-Getopt-Long-Descriptive: ∅ → 0.114, +51.8 KiB
+perl5.42.0-HTML-Parser: ∅ → 3.81, +163.1 KiB
+perl5.42.0-HTML-TagCloud: ∅ → 0.38, +12.8 KiB
+perl5.42.0-HTML-Tagset: ∅ → 3.20, +15.7 KiB
+perl5.42.0-HTTP-Body: ∅ → 1.23, +29.5 KiB
+perl5.42.0-HTTP-CookieJar: ∅ → 0.014, +25.5 KiB
+perl5.42.0-HTTP-Cookies: ∅ → 6.10, +40.4 KiB
+perl5.42.0-HTTP-Daemon: ∅ → 6.17, +34.5 KiB
+perl5.42.0-HTTP-Date: ∅ → 6.06, +15.1 KiB
+perl5.42.0-HTTP-Entity-Parser: ∅ → 0.25, +21.1 KiB
+perl5.42.0-HTTP-Headers-Fast: ∅ → 0.22, +20.4 KiB
+perl5.42.0-HTTP-Message: ∅ → 6.45, +141.9 KiB
+perl5.42.0-HTTP-MultiPartParser: ∅ → 0.02, +15.3 KiB
+perl5.42.0-HTTP-Negotiate: ∅ → 6.01, +19.2 KiB
+perl5.42.0-HTTP-Parser-XS: ∅ → 0.17, +86.6 KiB
+perl5.42.0-HTTP-Request-AsCGI: ∅ → 1.2, +14.0 KiB
+perl5.42.0-HTTP-Server-Simple: ∅ → 0.52, +32.2 KiB
+perl5.42.0-HTTP-Server-Simple-PSGI: ∅ → 0.16, +11.9 KiB
+perl5.42.0-Hash-Merge: ∅ → 0.302, +21.1 KiB
+perl5.42.0-Hash-MultiValue: ∅ → 0.16, +17.2 KiB
+perl5.42.0-Hash-SharedMem: ∅ → 0.005, +129.8 KiB
+perl5.42.0-IO-Compress: ∅ → 2.220, +885.6 KiB
+perl5.42.0-IO-HTML: ∅ → 1.004, +22.2 KiB
+perl5.42.0-IO-Handle-Util: ∅ → 0.02, +36.2 KiB
+perl5.42.0-IO-Interactive: ∅ → 1.025, +11.7 KiB
+perl5.42.0-IO-Socket-INET6: ∅ → 2.73, +22.0 KiB
+perl5.42.0-IO-Socket-SSL: ∅ → 2.083, +481.4 KiB
+perl5.42.0-IO-String: ∅ → 1.08, +14.2 KiB
+perl5.42.0-IO-Stringy: ∅ → 2.113, +77.5 KiB
+perl5.42.0-IO-Tty: ∅ → 1.20, +99.1 KiB
+perl5.42.0-IPC-Run: ∅ → 20231003.0, +237.9 KiB
+perl5.42.0-IPC-Run3: ∅ → 0.048, +45.0 KiB
+perl5.42.0-Importer: ∅ → 0.026, +44.2 KiB
+perl5.42.0-JSON: ∅ → 4.10, +174.7 KiB
+perl5.42.0-JSON-MaybeXS: ∅ → 1.004005, +13.4 KiB
+perl5.42.0-JSON-XS: ∅ → 4.03, +157.2 KiB
+perl5.42.0-LWP-MediaTypes: ∅ → 6.04, +58.8 KiB
+perl5.42.0-LWP-Protocol-http10: ∅ → 6.03, +12.5 KiB
+perl5.42.0-LWP-Protocol-https: ∅ → 6.11, +9.2 KiB
+perl5.42.0-LWP-UserAgent-Determined: ∅ → 1.07, +10.7 KiB
+perl5.42.0-Lingua-EN-FindNumber: ∅ → 1.32
+perl5.42.0-Lingua-EN-Inflect: ∅ → 1.905, +104.7 KiB
+perl5.42.0-Lingua-EN-Inflect-Number: ∅ → 1.12
+perl5.42.0-Lingua-EN-Inflect-Phrase: ∅ → 0.20, +14.7 KiB
+perl5.42.0-Lingua-EN-Number-IsOrdinal: ∅ → 0.05
+perl5.42.0-Lingua-EN-Tagger: ∅ → 0.31, +2355.7 KiB
+perl5.42.0-Lingua-EN-Words2Nums: ∅ → 0.18, +11.6 KiB
+perl5.42.0-Lingua-PT-Stemmer: ∅ → 0.02, +24.5 KiB
+perl5.42.0-Lingua-Stem: ∅ → 2.31, +98.3 KiB
+perl5.42.0-Lingua-Stem-Fr: ∅ → 0.02, +17.7 KiB
+perl5.42.0-Lingua-Stem-It: ∅ → 0.02, +14.1 KiB
+perl5.42.0-Lingua-Stem-Ru: ∅ → 0.04, +9.4 KiB
+perl5.42.0-Lingua-Stem-Snowball-Da: ∅ → 1.01, +11.5 KiB
+perl5.42.0-List-MoreUtils: ∅ → 0.430, +66.5 KiB
+perl5.42.0-List-MoreUtils-XS: ∅ → 0.430, +146.0 KiB
+perl5.42.0-List-SomeUtils: ∅ → 0.59, +41.7 KiB
+perl5.42.0-Log-Dispatch: ∅ → 2.71, +90.3 KiB
+perl5.42.0-Log-Dispatch-Array: ∅ → 1.005
+perl5.42.0-Long-Jump: ∅ → 0.000001
+perl5.42.0-MIME-Charset: ∅ → 1.013.1, +64.0 KiB
+perl5.42.0-MIME-Types: ∅ → 2.24, +165.4 KiB
+perl5.42.0-MRO-Compat: ∅ → 0.15, +13.7 KiB
+perl5.42.0-Memoize-ExpireLRU: ∅ → 0.56, +17.3 KiB
+perl5.42.0-Module-Build: ∅ → 0.4234, +387.0 KiB
+perl5.42.0-Module-Build-Tiny: ∅ → 0.047, +13.6 KiB
+perl5.42.0-Module-Find: ∅ → 0.16, +12.3 KiB
+perl5.42.0-Module-Implementation: ∅ → 0.09, +11.4 KiB
+perl5.42.0-Module-Install: ∅ → 1.21, +241.9 KiB
+perl5.42.0-Module-Pluggable: ∅ → 5.2, +44.5 KiB
+perl5.42.0-Module-Runtime: ∅ → 0.016, +19.3 KiB
+perl5.42.0-Module-Runtime-Conflicts: ∅ → 0.003
+perl5.42.0-Module-ScanDeps: ∅ → 1.37, +77.3 KiB
+perl5.42.0-Module-Util: ∅ → 1.09, +21.2 KiB
+perl5.42.0-Moo: ∅ → 2.005005, +105.5 KiB
+perl5.42.0-MooX-Types-MooseLike: ∅ → 0.29, +30.7 KiB
+perl5.42.0-Moose: ∅ → 2.2206, +1673.4 KiB
+perl5.42.0-MooseX-Emulate-Class-Accessor-Fast: ∅ → 0.009032, +19.4 KiB
+perl5.42.0-MooseX-Getopt: ∅ → 0.76, +54.8 KiB
+perl5.42.0-MooseX-MarkAsMethods: ∅ → 0.15, +13.0 KiB
+perl5.42.0-MooseX-MethodAttributes: ∅ → 0.32, +47.3 KiB
+perl5.42.0-MooseX-NonMoose: ∅ → 0.26, +28.7 KiB
+perl5.42.0-MooseX-RelatedClassRoles: ∅ → 0.004
+perl5.42.0-MooseX-Role-Parameterized: ∅ → 1.11, +38.7 KiB
+perl5.42.0-MooseX-Role-WithOverloading: ∅ → 0.17, +89.7 KiB
+perl5.42.0-MooseX-StrictConstructor: ∅ → 0.21, +13.5 KiB
+perl5.42.0-MooseX-Traits-Pluggable: ∅ → 0.12, +12.9 KiB
+perl5.42.0-MooseX-Types: ∅ → 0.50, +77.4 KiB
+perl5.42.0-MooseX-Types-DateTime: ∅ → 0.13, +9.0 KiB
+perl5.42.0-MooseX-Types-DateTime-MoreCoercions: ∅ → 0.15
+perl5.42.0-MooseX-Types-LoadableClass: ∅ → 0.015
+perl5.42.0-Mozilla-CA: ∅ → 20230821, +466.0 KiB
+perl5.42.0-Net-Amazon-S3: ∅ → 0.991, +483.3 KiB
+perl5.42.0-Net-HTTP: ∅ → 6.23, +37.8 KiB
+perl5.42.0-Net-Prometheus: ∅ → 0.12, +135.3 KiB
+perl5.42.0-Net-SMTP-SSL: ∅ → 1.04
+perl5.42.0-Net-SSLeay: ∅ → 1.92, +1179.3 KiB
+perl5.42.0-Net-Server: ∅ → 2.014, +359.7 KiB
+perl5.42.0-Net-Server-SS-PreFork: ∅ → 0.06pre
+perl5.42.0-Net-Statsd: ∅ → 0.12, +17.5 KiB
+perl5.42.0-Number-Bytes-Human: ∅ → 0.11, +22.4 KiB
+perl5.42.0-Number-Compare: ∅ → 0.03
+perl5.42.0-Object-Signature: ∅ → 1.08, +8.4 KiB
+perl5.42.0-POSIX-strftime-Compiler: ∅ → 0.44, +17.1 KiB
+perl5.42.0-PPI: ∅ → 1.277, +499.2 KiB
+perl5.42.0-PPIx-QuoteLike: ∅ → 0.023, +108.9 KiB
+perl5.42.0-PPIx-Regexp: ∅ → 0.088, +464.7 KiB
+perl5.42.0-PPIx-Utilities: ∅ → 1.001000, +22.1 KiB
+perl5.42.0-PPIx-Utils: ∅ → 0.003, +61.2 KiB
+perl5.42.0-Package-DeprecationManager: ∅ → 0.18, +13.9 KiB
+perl5.42.0-Package-Stash: ∅ → 0.40, +29.2 KiB
+perl5.42.0-Package-Stash-XS: ∅ → 0.30, +77.2 KiB
+perl5.42.0-PadWalker: ∅ → 2.5, +77.0 KiB
+perl5.42.0-Parallel-ForkManager: ∅ → 2.02, +35.3 KiB
+perl5.42.0-Params-Util: ∅ → 1.102, +95.1 KiB
+perl5.42.0-Params-Validate: ∅ → 1.31, +124.4 KiB
+perl5.42.0-Params-ValidationCompiler: ∅ → 0.31, +44.3 KiB
+perl5.42.0-Path-Class: ∅ → 0.37, +50.2 KiB
+perl5.42.0-Path-Tiny: ∅ → 0.144, +128.5 KiB
+perl5.42.0-Perl-Critic: ∅ → 1.150, +1483.7 KiB
+perl5.42.0-Perl-Critic-Community: ∅ → 1.0.4, +114.8 KiB
+perl5.42.0-Perl-Critic-Policy-Plicease-ProhibitArrayAssignAref: ∅ → 100.00, +11.0 KiB
+perl5.42.0-Perl-Critic-Policy-Variables-ProhibitLoopOnHash: ∅ → 0.008, +12.1 KiB
+perl5.42.0-Perl-Tidy: ∅ → 20250711, +3110.7 KiB
+perl5.42.0-PerlIO-utf8_strict: ∅ → 0.010, +75.1 KiB
+perl5.42.0-Plack: ∅ → 1.0053, +385.3 KiB
+perl5.42.0-Plack-Middleware-FixMissingBodyInRedirect: ∅ → 0.12
+perl5.42.0-Plack-Middleware-MethodOverride: ∅ → 0.20, +8.2 KiB
+perl5.42.0-Plack-Middleware-RemoveRedundantBody: ∅ → 0.09
+perl5.42.0-Plack-Middleware-ReverseProxy: ∅ → 0.16
+perl5.42.0-Plack-Test-ExternalServer: ∅ → 0.02
+perl5.42.0-Pod-Parser: ∅ → 1.66, +186.8 KiB
+perl5.42.0-Pod-Spell: ∅ → 1.26, +39.6 KiB
+perl5.42.0-Prometheus-Tiny: ∅ → 0.011, +13.7 KiB
+perl5.42.0-Prometheus-Tiny-Shared: ∅ → 0.027, +10.8 KiB
+perl5.42.0-Readonly: ∅ → 2.05, +29.4 KiB
+perl5.42.0-ReadonlyX: ∅ → 1.04, +17.1 KiB
+perl5.42.0-Ref-Util: ∅ → 0.204, +22.6 KiB
+perl5.42.0-Regexp-Common: ∅ → 2017060201, +393.5 KiB
+perl5.42.0-Role-Tiny: ∅ → 2.002004, +24.9 KiB
+perl5.42.0-SQL-Abstract: ∅ → 2.000001, +218.6 KiB
+perl5.42.0-SQL-Abstract-Classic: ∅ → 1.91, +96.8 KiB
+perl5.42.0-SQL-SplitStatement: ∅ → 1.00023, +65.2 KiB
+perl5.42.0-Safe-Isa: ∅ → 1.000010, +8.3 KiB
+perl5.42.0-Scope-Guard: ∅ → 0.21
+perl5.42.0-Server-Starter: ∅ → 0.35, +31.4 KiB
+perl5.42.0-Set-Infinite: ∅ → 0.65, +96.9 KiB
+perl5.42.0-Set-Object: ∅ → 1.42, +106.0 KiB
+perl5.42.0-Set-Scalar: ∅ → 1.29, +44.7 KiB
+perl5.42.0-Snowball-Norwegian: ∅ → 1.2, +12.3 KiB
+perl5.42.0-Snowball-Swedish: ∅ → 1.2, +11.9 KiB
+perl5.42.0-Socket6: ∅ → 0.29, +82.6 KiB
+perl5.42.0-Specio: ∅ → 0.48, +269.0 KiB
+perl5.42.0-Starman: ∅ → 0.4018, +47.7 KiB
+perl5.42.0-Stream-Buffered: ∅ → 0.03
+perl5.42.0-String-CamelCase: ∅ → 0.04
+perl5.42.0-String-Compare-ConstantTime: ∅ → 0.321, +78.5 KiB
+perl5.42.0-String-Format: ∅ → 1.18, +10.4 KiB
+perl5.42.0-String-RewritePrefix: ∅ → 0.009, +8.5 KiB
+perl5.42.0-String-ToIdentifier-EN: ∅ → 0.12, +16.1 KiB
+perl5.42.0-Struct-Dumb: ∅ → 0.14, +15.3 KiB
+perl5.42.0-Sub-Exporter: ∅ → 0.990, +116.8 KiB
+perl5.42.0-Sub-Exporter-ForMethods: ∅ → 0.100055, +10.9 KiB
+perl5.42.0-Sub-Exporter-Progressive: ∅ → 0.001013, +8.2 KiB
+perl5.42.0-Sub-Identify: ∅ → 0.14, +76.3 KiB
+perl5.42.0-Sub-Info: ∅ → 0.002
+perl5.42.0-Sub-Install: ∅ → 0.929, +16.0 KiB
+perl5.42.0-Sub-Name: ∅ → 0.27, +76.5 KiB
+perl5.42.0-Sub-Override: ∅ → 0.09, +11.1 KiB
+perl5.42.0-Sub-Quote: ∅ → 2.006008, +32.6 KiB
+perl5.42.0-Sub-Uplevel: ∅ → 0.2800, +20.7 KiB
+perl5.42.0-Sys-Hostname-Long: ∅ → 1.5, +15.1 KiB
+perl5.42.0-Task-Weaken: ∅ → 1.06
+perl5.42.0-Template-Timer: ∅ → 1.00
+perl5.42.0-Template-Toolkit: ∅ → 3.106, +1177.3 KiB
+perl5.42.0-Term-Encoding: ∅ → 0.03
+perl5.42.0-Term-ProgressBar: ∅ → 2.23, +36.7 KiB
+perl5.42.0-Term-ProgressBar-Quiet: ∅ → 0.31
+perl5.42.0-Term-ProgressBar-Simple: ∅ → 0.03, +9.2 KiB
+perl5.42.0-Term-Size-Any: ∅ → 0.002
+perl5.42.0-Term-Size-Perl: ∅ → 0.031
+perl5.42.0-Term-Table: ∅ → 0.017, +43.6 KiB
+perl5.42.0-TermReadKey: ∅ → 2.38, +88.4 KiB
+perl5.42.0-Test-CleanNamespaces: ∅ → 0.24, +11.8 KiB
+perl5.42.0-Test-Deep: ∅ → 1.204, +180.6 KiB
+perl5.42.0-Test-Differences: ∅ → 0.70, +22.0 KiB
+perl5.42.0-Test-Exception: ∅ → 0.43, +18.6 KiB
+perl5.42.0-Test-Fatal: ∅ → 0.017, +18.5 KiB
+perl5.42.0-Test-LWP-UserAgent: ∅ → 0.036, +28.5 KiB
+perl5.42.0-Test-LeakTrace: ∅ → 0.17, +93.1 KiB
+perl5.42.0-Test-MockTime: ∅ → 0.17, +9.6 KiB
+perl5.42.0-Test-MockTime-HiRes: ∅ → 0.08
+perl5.42.0-Test-Needs: ∅ → 0.002010, +11.5 KiB
+perl5.42.0-Test-PostgreSQL: ∅ → 1.29, +31.5 KiB
+perl5.42.0-Test-Requires: ∅ → 0.11
+perl5.42.0-Test-RequiresInternet: ∅ → 0.05
+perl5.42.0-Test-SharedFork: ∅ → 0.35, +13.1 KiB
+perl5.42.0-Test-TCP: ∅ → 2.22, +24.1 KiB
+perl5.42.0-Test-Warn: ∅ → 0.37, +19.0 KiB
+perl5.42.0-Test-Warnings: ∅ → 0.032, +18.0 KiB
+perl5.42.0-Test2-Harness: ∅ → 1.000161, +1334.1 KiB
+perl5.42.0-Test2-Plugin-MemUsage: ∅ → 0.002003
+perl5.42.0-Test2-Plugin-UUID: ∅ → 0.002001
+perl5.42.0-Test2-Suite: ∅ → 0.000156, +617.5 KiB
+perl5.42.0-Text-Aligner: ∅ → 0.16, +16.5 KiB
+perl5.42.0-Text-Brew: ∅ → 0.02, +10.7 KiB
+perl5.42.0-Text-Diff: ∅ → 1.45, +43.6 KiB
+perl5.42.0-Text-German: ∅ → 0.06, +49.0 KiB
+perl5.42.0-Text-Glob: ∅ → 0.11
+perl5.42.0-Text-ParseWords: ∅ → 3.31, +11.2 KiB
+perl5.42.0-Text-SimpleTable: ∅ → 2.07, +15.4 KiB
+perl5.42.0-Text-Table: ∅ → 1.135, +48.3 KiB
+perl5.42.0-Text-Unidecode: ∅ → 1.30, +501.6 KiB
+perl5.42.0-Throwable: ∅ → 1.001, +20.3 KiB
+perl5.42.0-Tie-Hash-Method: ∅ → 0.02, +10.2 KiB
+perl5.42.0-Tie-IxHash: ∅ → 1.23, +16.8 KiB
+perl5.42.0-Tie-ToObject: ∅ → 0.03
+perl5.42.0-Time-Duration-Parse: ∅ → 0.16
+perl5.42.0-TimeDate: ∅ → 2.33, +88.1 KiB
+perl5.42.0-Tree-Simple: ∅ → 1.34, +59.7 KiB
+perl5.42.0-Tree-Simple-VisitorFactory: ∅ → 0.16, +118.7 KiB
+perl5.42.0-Try-Tiny: ∅ → 0.31, +23.6 KiB
+perl5.42.0-Type-Tiny: ∅ → 2.004000, +731.5 KiB
+perl5.42.0-Types-Serialiser: ∅ → 1.01, +13.5 KiB
+perl5.42.0-UNIVERSAL-isa: ∅ → 1.20171012, +8.5 KiB
+perl5.42.0-URI: ∅ → 5.21, +158.1 KiB
+perl5.42.0-URI-Find: ∅ → 20160806, +40.5 KiB
+perl5.42.0-URI-ws: ∅ → 0.03
+perl5.42.0-UUID4-Tiny: ∅ → 0.003
+perl5.42.0-Unicode-LineBreak: ∅ → 2019.001, +298.9 KiB
+perl5.42.0-WWW-Form-UrlEncoded: ∅ → 0.26, +12.6 KiB
+perl5.42.0-WWW-RobotRules: ∅ → 6.02, +18.5 KiB
+perl5.42.0-XML-LibXML: ∅ → 2.0210, +806.0 KiB
+perl5.42.0-XML-NamespaceSupport: ∅ → 1.12, +22.6 KiB
+perl5.42.0-XML-Parser: ∅ → 2.46, +481.8 KiB
+perl5.42.0-XML-SAX: ∅ → 1.02, +109.8 KiB
+perl5.42.0-XML-SAX-Base: ∅ → 1.09, +155.4 KiB
+perl5.42.0-XML-SAX-Expat: ∅ → 0.51, +22.3 KiB
+perl5.42.0-XML-Simple: ∅ → 2.25, +123.2 KiB
+perl5.42.0-YAML: ∅ → 1.30, +117.8 KiB
+perl5.42.0-YAML-Tiny: ∅ → 1.74, +44.6 KiB
+perl5.42.0-aliased: ∅ → 0.34, +11.8 KiB
+perl5.42.0-asa: ∅ → 1.04, +8.1 KiB
+perl5.42.0-boolean: ∅ → 0.46, +9.2 KiB
+perl5.42.0-common-sense: ∅ → 3.75, +19.5 KiB
+perl5.42.0-curry: ∅ → 2.000001
+perl5.42.0-goto-file: ∅ → 0.005
+perl5.42.0-libnet: ∅ → 3.15, +211.0 KiB
+perl5.42.0-libwww-perl: ∅ → 6.72, +292.3 KiB
+perl5.42.0-namespace-autoclean: ∅ → 0.29, +15.4 KiB
+perl5.42.0-namespace-clean: ∅ → 0.27, +19.8 KiB
+perl5.42.0-perl-ldap: ∅ → 0.68, +549.4 KiB
+pg_hba.conf: ∅ → ε
+pg_ident.conf: ∅ → ε
+pixz: ∅ → 1.0.7, +80.2 KiB
+popt: -29.4 KiB
+postgresql: ∅ → 17.10, +26388.7 KiB
+postgresql-and-plugins: ∅ → 17.10, +156.8 KiB
+postgresql.conf: ∅ → ε
+procps: 4.0.4 → 4.0.6, +345.1 KiB
+profile: ε → ∅
+prometheus-cpp: ∅ → 1.3.0, +506.6 KiB
+publicsuffix-list: 0-unstable-2026-01-25 → 0-unstable-2026-05-13
+pybind11-setup: ∅ → ε
+python3: 3.13.12 → 3.13.14, +21199.0 KiB
+python3.13-breezy: ∅ → 3.3.21, +59466.6 KiB
+python3.13-certifi: ∅ → 2026.01.04, +481.6 KiB
+python3.13-cffi: ∅ → 2.0.0, +1505.2 KiB
+python3.13-charset-normalizer: ∅ → 3.4.7, +1145.5 KiB
+python3.13-configobj: ∅ → 5.0.9, +402.2 KiB
+python3.13-cryptography: ∅ → 48.0.0, +6381.5 KiB
+python3.13-cython: ∅ → 3.2.4, +19803.7 KiB
+python3.13-deprecated: ∅ → 1.3.1, +91.3 KiB
+python3.13-distro: ∅ → 1.9.0, +178.9 KiB
+python3.13-dulwich: ∅ → 1.2.6, +11090.6 KiB
+python3.13-fastbencode: ∅ → 0.3.10, +835.8 KiB
+python3.13-fastimport: ∅ → 0.9.16, +402.4 KiB
+python3.13-google-re2: ∅ → 1.1.20251105, +588.8 KiB
+python3.13-httplib2: ∅ → 0.32.0, +417.9 KiB
+python3.13-idna: ∅ → 3.15, +894.5 KiB
+python3.13-installer: ∅ → 1.0.0, +1096.1 KiB
+python3.13-launchpadlib: ∅ → 2.1.0, +2162.9 KiB
+python3.13-lazr-restfulclient: ∅ → 0.14.6, +430.8 KiB
+python3.13-lazr-uri: ∅ → 1.0.8, +125.7 KiB
+python3.13-merge3: ∅ → 0.0.16, +100.7 KiB
+python3.13-oauthlib: ∅ → 3.3.1, +1609.5 KiB
+python3.13-packaging: ∅ → 26.1, +1099.0 KiB
+python3.13-patiencediff: ∅ → 0.2.18, +934.6 KiB
+python3.13-pybind11: ∅ → 3.0.4, +11806.6 KiB
+python3.13-pycparser: ∅ → 3.00, +660.1 KiB
+python3.13-pygithub: ∅ → 2.8.1, +5470.8 KiB
+python3.13-pyjwt: ∅ → 2.13.0, +351.8 KiB
+python3.13-pynacl: ∅ → 1.6.2, +1074.9 KiB
+python3.13-pyparsing: ∅ → 3.3.2, +1475.6 KiB
+python3.13-pyyaml: ∅ → 6.0.3, +1024.0 KiB
+python3.13-requests: ∅ → 2.33.1, +622.7 KiB
+python3.13-semantic-version: ∅ → 2.10.0, +203.6 KiB
+python3.13-setuptools: ∅ → 80.10.1, +11599.1 KiB
+python3.13-setuptools-gettext: ∅ → 0.1.16, +80.5 KiB
+python3.13-setuptools-rust: ∅ → 1.12.0, +258.2 KiB
+python3.13-six: ∅ → 1.17.0, +122.6 KiB
+python3.13-typing-extensions: ∅ → 4.15.0, +494.6 KiB
+python3.13-tzlocal: ∅ → 5.3.1, +164.6 KiB
+python3.13-urllib3: ∅ → 2.6.3, +1359.5 KiB
+python3.13-wadllib: ∅ → 2.0.0, +478.0 KiB
+python3.13-wheel: ∅ → 0.46.1, +224.9 KiB
+python3.13-wrapt: ∅ → 1.17.2, +305.7 KiB
+raspberrypi-firmware: 1.20250915 → 0-unstable-20260806, +12588.2 KiB
+raspberrypi-initrd-secrets.sh: ∅ → ε
+raspberrypi-utils: ∅ → 0-unstable-2026-08-04, +3180.9 KiB
+raspberrypi-utils-unstable: 2025-11-19 → ∅, -1806.0 KiB
+raspberrypi-wireless-firmware: 2025-10-02 → 2026-03-21
+re2: ∅ → 2025-11-05, +600.7 KiB
+reader.conf: ε → ∅
+readline: 8.3p1 → 8.3p3
+rpi-otp-derived: ε → ∅
+rpi-otp-private-key: 2025.12.08-2712 → ∅, -8.7 KiB
+rpi-otp-provision-private: ε → ∅
+rpi-otp-write-derived: ε → ∅
+rpm: ∅ → 4.20.1, +13299.8 KiB
+rpm-sequoia: ∅ → 1.10.0, +3982.1 KiB
+rsync: 3.4.1 → 3.4.4
+s2n-tls: 1.5.27 → 1.7.6
+sd-switch: 0.6.2 → ∅, -2284.5 KiB
+security-wrapper-dbus-daemon-launch-helper-aarch64-unknown-linux: ε → ∅, -146.2 KiB
+serf: ∅ → 1.3.10, +442.6 KiB
+shadow: 4.18.0 → 4.19.4, -98.9 KiB
+sof-firmware: 2025.05.1 → 2025.12.2, +1520.6 KiB
+source: +11517.5 KiB
+sqlite: 3.50.4 → 3.51.2, +1892.6 KiB
+strace: 6.18 → 7.1, +775.6 KiB
+stub-ld-aarch64-unknown-linux: ∅ → ε, +76.3 KiB
+subversion: ∅ → 1.14.5, +6615.4 KiB
+sudo: -74.7 KiB
+switch: ∅ → ε
+system: +196.2 KiB
+systemd: 258.3 → 260.2, +4639.5 KiB
+systemd-generator-environment.json: ∅ → ε
+systemd-minimal: 258.3 → 260.2, +1510.6 KiB
+systemd-minimal-libs: 258.3 → 260.2, +356.5 KiB
+time: 1.9 → 1.10
+tinyxxd: 1.3.7 → ∅, -74.2 KiB
+topgit: ∅ → 0.19.14, +701.8 KiB
+tpm2-tss: 4.1.3 → 4.2.0, +88.9 KiB
+tray.target: ε → ∅
+tzdata: 2025c → 2026c, -10.4 KiB
+unbound: 1.24.2 → 1.25.2
+unit-autovt: .service → ∅
+unit-dbus-broker.service: ∅ → ε
+unit-home-manager-adam.service: ε → ∅
+unit-hydra-check-space.service: ∅ → ε
+unit-hydra-check-space.timer: ∅ → ε
+unit-hydra-compress-logs.service: ∅ → ε
+unit-hydra-compress-logs.timer: ∅ → ε
+unit-hydra-evaluator.service: ∅ → ε
+unit-hydra-init.service: ∅ → ε
+unit-hydra-notify.service: ∅ → ε
+unit-hydra-queue-runner.service: ∅ → ε
+unit-hydra-send-stats.service: ∅ → ε
+unit-hydra-server.service: ∅ → ε
+unit-hydra-update-gc-roots.service: ∅ → ε
+unit-hydra-update-gc-roots.timer: ∅ → ε
+unit-kaiba-hydra-backup.service: ∅ → ε
+unit-kaiba-hydra-backup.timer: ∅ → ε
+unit-modprobe: ∅ → .service
+unit-network-setup.service: ε → ∅
+unit-network.target: ∅ → ε
+unit-networking-scripted.target: ∅ → ε
+unit-nix-gc.timer: ∅ → ε
+unit-pcscd.service: ε → ∅
+unit-pcscd.socket: ε → ∅
+unit-post-boot.service: ∅ → ε
+unit-post-resume.service: ε → ∅
+unit-post-resume.target: ε → ∅
+unit-postgresql-setup.service: ∅ → ε
+unit-postgresql.service: ∅ → ε
+unit-postgresql.target: ∅ → ε
+unit-pre-sleep.service: ε → ∅
+unit-rpi-otp-luks-key-initrd.service: ε → ∅
+unit-save-hwclock.service: ε → ∅
+unit-script-hydra-check-space: ∅ → ε
+unit-script-hydra-compress-logs: ∅ → ε
+unit-script-hydra-init-pre: ∅ → ε
+unit-script-kaiba-hydra-backup: ∅ → ε
+unit-script-network-local-commands: ∅ → ε
+unit-script-network-setup: ε → ∅
+unit-script-post-boot: ∅ → ε
+unit-script-post-boot-pre: ∅ → ε
+unit-script-post-resume: ε → ∅
+unit-script-postgresql-pre: ∅ → ε
+unit-script-postgresql-setup: ∅ → ε
+unit-script-pre-sleep: ε → ∅
+unit-script-rpi-otp-luks-key-initrd: ε → ∅
+unit-script-sleep-actions: ∅ → ε
+unit-script-sleep-actions-pre: ∅ → ε
+unit-sleep-actions.service: ∅ → ε
+unit-sshd-vsock: ∅ → .service
+unit-sshd-vsock.socket: ∅ → ε
+unit-system-hydra.slice: ∅ → ε
+unit-systemd-hostnamed.service: ∅ → ε
+unit-systemd-localed.service: ∅ → ε
+unit-systemd-udev-settle.service: ε → ∅
+unzip: ∅ → 6.0, +626.0 KiB
+user: -2923.2 KiB
+utf8proc: ∅ → 2.11.3, +434.5 KiB
+util-linux: 2.41.3 → 2.42.2, +1733.9 KiB
+util-linux-minimal: 2.41.3 → 2.42.2, +509.4 KiB
+w3m: 0.5.5 → 0.5.6, -191.3 KiB
+wireless-regdb: 2025.10.07 → 2026.05.30
+xauth: 1.1.4 → 1.1.5
+xgcc: 14.3.0 → 15.2.0
+xxHash: 0.8.3 → ∅, -424.5 KiB
+xxd-tinyxxd: 1.3.7 → ∅
+xxhash: ∅ → 0.8.3, +488.8 KiB
+xz: 5.8.1 → 5.8.3, +18.2 KiB
+zlib: +150.4 KiB
+zlib-ng: 2.2.5 → 2.3.3, +65.3 KiB
+zstd: +128.6 KiB

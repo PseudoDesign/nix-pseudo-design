@@ -1,15 +1,21 @@
-# Ace's existing pilot credential persistence
+# Existing pilot credential persistence on Ace and Mako
 
-Ace enables `services.kaibaPilotDevice` with the UID/GID already assigned to its
-enrolled account. The module preserves the existing private state in
+Ace and Mako enable `services.kaibaPilotDevice` with the UID/GID already assigned
+to each enrolled account. The module preserves the existing private state in
 `/var/lib/kaiba-pilot-device`; it never initializes, reads, replaces or changes
-ownership of a key file. Mako does not enable this module.
+ownership of a key file.
 
-The declarative nonlogin account uses UID 994 and GID 988. A boot-time metadata
-check requires an existing nonsymlink directory owned by that account with mode
-0700, and an existing single-link regular `state.json` with mode 0600 and the
-same ownership. Missing or unsafe state fails the mount dependency without
-creating a new identity or repairing evidence silently.
+The declarative nonlogin account preserves these observed IDs:
+
+| Host | UID | GID |
+| --- | --- | --- |
+| Ace | 994 | 988 |
+| Mako | 991 | 985 |
+
+A boot-time metadata check requires an existing nonsymlink directory owned by
+that account with mode 0700, and an existing single-link regular `state.json`
+with mode 0600 and the same ownership. Missing or unsafe state fails the mount
+dependency without creating a new identity or repairing evidence silently.
 
 The systemd self-bind mount supplies `rw,nosuid,nodev,noexec`. The metadata check
 is ordered before the mount and can run before local filesystems finish without
@@ -39,21 +45,22 @@ checks that unsafe file permissions and missing state block the mount without
 changing permissions or recreating state. This is a generic VM, not a Pi image
 or OTP test; it does not qualify hardware encryption or real enrollment.
 
-Evaluate the Ace and Mako configurations separately to confirm only Ace enables
-the module. The new options default to disabled; explicit numeric IDs are
-required when enabled so an existing identity is never silently reassigned.
+Evaluate the Ace and Mako configurations separately to confirm each enables the
+module with its own existing IDs. The options default to disabled; explicit
+numeric IDs are required when enabled so an existing identity is never silently
+reassigned.
 
 ## Deployment and real-host acceptance
 
-Do not run `nixos-anywhere` on this existing device. Do not copy private state
+Do not run `nixos-anywhere` on either existing device. Do not copy private state
 into the repository, Nix store, build logs or a deployment machine.
 
 Before applying this change, compare the candidate's complete system closure
-against Ace's running configuration. A configuration built from current `main`
-may include unrelated kernel, initrd, firmware, disk-unlock or workload changes
-relative to the older running generation. Repository evaluation and the VM test
-do not authorize those changes. Review a concrete deployment and recovery path
-before any switch or reboot; preserve the account IDs and existing identity.
+against that host's running configuration. A configuration built from current
+`main` may include unrelated kernel, initrd, firmware, disk-unlock or workload
+changes relative to the older running generation. Repository evaluation and the
+VM test do not authorize those changes. Review a concrete deployment and recovery
+path before any switch or reboot; preserve the account IDs and existing identity.
 
 Record only public client status (including the key digest and enrollment ID),
 state-file metadata and the protected mount options before and after the
@@ -65,5 +72,5 @@ key use.
 
 Policy expiry and credential renewal are separate from filesystem persistence.
 Successful boot does not renew authorization, turn local `verified` status into
-live membership, or close any full fleet-admission condition. Ace's actual
-restart and NixOS-switch results remain pending the reviewed deployment.
+live membership, or close any full fleet-admission condition. Both hosts' actual
+restart and NixOS-switch acceptance remains pending the reviewed deployment.

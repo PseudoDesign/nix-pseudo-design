@@ -6,6 +6,11 @@
 
     nixos-raspberrypi.url = "github:ams-tech/nixos-raspberrypi/codex/rpi-otp-upstream-improvements";
 
+    kaiba-infra = {
+      url = "github:PseudoDesign/kaiba-infra";
+      inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
+    };
+
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
@@ -28,6 +33,7 @@
       crtvar,
       disko,
       dogsitting,
+      kaiba-infra,
       nixos-raspberrypi,
       nixpkgs,
       ...
@@ -43,17 +49,21 @@
           crtvar
           disko
           dogsitting
+          kaiba-infra
           nixos-raspberrypi
           self
           ;
       };
 
       mkRpi5Host =
-        hostModule:
+        {
+          hostModule,
+          hardwareModule ? self.nixosModules.rpi5-luks-hardware,
+        }:
         nixos-raspberrypi.lib.nixosSystemFull {
           inherit specialArgs;
           modules = [
-            self.nixosModules.rpi5-luks-hardware
+            hardwareModule
             ./modules/profiles/base-rpi.nix
             ./modules/users/adam.nix
             hostModule
@@ -74,6 +84,9 @@
 
       checks = forAllSystems (system: {
         pseudo-design-site = self.packages.${system}.pseudo-design-site;
+        ace-legacy-luks-key = import ./tests/ace-legacy-luks-key.nix {
+          pkgs = import nixpkgs { inherit system; };
+        };
         kaiba-pilot-device = import ./tests/kaiba-pilot-device.nix {
           pkgs = import nixpkgs { inherit system; };
         };
@@ -104,8 +117,11 @@
       nixosModules.kaiba-pilot-device = ./modules/services/kaiba-pilot-device.nix;
 
       nixosConfigurations = {
-        ace = mkRpi5Host ./hosts/ace;
-        mako = mkRpi5Host ./hosts/mako;
+        ace = mkRpi5Host {
+          hostModule = ./hosts/ace;
+          hardwareModule = ./hosts/ace/hardware.nix;
+        };
+        mako = mkRpi5Host { hostModule = ./hosts/mako; };
       };
     };
 }

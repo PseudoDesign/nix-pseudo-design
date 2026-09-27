@@ -1,6 +1,7 @@
 {
   crtvar,
   dogsitting,
+  kaiba-infra,
   pkgs,
   self,
   ...
@@ -11,8 +12,11 @@ let
 in
 {
   imports = [
+    ../../modules/services/kaiba-pilot-device.nix
     crtvar.nixosModules.default
     dogsitting.nixosModules.default
+    kaiba-infra.nixosModules.hydra-proxy
+    kaiba-infra.nixosModules.hydra-backup-receiver
   ];
 
   networking = {
@@ -24,6 +28,19 @@ in
   };
 
   time.timeZone = "America/Indiana/Indianapolis";
+
+  services.kaibaHydraProxy = {
+    enable = true;
+    upstream = "192.168.8.214:3000";
+  };
+  services.kaibaHydraBackupReceiver.enable = true;
+
+  services.kaibaPilotDevice = {
+    enable = true;
+    # Preserve the IDs that own Mako's existing enrolled key.
+    uid = 991;
+    gid = 985;
+  };
 
   security.acme = {
     acceptTerms = true;
