@@ -1,9 +1,10 @@
 # Hydra deployment review — 2026-09-27 UTC
 
-The implementation is built and tested, but neither host has been activated.
-Ace's current upstream configuration differed from its installed storage and
-boot recipe. The host-specific configuration now preserves the installed layout;
-the remaining OS upgrade still needs a reviewed deployment window.
+This records the candidate review before activation. The owner subsequently
+accepted the reviewed upgrade and authorized merging the three PRs and test
+activation on Mako and Ace. Both test activations are complete; permanent
+switching and reboot remain separate. See the [live test deployment report](hydra-test-deployment.md)
+for results and a required correction to Ace's firmware settings before switching.
 
 ## Qualification
 
@@ -29,8 +30,8 @@ and protected state directories:
 | Ace | 994 | 988 | 0700 | 0600 / 1 |
 | Mako | 991 | 985 | 0700 | 0600 / 1 |
 
-Both have an active `rw,nosuid,nodev,noexec` self-bind mount. Mako's live mount
-has no systemd unit file; the refreshed candidate declares its existing account
+Both have an active `rw,nosuid,nodev,noexec` self-bind mount. Before test activation,
+Mako's live mount had no systemd unit file; the refreshed candidate declares its existing account
 and protected mount through the same persistence module as Ace. Neither
 credential was read, copied, regenerated, or re-enrolled.
 
@@ -39,7 +40,7 @@ state without activation. Configuration evaluation confirms both hosts' numeric
 IDs, protected mount flags and required metadata-check dependency. The existing
 generic persistence VM check and all 16 infrastructure Python tests pass.
 
-The provisioning draft incorporates `main` at
+The provisioning change incorporated `main` at
 `39f51b118f05b776f014043da43f79a90e85fea1`. Its Hydra export still evaluates to
 exactly the ten inventoried ARM64 derivations, each identical to the corresponding
 application check. All pre-existing input locks remain unchanged. Full execution
@@ -62,9 +63,9 @@ the actual recipe. Future key-scheme migration is a separate operation.
 Mako's existing disk labels and mounts match the shared hardware module. Its
 kernel and initrd remain unchanged by this rollout.
 
-## System changes to approve
+## Reviewed system changes
 
-| Component | Running Ace | Proposed Ace |
+| Component | Ace before test activation | Reviewed candidate |
 | --- | --- | --- |
 | NixOS | 25.11.20260313.3e20095 | 26.05.20260807.ee48b14 |
 | Kernel | 6.12.47-stable_20250916 | 6.18.42-unstable_20260806 |
@@ -93,7 +94,8 @@ The refreshed Mako closure includes its enrolled account and protected mount.
 It is copied to Mako and GC-rooted on both hosts as
 `/nix/var/nix/gcroots/kaiba-hydra-20260927-mako-enrollment-candidate`. Earlier
 running-generation and candidate roots are retained. Ace's candidate is
-unchanged. Neither host has been activated.
+unchanged by that refresh. These two closures were subsequently test-activated;
+neither persistent system profile was changed.
 
 The final Ace initrd was inspected for the legacy helper, OTP helper and
 `vcgencmd`; shell-script dependencies are included explicitly.
@@ -125,6 +127,7 @@ The final Ace initrd was inspected for the legacy helper, OTP helper and
    until these prerequisites and the infrastructure build are satisfied; then
    enable and verify all ten jobs, subsequent main polling and output reuse.
 
-Live HTTPS, administrator bootstrap, live backup restoration, full ten-job Hydra
-execution, main-commit triggering, system rollback and reboot acceptance remain
-pending. The successful VM tests do not substitute for those live checks.
+Live HTTPS, administrator bootstrap, infrastructure evaluation, service restart
+and backup restoration have now passed. Full ten-job Hydra execution, a subsequent
+main-commit trigger, system rollback and reboot acceptance remain pending. See
+the live report for the boot-partition correction needed before a persistent switch.
