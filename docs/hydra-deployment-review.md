@@ -1,5 +1,8 @@
 # Hydra deployment review — 2026-09-27 UTC
 
+This records the pre-activation review. The subsequent persistent deployment
+and recovery are recorded in the [live rollout report](hydra-live-rollout.md).
+
 This records the candidate review before activation. The owner subsequently
 accepted the reviewed upgrade and authorized merging the three PRs and test
 activation on Mako and Ace. Both test activations are complete; permanent
