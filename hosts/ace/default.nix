@@ -15,6 +15,11 @@
     backup.host = "192.168.8.247";
   };
 
+  # Use the same upstream Hydra package as the qualified infrastructure VMs.
+  # Its ARM64 jemalloc supports 16 KiB pages too; the Pi overlay otherwise
+  # rebuilds Hydra's Rust/Node toolchains solely to specialize the allocator.
+  services.hydra.package = (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).hydra;
+
   services.kaibaPilotDevice = {
     enable = true;
     # Preserve the IDs that own Ace's existing enrolled key.

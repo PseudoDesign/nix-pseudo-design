@@ -2,7 +2,8 @@
 
 The pinned `kaiba-infra` flake supplies the Hydra, HTTPS proxy and restricted
 backup receiver modules. Ace imports Hydra alongside its existing pilot
-credential-persistence module. Mako adds the `hydra.pseudo.design` virtual host
+credential-persistence module and a hardware module preserving its installed
+partition labels, mounts and legacy disk-unlock recipe. Mako adds the `hydra.pseudo.design` virtual host
 and backup receiver alongside its existing services.
 
 The reserved LAN addresses are Ace `192.168.8.214` and Mako `192.168.8.247`.
@@ -29,3 +30,7 @@ The ordinary deployment order is: publish the infrastructure revision, lock it
 here and in provisioning, build host closures, review their differences, test
 Mako and Ace configurations, verify HTTPS and the small infrastructure job,
 then persist the host generations and enable provisioning after qualification.
+
+See the [concrete deployment review](hydra-deployment-review.md) for measured
+qualification, closure differences, preserved storage and the remaining
+OS-upgrade and recovery decision.
