@@ -1,15 +1,23 @@
 # Hydra CI integration qualification — 2026-09-27 UTC
 
-Ace has test-activated the GitHub status and Cachix publication integrations.
-The persistent system profile remains the previously qualified generation;
-this service update has not changed the boot selection or rebooted either host.
+Ace test-activated the GitHub status and Cachix publication integrations, then
+made that same configuration persistent at 18:48:46 UTC after owner approval.
+The service update preserves the existing kernel and has not rebooted either
+host.
 
 | Item | Revision or closure |
 | --- | --- |
-| Infrastructure integration | `596271d006408de1d9ba33888d5b4eb33b83dfdc` |
+| Merged infrastructure integration | `0a64f953151cf4c1ee01c0605aa690e341ee5497` |
 | Host configuration tested | `f46fc8fa678e36456e81cacd5cef8bfa3c4db4d4` |
-| Ace test candidate | `/nix/store/7jncgkzy00g2p3qqwqa1vwwdw835117g-nixos-system-ace-26.05.20260807.ee48b14` |
-| Ace persistent generation | `/nix/store/6rq3psyd25v34jlj402agjs6vafdy5dg-nixos-system-ace-26.05.20260807.ee48b14` |
+| Ace current and persistent generation | `/nix/store/7jncgkzy00g2p3qqwqa1vwwdw835117g-nixos-system-ace-26.05.20260807.ee48b14` |
+| Previous retained generation | `/nix/store/6rq3psyd25v34jlj402agjs6vafdy5dg-nixos-system-ace-26.05.20260807.ee48b14` |
+
+The original infrastructure revision was
+`596271d006408de1d9ba33888d5b4eb33b83dfdc`. Its merged revision has the same
+source hash and produces exactly the same Ace system closure. The host input
+now pins the merged revision. The merged infrastructure main commit also
+completed [Hydra build 12](https://hydra.pseudo.design/build/12), reporting both
+pending and successful GitHub statuses automatically.
 
 ## Host acceptance
 
@@ -23,8 +31,11 @@ Activation used the boot-automount procedure in `hydra-live-rollout.md`, keeping
 the shell in the real `/boot/firmware` filesystem throughout. The test switch
 completed at 16:56 UTC, all Hydra services returned, and verified HTTPS through
 Mako continued serving the API. Neither a kernel change nor a reboot is needed
-for this update. The rollback is the recorded persistent generation, using the
-same boot-mount preparation before activation.
+for this update. The permanent switch used the same mount procedure and again
+verified identical public pilot status and no failed services. The previous
+generation is additionally rooted at
+`/nix/var/nix/gcroots/kaiba-hydra-ci-before-persist-20260927`; use the same
+boot-mount preparation when activating it for rollback.
 
 Cachix uses the ordinary upstream ARM64 package, as Hydra already does. The
 publisher uses the host's configured Nix package. Using the Pi overlay's default
@@ -100,7 +111,9 @@ verification, evaluated main's ten derivations, and used the new waiter to check
 all ten actual GitHub statuses and linked Hydra results. This confirms external
 access despite public-address hairpin connections timing out inside the LAN.
 
-The repository variable `HYDRA_MAIN_ENABLED` remains unset, so main pushes still
-use GitHub builders. Before enabling it, merge the reviewed workflow and persist
-the accepted host configuration. The next actual main evaluation must then
-demonstrate unchanged-build reuse and new per-commit statuses.
+The repository variable `HYDRA_MAIN_ENABLED=true` enables the new workflow's main
+delegation after the approved provisioning PR is merged. PRs and manual runs
+retain GitHub builders. Set the variable to `false` to restore GitHub main builds
+for subsequent runs. Acceptance of the first delegated main run requires all ten
+statuses for that exact revision, unchanged-build reuse, and a successful
+required aggregate; the qualification run above is separate evidence.
