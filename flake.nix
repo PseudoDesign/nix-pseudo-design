@@ -7,7 +7,7 @@
     nixos-raspberrypi.url = "github:ams-tech/nixos-raspberrypi/codex/rpi-otp-upstream-improvements";
 
     kaiba-infra = {
-      url = "github:PseudoDesign/kaiba-infra/84cb4605c8726f1fb9ba3e9c83439abebf5baf5a";
+      url = "github:PseudoDesign/kaiba-infra/596271d006408de1d9ba33888d5b4eb33b83dfdc";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
 

@@ -21,6 +21,8 @@
   # Its ARM64 jemalloc supports 16 KiB pages too; the Pi overlay otherwise
   # rebuilds Hydra's Rust/Node toolchains solely to specialize the allocator.
   services.hydra.package = (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).hydra;
+  services.kaibaHydra.cachePublish.package =
+    (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).cachix;
 
   services.kaibaPilotDevice = {
     enable = true;
