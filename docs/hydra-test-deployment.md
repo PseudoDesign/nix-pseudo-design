@@ -1,5 +1,9 @@
 # Hydra test deployment — 2026-09-27 UTC
 
+This is the historical test-deployment baseline. See the
+[live rollout report](hydra-live-rollout.md) for the subsequent persistent
+switch, emergency-mode incident, recovery and successful kernel reboot.
+
 The owner accepted the reviewed upgrade, then explicitly authorized merging the
 three PRs and test-deploying Mako followed by Ace. Permanent switching and reboot
 were excluded from that authorization. All three PRs are merged:
