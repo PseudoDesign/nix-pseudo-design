@@ -66,10 +66,8 @@ in
       fsType = "ext4";
       options = [ "defaults" ];
     };
-    "/home" = {
-      device = "/dev/pool/home";
-      fsType = "ext4";
-    };
+    # /home is a directory on root after the existing LV's data is migrated.
+    # Follow docs/ace-home-migration.md for the data cutover before activation.
     "/boot" = {
       device = "/dev/disk/by-partlabel/disk-main-ESP";
       fsType = "vfat";
