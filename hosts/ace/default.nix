@@ -15,6 +15,11 @@
     backup.host = "192.168.8.247";
     github.enable = true;
     cachePublish.enable = true;
+    ciRuns = {
+      enable = true;
+      workflowId = 352674431;
+      passwordFile = "/var/lib/kaiba-hydra-bootstrap/adam-password";
+    };
   };
 
   # Use the same upstream Hydra package as the qualified infrastructure VMs.
