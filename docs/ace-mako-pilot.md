@@ -12,6 +12,17 @@ admission or native two-host acceptance has occurred. Malak still holds the live
 pilot control plane. The earlier bounded same-host DNS trial has expired and
 Ace's persistent standalone identity baseline is restored.
 
+The reviewed September 29 inventory confirms the complete source authority.
+Ace's transfer recipient and transport CSR were prepared on encrypted storage;
+its private keys stayed on Ace. Native preflight authenticated Ace, but Mako's
+installed credential expired at `2026-09-28T08:03:32Z`. Its local `verified` phase
+does not establish current admission. Supported same-key recovery must preserve
+Mako's logical identity, instance, key and history before two-host qualification.
+That recovery needs exact Fleet/issuer grants and a new serving-policy baseline,
+followed by fresh migration inventory and transport/target-policy bindings. The
+earlier transport-signing command is superseded; Malak remains serving while the
+read-only recovery preflight is reviewed.
+
 ## Install, then activate
 
 `kaiba.pilotServer.enable` and `kaiba.pilotAgent.enable` default to `false`.
@@ -115,6 +126,19 @@ and filesystem definitions. Disabled host closures match the existing installed
 Ace and Mako baselines. This is evaluation evidence, not a native deployment.
 The [composition receipt](observations/2026-09-29-ace-mako-composition.json)
 records the final published dependency revisions and unchanged baseline paths.
+
+The current Fleet runtime pin is `0bd55c5`, including encrypted export/restore,
+restricted registry finalization and an issuer-only callback dial override that
+preserves canonical URLs, TLS identity and all retained scope pins. Its 76
+migration checks pass with real encryption and disposable PG18 clusters. The
+host composition check also passes against this pin and both disabled closures
+still match the installed baselines. Independent staging evaluation found no
+existing unit that starts a new pilot unit, unchanged application/SPIRE units
+and unchanged existing user/group assignments. Expected staging effects include
+new accounts, firewall/DBus reloads and Ace's empty controller SQLite placeholder;
+there is no authority database initialization.
+The [migration preparation receipt](observations/2026-09-29-migration-preparation.json)
+records this pin and Mako's observed recovery prerequisite.
 
 The DNS dependency has a passing two-host VM covering real AXFR/NOTIFY, updates,
 credential/source separation, outages, journal recovery and missing imported

@@ -191,17 +191,17 @@
         "provisioning": "provisioning"
       },
       "locked": {
-        "lastModified": 1790694591,
-        "narHash": "sha256-zUfxDeoXaYRnssDM6+8ZYDNxrrcK6KR9AdUFRDUu4JA=",
+        "lastModified": 1790707797,
+        "narHash": "sha256-FycLZ0EDlTrUWa4cpxPi981QqGm79s3+HPi3238BJtg=",
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "8ac42e12aa4b9a1c0d0a7b80e03cbac3411ab672",
+        "rev": "0bd55c576536c29825aada2f7ce6fa052a877402",
         "type": "github"
       },
       "original": {
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "8ac42e12aa4b9a1c0d0a7b80e03cbac3411ab672",
+        "rev": "0bd55c576536c29825aada2f7ce6fa052a877402",
         "type": "github"
       }
     },

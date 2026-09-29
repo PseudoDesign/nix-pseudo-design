@@ -13,7 +13,7 @@
 
     kaiba-dns.url = "github:pd-codex/nixos-kaiba-network/67574bb1fe88a60118c680d823ac2ddb7656975b";
 
-    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/8ac42e12aa4b9a1c0d0a7b80e03cbac3411ab672";
+    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/0bd55c576536c29825aada2f7ce6fa052a877402";
 
     disko = {
       url = "github:nix-community/disko";

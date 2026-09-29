@@ -1,0 +1,37 @@
+{
+  "schema_version": "kaiba.two-host-migration-preparation/v1alpha1",
+  "observed_at": "2026-09-29T19:06:22.284070+00:00",
+  "evaluation_only": true,
+  "live_cutover": false,
+  "fleet_revision": "0bd55c576536c29825aada2f7ce6fa052a877402",
+  "dns_revision": "67574bb1fe88a60118c680d823ac2ddb7656975b",
+  "disabled_host_closures": {
+    "ace": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14",
+    "mako": "/nix/store/nf6pj4bqp2gp4j9rf4d23bfgsh6lcbjf-nixos-system-mako-26.05.20260807.ee48b14"
+  },
+  "composition_check_passed": true,
+  "existing_application_units_and_device_ownership_preserved": true,
+  "new_pilot_services_have_no_boot_start_path": true,
+  "source_inventory_verified": true,
+  "source_services_changed": false,
+  "source_export_performed": false,
+  "target_import_performed": false,
+  "ace_private_transfer_key_and_csr_prepared": true,
+  "private_keys_remained_on_ace": true,
+  "native_preflight": {
+    "ace_current_authenticated_access": true,
+    "mako_current_authenticated_access": false,
+    "mako_selected_credential_not_after": "2026-09-28T08:03:32Z",
+    "mako_retained_local_phase": "verified",
+    "mako_local_renewal_or_recovery": false
+  },
+  "remaining": [
+    "owner read-only Mako recovery projection",
+    "reviewed same-key Mako recovery preserving IDs and history",
+    "new serving baseline and source inventory",
+    "refrozen transport, export and target policy bindings",
+    "fenced encrypted transfer and verified import",
+    "explicit activation and two-host acceptance with Malak disconnected",
+    "separate persistent reboot and offline hardware qualification"
+  ]
+}
