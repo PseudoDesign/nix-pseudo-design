@@ -2,8 +2,9 @@
 
 The owner selected LAN qualification first, retaining
 `pilot.kaiba.pseudo.design`. The [persistent identity pilot](ace-identity-pilot.md)
-has passed a controlled online warm reboot. This next composition is disabled
-by default and has not been activated. Public delegation, router resolver
+has passed a controlled online warm reboot. This composition remains disabled
+by default in the source configuration. The enabled candidate is now
+test-activated on Ace; persistent and booted generation 10 are unchanged. Public delegation, router resolver
 configuration and existing applications remain outside this LAN step.
 
 `hosts/ace/dns-lan-qualification.nix` imports the dedicated DNS qualification
@@ -53,6 +54,32 @@ remote dependency lock evaluates to the same candidate closure; disabled Ace
 and Mako closures are also unchanged. This receipt establishes
 a native build and preservation checks, not the enrolled-device LAN path.
 
+## Native checks before station admission
+
+The [sanitized native receipt](observations/2026-09-29-ace-lan-pre-station.json)
+records the enabled `ipk6rwq7…` candidate test-active on Ace, with the persistent
+and booted system still `ylpbjk8j…` (generation 10). At
+**2026-09-29T08:22:35.667309Z**, all 15 expected services/timer were active,
+including the original Hydra/PostgreSQL/SSH services and new DNS services.
+The original SPIRE manifest, agent alias, valid probe identity, authenticated
+public bundle and enrolled pilot status were preserved. SPIRE listened exactly
+on `192.168.8.214:8081`, and all four workload registrations matched their
+reviewed user-plus-unit selectors and expiry `2026-09-29T08:52:37Z`.
+
+At **2026-09-29T08:22:24.977239Z**, an unregistered unit running under the same
+Unix user was denied a workload identity; its fetch reached the deadline and
+the transient failed unit was cleared. At **2026-09-29T08:23:23.780183Z**, the
+controller's exact SPIFFE identity was verified and the unavailable station
+registry produced HTTP **503**. The real updater was restored afterward.
+These are native selector and dependency-failure checks.
+
+Station admission was still absent. The desired-state table was empty and
+queries to the primary and both replica ports returned no A or AAAA record for
+`pi-001.pilot.kaiba.pseudo.design`. This receipt establishes pre-station checks;
+it does not establish a successful admitted-device update, a DNS publication,
+or end-to-end LAN qualification. The station apply and positive path remain
+pending, and no persistent LAN activation is claimed.
+
 ## Current-admission and station prerequisites
 
 The existing pilot inventory and authenticated admission/observation services
@@ -78,9 +105,9 @@ denied by PostgreSQL. Existing authorities and their encrypted storage/serving
 window remain authoritative. Station credentials stay local and runtime-only.
 
 The workspace lacks passwordless root access to Malak. The initial read-only
-preflight is complete; the protected serving-window metadata and reviewed
-station service preparation are still required before native activation.
-Preparation must expose no keys or database credentials.
+preflight and reviewed service preparation are complete. Owner application
+of the prepared station services is pending within the approved serving
+window. Preparation exposes no keys or database credentials.
 
 ## Activation and acceptance sequence
 
