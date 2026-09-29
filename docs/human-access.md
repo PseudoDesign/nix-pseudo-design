@@ -20,6 +20,15 @@ Hydra, while direct HTTPS to Mako's reserved `192.168.8.247` works with the same
 hostnames and valid certificates. Configure the LAN resolver to return Mako's
 private address for both `auth.pseudo.design` and `ssh-ca.pseudo.design`.
 
+The GL-BE9300 LAN router at `192.168.8.1` now has both entries under DNS →
+Edit Hosts. Direct router queries and ordinary HTTPS requests from Ace verified
+the private addresses and valid TLS on 2026-09-29. Existing clients may retain
+the previous public address until their DNS cache expires. On a Linux workstation
+using systemd-resolved, run `sudo resolvectl flush-caches`; on Windows, run
+`ipconfig /flushdns` in an administrator Command Prompt. Restart the browser if
+it still uses the old address, and ensure custom browser Secure DNS does not
+bypass the LAN resolver.
+
 An alternative on a NixOS workstation is:
 
 ```nix
@@ -80,15 +89,88 @@ recovery keys must remain under the owner's control outside both hosts. Seven en
 snapshots are retained. A synthetic restore test does not establish possession
 of an actual owner's decryption key.
 
-The owner is completing the initial browser enrollment ceremony with two distinct
-passkey credentials. Finalization, the reviewed host principal mapping, and a real
-workstation login remain pending. The browser/CLI integration test has passed with
-two virtual passkeys; it does not replace these owner checks. Use independent
-recovery devices or accounts when possible. Only after finalization does Keycloak grant the SSH
-administrator group. Host principal mappings must use the public immutable
-subject returned by `kaiba-human-identity enroll-status`, never the username.
-`ownerSubject = null` keeps host certificate authentication disabled until that
-subject is reviewed and committed. Both hosts then share the exact `adam` mapping.
+The owner has finalized enrollment with two distinct passkey credentials. The
+recorded phase is `complete`, and Keycloak has granted the SSH administrator
+group. The immutable subject is `e43b0b5d-bbc8-4079-9bb7-2eb882f14514`.
+The host configuration now maps
+`kaiba:person:e43b0b5d-bbc8-4079-9bb7-2eb882f14514` to `adam` on both hosts;
+deployment of that mapping is pending. The subject comes from
+`kaiba-human-identity enroll-status`, never the username or email.
+
+Real workstation certificate login to both hosts and decryption of a backup
+using an owner's recovery key remain pending. The browser/CLI integration test
+passed with virtual passkeys; the owner must still complete the workstation
+checks below. Keep passkeys on independent recovery devices or accounts when
+possible.
+
+## Workstation setup (Linux with Nix)
+
+Run these commands on your own workstation, from a reviewed checkout of this
+repository. `hosts/human-access-client.json` contains only public trust and the
+finalized owner's principal. It is the client configuration; the larger
+`human-access-trust.json` contains additional fields the client does not accept.
+
+```sh
+nix --extra-experimental-features 'nix-command flakes' profile install \
+  'github:PseudoDesign/kaiba-infra/ef8e41b97c8d7668aadd4f385e2daa0ccba383be#kaiba-login'
+kaiba_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/kaiba"
+install -d -m 0700 "$kaiba_config_dir"
+install -m 0600 hosts/human-access-client.json "$kaiba_config_dir/login.json"
+```
+
+Use your workstation's local SSH agent. If the shell has none, start one, then
+authenticate in your browser:
+
+```sh
+if [ -z "${SSH_AUTH_SOCK:-}" ]; then
+  eval "$(ssh-agent -s)"
+fi
+kaiba login
+kaiba status
+```
+
+Run this outside an SSH session or automation workspace. The private key stays
+in memory and the local agent. The certificate expires within eight hours; the
+client reports its public `certificateFile` path. Do not forward this agent.
+
+Save this dedicated SSH profile as `$kaiba_config_dir/ssh_config`. If you use
+`XDG_STATE_HOME`, replace `IdentityFile` with the reported `certificateFile` path.
+The public certificate selects its matching agent-held private key:
+
+```sshconfig
+Host ace-human mako-human
+    User adam
+    IdentityFile ~/.local/state/kaiba/certificate.pub
+    IdentitiesOnly yes
+    ForwardAgent no
+    ControlMaster no
+    ControlPath none
+
+Host ace-human
+    HostName ace
+
+Host mako-human
+    HostName mako
+```
+
+After the host mapping is deployed, open fresh sessions with that profile:
+
+```sh
+ssh -F "$kaiba_config_dir/ssh_config" ace-human
+ssh -F "$kaiba_config_dir/ssh_config" mako-human
+```
+
+Keep host-key verification enabled and confirm the server audit records the
+certificate principal. Remove this client's agent identity when finished:
+
+```sh
+kaiba logout
+```
+
+Logout preserves unrelated agent keys and existing SSH/browser sessions. Use
+`kaiba logout` before logging in again to replace an expired certificate.
+
+## Future deployments and recovery
 
 Preserve the running system generation, public pilot identity status, state-file
 metadata, and protected mount options before test deployment. The runtime record
