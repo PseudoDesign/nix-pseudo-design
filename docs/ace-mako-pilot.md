@@ -1,16 +1,19 @@
 # Ace server and Mako member pilot
 
-The selected target uses `pilot.kaiba.pseudo.design` on the LAN. Ace hosts the
+The selected target uses `pilot.kaiba.pseudo.design` on the LAN. It assigns Ace the
 complete pilot authority, SPIRE Server and Agent, workload registry, DNS update
-services and writable DNS origin. Mako hosts a SPIRE Agent, an exact-unit identity
-probe and a read-only DNS replica. Malak becomes an operator workstation after
+services and writable DNS origin. It assigns Mako a SPIRE Agent, an exact-unit
+identity probe and a read-only DNS replica. Malak becomes an operator workstation after
 the complete authority state has moved and normal operation has passed with
 Malak disconnected.
 
-These profiles are implemented but disabled. No authority migration, Mako agent
-admission or native two-host acceptance has occurred. Malak still holds the live
-pilot control plane. The earlier bounded same-host DNS trial has expired and
-Ace's persistent standalone identity baseline is restored.
+The profiles default to disabled. On September 29, both hosts passed native
+builds and temporary test activation with `enable = true`, `activate = false`.
+The new pilot units remain nonrunning, and both persistent boot profiles retain
+their previous baselines. Ace's existing standalone SPIRE identity continues.
+No authority migration, Mako agent admission or native end-to-end acceptance has
+occurred. Malak still holds the live pilot control plane. The earlier bounded
+same-host DNS trial has expired.
 
 The reviewed September 29 inventory confirms the complete source authority.
 Ace's transfer recipient and transport CSR were prepared on encrypted storage;
@@ -122,8 +125,8 @@ state transfer and reconciliation.
 active compositions; rejected missing policy and conflicting trial profiles;
 identity preservation; private listeners; distinct issuer/controller ports;
 guard dependencies; and unchanged existing application units, kernel, initrd
-and filesystem definitions. Disabled host closures match the existing installed
-Ace and Mako baselines. This is evaluation evidence, not a native deployment.
+and filesystem definitions. Disabled host closures match the retained persistent
+Ace and Mako baselines. This check provides evaluation evidence.
 The [composition receipt](observations/2026-09-29-ace-mako-composition.json)
 records the final published dependency revisions and unchanged baseline paths.
 
@@ -132,13 +135,27 @@ restricted registry finalization and an issuer-only callback dial override that
 preserves canonical URLs, TLS identity and all retained scope pins. Its 76
 migration checks pass with real encryption and disposable PG18 clusters. The
 host composition check also passes against this pin and both disabled closures
-still match the installed baselines. Independent staging evaluation found no
+still match the persistent baselines. Independent staging evaluation found no
 existing unit that starts a new pilot unit, unchanged application/SPIRE units
 and unchanged existing user/group assignments. Expected staging effects include
 new accounts, firewall/DBus reloads and Ace's empty controller SQLite placeholder;
 there is no authority database initialization.
 The [migration preparation receipt](observations/2026-09-29-migration-preparation.json)
 records this pin and Mako's observed recovery prerequisite.
+
+Native dormant staging then passed on Mako at `2026-09-29T19:31:24Z` and Ace at
+`2026-09-29T19:31:54Z`, using native builds of the reviewed candidates and
+`switch-to-configuration test`. The
+[sanitized staging observation](observations/2026-09-29-ace-mako-dormant-staging.json)
+records both system paths. Selected existing application processes, Ace's SPIRE
+processes, device state and directory, device ownership, boot identity and
+persistent system profiles were preserved. All new pilot units were nonrunning
+with no main process, and imported authority state was absent. This does not
+mean every service and mount was unchanged: both activations reloaded DBus and
+the firewall; Ace also restarted tmpfiles setup and started
+`boot-firmware.automount`, `boot.mount`, `local-fs.target` and
+`systemd-timedated`. No source export, target import or authority activation
+occurred.
 
 The DNS dependency has a passing two-host VM covering real AXFR/NOTIFY, updates,
 credential/source separation, outages, journal recovery and missing imported
@@ -154,8 +171,8 @@ operation while Malak is disconnected. Mako's added Agent and replica each have
 `MemoryHigh = 128M`, `MemoryMax = 256M` and `TasksMax = 128`; verify headroom while
 its existing applications remain healthy.
 
-After a successful bounded test activation, verify persistent configuration and
-controlled warm reboot separately. Cold/offline boot, clock policy and hardware
+After a successful runtime activation and acceptance, verify persistent
+configuration and controlled warm reboot separately. Cold/offline boot, clock policy and hardware
 rollback/recovery qualification remain separate work. Existing boot, firmware,
 OTP/TPM, encrypted storage layout, Hydra, PostgreSQL, human identity, SSH CA and
 backup services must retain their reviewed behavior.
