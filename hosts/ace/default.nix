@@ -2,7 +2,9 @@
 {
   imports = [
     ../../modules/services/kaiba-pilot-device.nix
+    ../../modules/services/kaiba-human-access.nix
     kaiba-infra.nixosModules.hydra
+    kaiba-infra.nixosModules.human-access-backup-receiver
   ];
 
   services.kaibaHydra = {
@@ -26,6 +28,7 @@
   # Its ARM64 jemalloc supports 16 KiB pages too; the Pi overlay otherwise
   # rebuilds Hydra's Rust/Node toolchains solely to specialize the allocator.
   services.hydra.package = (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).hydra;
+  services.kaibaHumanAccessBackupReceiver.enable = true;
   services.kaibaHydra.cachePublish.package =
     (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).cachix;
 

@@ -9,14 +9,19 @@
 
 let
   pseudoDesignSite = self.packages.${pkgs.stdenv.hostPlatform.system}.pseudo-design-site;
+  humanAccessTrust = builtins.fromJSON (builtins.readFile ../human-access-trust.json);
 in
 {
   imports = [
     ../../modules/services/kaiba-pilot-device.nix
+    ../../modules/services/kaiba-human-access.nix
     crtvar.nixosModules.default
     dogsitting.nixosModules.default
     kaiba-infra.nixosModules.hydra-proxy
     kaiba-infra.nixosModules.hydra-backup-receiver
+    kaiba-infra.nixosModules.human-identity
+    kaiba-infra.nixosModules.ssh-user-ca
+    kaiba-infra.nixosModules.human-access-backup
   ];
 
   networking = {
@@ -29,11 +34,39 @@ in
 
   time.timeZone = "America/Indiana/Indianapolis";
 
+  # Pi firmware's DTB supplies cgroup_disable=memory. The later generation
+  # argument re-enables it so the identity services' memory limits take effect.
+  boot.kernelParams = [ "cgroup_enable=memory" ];
+
   services.kaibaHydraProxy = {
     enable = true;
     upstream = "192.168.8.214:3000";
   };
   services.kaibaHydraBackupReceiver.enable = true;
+
+  services.kaibaHumanIdentity = {
+    enable = true;
+    domain = "auth.pseudo.design";
+    bootstrapAdminPasswordFile = "/var/lib/kaiba-human-identity/bootstrap-admin-password";
+    javaHeapMB = 384;
+    memoryHighMB = 768;
+    memoryMaxMB = 1024;
+  };
+  services.kaibaSSHUserCA.enable = true;
+  systemd.services.kaiba-ssh-ca = {
+    after = [ "nginx.service" "kaiba-human-identity-configure.service" ];
+    requires = [ "kaiba-human-identity-configure.service" ];
+    partOf = [ "kaiba-human-identity-configure.service" ];
+  };
+  services.kaibaHumanAccessBackup = {
+    enable = true;
+    # Encryption recipients are reviewed separately from future SSH key grants.
+    recipients = humanAccessTrust.backupRecipients;
+    receiverHost = "192.168.8.214";
+  };
+  # Server-to-server OIDC and CA traffic stays local while preserving the
+  # public HTTPS names and certificate verification.
+  networking.hosts."127.0.0.1" = [ "auth.pseudo.design" "ssh-ca.pseudo.design" ];
 
   services.kaibaPilotDevice = {
     enable = true;
