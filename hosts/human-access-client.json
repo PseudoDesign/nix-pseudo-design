@@ -1,0 +1,8 @@
+{
+  "caURL": "https://ssh-ca.pseudo.design",
+  "rootFingerprint": "5f37a2ac06a7f6a68dbec42b7de97031e555f9a3fa89e27a9afaed6c23243797",
+  "sshUserCAFingerprint": "SHA256:wtUloFybtj/3kU/koBckxVt/Z0wwinHarz1MKvNLhUU",
+  "issuer": "https://auth.pseudo.design/realms/kaiba",
+  "clientID": "kaiba-ssh",
+  "principal": "kaiba:person:e43b0b5d-bbc8-4079-9bb7-2eb882f14514"
+}

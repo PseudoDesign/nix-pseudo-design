@@ -3,7 +3,7 @@
 Mako hosts the Kaiba human Keycloak realm and SSH user certificate issuer. Ace
 receives encrypted backups using a dedicated write-only rsync account. Reusable
 modules and the Linux/Nix client are owned by `kaiba-infra`; its
-[human access runbook](https://github.com/PseudoDesign/kaiba-infra/blob/codex/passkey-human-login/docs/human-access.md)
+[human access runbook](https://github.com/PseudoDesign/kaiba-infra/blob/main/docs/human-access.md)
 describes enrollment, login, revocation, and recovery.
 
 `hosts/human-access-trust.json` records public trust generated on Mako during the
@@ -12,59 +12,175 @@ and the backup SSH key were generated on Mako and remain in root-private runtime
 directories. The public transport-root fingerprint and SSH signing-key fingerprint
 are different and must both be pinned by the workstation client.
 
-Mako's initial inspection found 1,988 MiB RAM, about 1,300 MiB available, no swap,
-four ARM64 cores, and about 195 GiB free root space. This qualifies it for a bounded
-test deployment; native enrollment/issuance/backup memory peaks must still be
-checked before persistent activation. Keycloak's heap is 384 MiB with a 1 GiB hard
-limit, PostgreSQL uses a small connection pool, and the issuer is limited to
-256 MiB. No swap is added. Heavy package builds run on Ace.
+## Workstation access from the LAN
 
-Native temporary activation passed HTTPS, blocked administrative routes, service
-restart recovery, and encrypted backup transfer with matching ciphertext hashes.
-Mako retained about 714–738 MiB available memory; Java used about 473 MiB RSS.
-Both hosts' public pilot identity, protected mount metadata, kernel, initrd and
-persistent boot profiles stayed unchanged. The real browser/CLI integration test
-also passes with two virtual passkeys; the owner's hardware enrollment remains
-required. Dogsitting's existing 502/missing runtime password predates this rollout;
-the other existing public sites and Hydra remain healthy.
+Public DNS resolves the identity domains to `204.8.14.108`. Connections from
+inside this LAN to that public address time out, as previously observed for
+Hydra, while direct HTTPS to Mako's reserved `192.168.8.247` works with the same
+hostnames and valid certificates. Configure the LAN resolver to return Mako's
+private address for both `auth.pseudo.design` and `ssh-ca.pseudo.design`.
+
+The GL-BE9300 LAN router at `192.168.8.1` now has both entries under DNS →
+Edit Hosts. Direct router queries and ordinary HTTPS requests from Ace verified
+the private addresses and valid TLS on 2026-09-29. Existing clients may retain
+the previous public address until their DNS cache expires. On a Linux workstation
+using systemd-resolved, run `sudo resolvectl flush-caches`; on Windows, run
+`ipconfig /flushdns` in an administrator Command Prompt. Restart the browser if
+it still uses the old address, and ensure custom browser Secure DNS does not
+bypass the LAN resolver.
+
+An alternative on a NixOS workstation is:
+
+```nix
+networking.hosts."192.168.8.247" = [
+  "auth.pseudo.design"
+  "ssh-ca.pseudo.design"
+];
+```
+
+Apply this through the workstation's normal `nixos-rebuild switch` procedure.
+On other Linux distributions using Nix, add this line to `/etc/hosts` instead:
+
+```text
+192.168.8.247 auth.pseudo.design ssh-ca.pseudo.design
+```
+
+A static workstation mapping must be removed or limited to the LAN network
+profile when roaming elsewhere. DHCP-distributed LAN DNS avoids that problem.
+Keep the original HTTPS enrollment URL: replacing its hostname with an IP or
+`.local` name breaks the expected TLS/origin configuration. The bare domain's
+`/` route deliberately returns 404; the public discovery and account routes are
+under `/realms/kaiba/`.
+
+## Deployment and qualification
+
+The reviewed infrastructure and host changes are merged and persistently deployed
+on both hosts. Mako has rebooted successfully into the approved configuration.
+Native checks passed HTTPS, blocked administrative routes, service restart
+recovery, and encrypted backup transfer, including a backup after reboot.
+Both hosts' public pilot identities and protected mount metadata were preserved;
+Mako's checks also passed across reboot. The kernel image, initrd, and storage
+configuration are unchanged. Dogsitting's existing 502/missing runtime password
+predates this rollout; the other existing public sites and Hydra remain healthy.
+
+Mako has 1,988 MiB RAM, four ARM64 cores, no swap, and about 195 GiB free root
+space at initial inspection. After reboot and backup it retained about
+895–899 MiB available RAM, with no OOM kills. Measured peaks were about 599 MiB
+for Keycloak and 74 MiB for PostgreSQL; the SSH issuer peaked at about 66 MiB
+before its backup restart. Keycloak's heap is 384 MiB with a 1 GiB hard limit,
+PostgreSQL uses a small connection pool, and the issuer is limited to 256 MiB.
+No swap is added. Heavy package builds run on Ace.
 
 Qualification found that Pi firmware injects `cgroup_disable=memory`, preventing
 the configured limits from taking effect despite kernel `CONFIG_MEMCG=y`. Mako
 now appends `cgroup_enable=memory` in its generation's kernel parameters. The
-[pinned kernel supports this later override](https://github.com/raspberrypi/linux/blob/8c0da7c3bb97a2e0aaa0d405d3052786c1469b35/kernel/cgroup/cgroup.c#L7080);
-activating it requires a reboot.
-The kernel image, initrd and storage configuration do not change. Before accepting
-permanent operation, verify `memory` appears in `/sys/fs/cgroup/cgroup.controllers`,
-Keycloak's `memory.max` is `1073741824`, its `memory.high` is `805306368`, its
-`memory.swap.max` is `0`, and the SSH issuer's `memory.max` is `268435456`.
-Check the effective cgroup files: the earlier disable argument can still appear
-in `/proc/cmdline` alongside the later enable argument. Native enforcement and
-post-reboot capacity checks are pending; do not infer enforcement from configured
-systemd properties alone.
-
-After qualification, Mako's original runtime was restored successfully while the
-boot-parameter change awaits a scheduled reboot. Identity runtime state and the
-encrypted backup are retained. Ace's backup receiver remains temporarily active.
-Neither persistent boot profile has changed, and no real owner has enrolled yet.
+[pinned kernel supports this later override](https://github.com/raspberrypi/linux/blob/8c0da7c3bb97a2e0aaa0d405d3052786c1469b35/kernel/cgroup/cgroup.c#L7080).
+The approved reboot activated it: `memory` is present in
+`/sys/fs/cgroup/cgroup.controllers`, and effective cgroup files confirm Keycloak's
+`memory.max=1073741824`, `memory.high=805306368`, and `memory.swap.max=0`, plus the
+SSH issuer's `memory.max=268435456`. Use these effective files for future checks;
+the earlier disable argument can still appear in `/proc/cmdline` alongside the
+later enable argument. Configured systemd properties alone do not prove enforcement.
 
 The existing owner SSH keys remain in `modules/users/adam.nix`. Their three public
 keys are explicitly recorded as the initial encryption recipients in the public
-trust file; future SSH grants do not automatically grant decryption. The private recovery
-keys must remain under the owner's control outside both hosts. Seven encrypted
+trust file; future SSH grants do not automatically grant decryption. The private
+recovery keys must remain under the owner's control outside both hosts. Seven encrypted
 snapshots are retained. A synthetic restore test does not establish possession
 of an actual owner's decryption key.
 
-The initial passkey owner must complete the browser enrollment ceremony and
-register two distinct passkey credentials. Use independent recovery devices or
-accounts when possible. Only after finalization does Keycloak grant the SSH
-administrator group. Host principal mappings must use the public immutable
-subject returned by `kaiba-human-identity enroll-status`, never the username.
-`ownerSubject = null` keeps host certificate authentication disabled until that
-subject is reviewed and committed. Both hosts then share the exact `adam` mapping.
+The owner has finalized enrollment with two distinct passkey credentials. The
+recorded phase is `complete`, and Keycloak has granted the SSH administrator
+group. The immutable subject is `e43b0b5d-bbc8-4079-9bb7-2eb882f14514`.
+The host configuration maps
+`kaiba:person:e43b0b5d-bbc8-4079-9bb7-2eb882f14514` to `adam` on both hosts.
+The mapping passed native test activation and was persistently switched on both
+hosts on 2026-09-29, without a reboot. Checks verified the pinned CA, the single
+`adam` principal file, fresh recovery SSH connections, existing services, and
+unchanged kernel, initrd, mounts, and public pilot identity. Native guarded
+rollback was also exercised successfully on Mako. The subject comes from
+`kaiba-human-identity enroll-status`, never the username or email.
+
+Real workstation certificate login to both hosts and decryption of a backup
+using an owner's recovery key remain pending. The browser/CLI integration test
+passed with virtual passkeys; the owner must still complete the workstation
+checks below. Keep passkeys on independent recovery devices or accounts when
+possible.
+
+## Workstation setup (Linux with Nix)
+
+Run these commands on your own workstation, from a reviewed checkout of this
+repository. `hosts/human-access-client.json` contains only public trust and the
+finalized owner's principal. It is the client configuration; the larger
+`human-access-trust.json` contains additional fields the client does not accept.
+
+```sh
+nix --extra-experimental-features 'nix-command flakes' profile install \
+  'github:PseudoDesign/kaiba-infra/ef8e41b97c8d7668aadd4f385e2daa0ccba383be#kaiba-login'
+kaiba_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/kaiba"
+install -d -m 0700 "$kaiba_config_dir"
+install -m 0600 hosts/human-access-client.json "$kaiba_config_dir/login.json"
+```
+
+Use your workstation's local SSH agent. If the shell has none, start one, then
+authenticate in your browser:
+
+```sh
+if [ -z "${SSH_AUTH_SOCK:-}" ]; then
+  eval "$(ssh-agent -s)"
+fi
+kaiba login
+kaiba status
+```
+
+Run this outside an SSH session or automation workspace. The private key stays
+in memory and the local agent. The certificate expires within eight hours; the
+client reports its public `certificateFile` path. Do not forward this agent.
+
+Save this dedicated SSH profile as `$kaiba_config_dir/ssh_config`. If you use
+`XDG_STATE_HOME`, replace `IdentityFile` with the reported `certificateFile` path.
+The public certificate selects its matching agent-held private key:
+
+```sshconfig
+Host ace-human mako-human
+    User adam
+    IdentityFile ~/.local/state/kaiba/certificate.pub
+    IdentitiesOnly yes
+    ForwardAgent no
+    ControlMaster no
+    ControlPath none
+
+Host ace-human
+    HostName ace
+
+Host mako-human
+    HostName mako
+```
+
+Open fresh sessions with that profile:
+
+```sh
+ssh -F "$kaiba_config_dir/ssh_config" ace-human
+ssh -F "$kaiba_config_dir/ssh_config" mako-human
+```
+
+Keep host-key verification enabled and confirm the server audit records the
+certificate principal. Remove this client's agent identity when finished:
+
+```sh
+kaiba logout
+```
+
+Logout preserves unrelated agent keys and existing SSH/browser sessions. Use
+`kaiba logout` before logging in again to replace an expired certificate.
+
+## Future deployments and recovery
 
 Preserve the running system generation, public pilot identity status, state-file
 metadata, and protected mount options before test deployment. The runtime record
-directory is `/var/tmp/kaiba-human-access-rollout` on each host. The pilot UID/GID
+directories are `/var/tmp/kaiba-human-access-rollout` for the identity service
+deployment and `/var/tmp/kaiba-human-owner-rollout` for the owner mapping on each
+host. The pilot UID/GID
 assignments remain Ace `994:988`, Mako `991:985`; private pilot state is excluded
 from human-access backups and is never read by this rollout.
 
@@ -89,7 +205,7 @@ sudo bash -euc '
   systemctl is-active --quiet boot-firmware.automount
   test "$(findmnt -n -t vfat -o SOURCE --mountpoint /boot/firmware)" = \
     "$(readlink -f "$firmware_source")"
-  /nix/store/<reviewed-system>/bin/switch-to-configuration test
+  "/nix/store/<reviewed-system>/bin/switch-to-configuration" test
 '
 ```
 
