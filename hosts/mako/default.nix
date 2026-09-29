@@ -52,6 +52,7 @@ in
   systemd.services.kaiba-ssh-ca = {
     after = [ "nginx.service" "kaiba-human-identity-configure.service" ];
     requires = [ "kaiba-human-identity-configure.service" ];
+    partOf = [ "kaiba-human-identity-configure.service" ];
   };
   services.kaibaHumanAccessBackup = {
     enable = true;

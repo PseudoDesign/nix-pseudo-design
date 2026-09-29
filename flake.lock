@@ -100,17 +100,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1790648743,
-        "narHash": "sha256-51i9Quf56eBo78YFF23qdewSF0Hj+yFebPAMIoAWShg=",
+        "lastModified": 1790649892,
+        "narHash": "sha256-+phywH2fPAlwe+sk9zSaoWPadJh3z0Geif1CSaRLuss=",
         "owner": "PseudoDesign",
         "repo": "kaiba-infra",
-        "rev": "1ae1e826421204c244c52b5f32ab97dd6c9a1a9c",
+        "rev": "4c041f919802ae1a4f4c8470b6100c6fbc4bbbab",
         "type": "github"
       },
       "original": {
         "owner": "PseudoDesign",
         "repo": "kaiba-infra",
-        "rev": "1ae1e826421204c244c52b5f32ab97dd6c9a1a9c",
+        "rev": "4c041f919802ae1a4f4c8470b6100c6fbc4bbbab",
         "type": "github"
       }
     },
