@@ -34,6 +34,10 @@ in
 
   time.timeZone = "America/Indiana/Indianapolis";
 
+  # Pi firmware's DTB supplies cgroup_disable=memory. The later generation
+  # argument re-enables it so the identity services' memory limits take effect.
+  boot.kernelParams = [ "cgroup_enable=memory" ];
+
   services.kaibaHydraProxy = {
     enable = true;
     upstream = "192.168.8.214:3000";
