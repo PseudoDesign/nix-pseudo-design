@@ -11,7 +11,9 @@
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
 
-    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/c7d13f8ecd3e8d98108a2c6eb4787c550405e7c2";
+    kaiba-dns.url = "github:pd-codex/nixos-kaiba-network/2edf05378b3b2c88773dc95044408a50a20229fc";
+
+    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/66ee0d6aa6fa3747ad69566567f465af32c31580";
 
     disko = {
       url = "github:nix-community/disko";
@@ -37,6 +39,7 @@
       dogsitting,
       kaiba-infra,
       kaiba-fleet,
+      kaiba-dns,
       nixos-raspberrypi,
       nixpkgs,
       ...
@@ -54,6 +57,7 @@
           dogsitting
           kaiba-infra
           kaiba-fleet
+          kaiba-dns
           nixos-raspberrypi
           self
           ;

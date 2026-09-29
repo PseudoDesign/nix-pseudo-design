@@ -194,3 +194,5 @@ cold boot and recovery test.
 Ace's existing pilot account and protected credential mount are declared in its
 host configuration. See [the persistence and deployment notes](docs/ace-pilot-persistence.md)
 for the focused VM check and the separate real-host acceptance procedure.
+
+The next disabled pilot composition is documented in [Ace LAN DNS qualification preparation](docs/ace-dns-lan-qualification.md).

@@ -4,6 +4,7 @@
     ../../modules/services/kaiba-pilot-device.nix
     ../../modules/services/kaiba-human-access.nix
     ./identity-pilot.nix
+    ./dns-lan-qualification.nix
     kaiba-infra.nixosModules.hydra
     kaiba-infra.nixosModules.human-access-backup-receiver
   ];

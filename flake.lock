@@ -74,6 +74,25 @@
         "type": "github"
       }
     },
+    "dns": {
+      "inputs": {
+        "nixpkgs": [
+          "kaiba-dns",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./nix/dns",
+        "type": "path"
+      },
+      "original": {
+        "path": "./nix/dns",
+        "type": "path"
+      },
+      "parent": [
+        "kaiba-dns"
+      ]
+    },
     "dnsIntegration": {
       "flake": false,
       "locked": {
@@ -143,26 +162,46 @@
         "type": "github"
       }
     },
+    "kaiba-dns": {
+      "inputs": {
+        "dns": "dns",
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1790665558,
+        "narHash": "sha256-FWP7TFa0gLfkdV0xKA5dJbaaRAr4+odvuQlRt98VGn8=",
+        "owner": "pd-codex",
+        "repo": "nixos-kaiba-network",
+        "rev": "2edf05378b3b2c88773dc95044408a50a20229fc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pd-codex",
+        "repo": "nixos-kaiba-network",
+        "rev": "2edf05378b3b2c88773dc95044408a50a20229fc",
+        "type": "github"
+      }
+    },
     "kaiba-fleet": {
       "inputs": {
         "contracts": "contracts",
         "dnsIntegration": "dnsIntegration",
         "enrollmentRunner": "enrollmentRunner",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "provisioning": "provisioning"
       },
       "locked": {
-        "lastModified": 1790661848,
-        "narHash": "sha256-HCoeH1orbpnkHyYVe3BkDNuqYngtXT66lc9SSZ9tE60=",
+        "lastModified": 1790666393,
+        "narHash": "sha256-fd6BgQG+zjukU/yE8jIvgSHP+8JLdCQxqBm0reW+/FU=",
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "c7d13f8ecd3e8d98108a2c6eb4787c550405e7c2",
+        "rev": "66ee0d6aa6fa3747ad69566567f465af32c31580",
         "type": "github"
       },
       "original": {
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "c7d13f8ecd3e8d98108a2c6eb4787c550405e7c2",
+        "rev": "66ee0d6aa6fa3747ad69566567f465af32c31580",
         "type": "github"
       }
     },
@@ -219,7 +258,7 @@
         "argononed": "argononed",
         "flake-compat": "flake-compat",
         "nixos-images": "nixos-images",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_3"
       },
       "locked": {
         "lastModified": 1786737479,
@@ -254,6 +293,22 @@
     },
     "nixpkgs_2": {
       "locked": {
+        "lastModified": 1785975029,
+        "narHash": "sha256-X44cn5rzytELc3NNoQsh0aLkjWA/QzPfc6HPQmsG3sU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "70ce234312134a463ba7728e94da2486a1d237ac",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "70ce234312134a463ba7728e94da2486a1d237ac",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
         "lastModified": 1786089803,
         "narHash": "sha256-ZuvZfVW2tB5tXYEcpcfhVXB3N4OhdZLOqOviy4OD4b4=",
         "owner": "NixOS",
@@ -268,7 +323,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_3": {
+    "nixpkgs_4": {
       "locked": {
         "lastModified": 1776734388,
         "narHash": "sha256-vl3dkhlE5gzsItuHoEMVe+DlonsK+0836LIRDnm6MXQ=",
@@ -306,10 +361,11 @@
         "crtvar": "crtvar",
         "disko": "disko",
         "dogsitting": "dogsitting",
+        "kaiba-dns": "kaiba-dns",
         "kaiba-fleet": "kaiba-fleet",
         "kaiba-infra": "kaiba-infra",
         "nixos-raspberrypi": "nixos-raspberrypi",
-        "nixpkgs": "nixpkgs_3"
+        "nixpkgs": "nixpkgs_4"
       }
     }
   },
