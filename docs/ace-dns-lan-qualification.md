@@ -3,9 +3,10 @@
 The owner selected LAN qualification first, retaining
 `pilot.kaiba.pseudo.design`. The [persistent identity pilot](ace-identity-pilot.md)
 has passed a controlled online warm reboot. This composition remains disabled
-by default in the source configuration. The enabled candidate is now
-test-activated on Ace; persistent and booted generation 10 are unchanged. Public delegation, router resolver
-configuration and existing applications remain outside this LAN step.
+by default in the source configuration. The temporary native trial is closed:
+Ace is restored to generation 10 as its active, persistent and booted system.
+Public delegation, router resolver configuration and existing applications
+remain outside this LAN step.
 
 `hosts/ace/dns-lan-qualification.nix` imports the dedicated DNS qualification
 profile. Enabling `kaiba.lanQualification.enable` promotes the existing SPIRE
@@ -77,8 +78,26 @@ Station admission was still absent. The desired-state table was empty and
 queries to the primary and both replica ports returned no A or AAAA record for
 `pi-001.pilot.kaiba.pseudo.design`. This receipt establishes pre-station checks;
 it does not establish a successful admitted-device update, a DNS publication,
-or end-to-end LAN qualification. The station apply and positive path remain
-pending, and no persistent LAN activation is claimed.
+or end-to-end LAN qualification. No station apply receipt was received before
+the window closed, and no persistent LAN activation is claimed.
+
+## Closed trial and baseline restoration
+
+At **2026-09-29T14:23:30.962325Z**, observation confirmed the scheduled stop
+completed successfully and all seven new DNS units were inactive. The timer
+intentionally retained the SPIRE authority; its LAN listener was still present.
+The [sanitized restoration receipt](observations/2026-09-29-ace-lan-restoration.json)
+then records successful guarded restoration at
+**2026-09-29T14:26:10.629592Z**: active, persistent and booted systems all match
+`ylpbjk8j…` (generation 10). The original manifest, valid identity probe,
+public enrollment and existing services were preserved, with no unexpected
+failed units. SPIRE listens only on `127.0.0.1:8081`; DNS/controller listeners
+are absent.
+
+The expired station command must not be applied. No Malak apply receipt or
+successful end-to-end update was established. A future Ace/Mako topology and
+any renewed authority/registration window require their own reviewed plan;
+this closed trial does not deploy new services on either Mako or Malak.
 
 ## Current-admission and station prerequisites
 
@@ -105,9 +124,10 @@ denied by PostgreSQL. Existing authorities and their encrypted storage/serving
 window remain authoritative. Station credentials stay local and runtime-only.
 
 The workspace lacks passwordless root access to Malak. The initial read-only
-preflight and reviewed service preparation are complete. Owner application
-of the prepared station services is pending within the approved serving
-window. Preparation exposes no keys or database credentials.
+preflight and reviewed service preparation were completed for the now-expired
+window. No station application receipt was received. Any resumed work needs
+a fresh reviewed plan and deadline. Preparation exposes no keys or database
+credentials.
 
 ## Activation and acceptance sequence
 
