@@ -92,9 +92,13 @@ of an actual owner's decryption key.
 The owner has finalized enrollment with two distinct passkey credentials. The
 recorded phase is `complete`, and Keycloak has granted the SSH administrator
 group. The immutable subject is `e43b0b5d-bbc8-4079-9bb7-2eb882f14514`.
-The host configuration now maps
-`kaiba:person:e43b0b5d-bbc8-4079-9bb7-2eb882f14514` to `adam` on both hosts;
-deployment of that mapping is pending. The subject comes from
+The host configuration maps
+`kaiba:person:e43b0b5d-bbc8-4079-9bb7-2eb882f14514` to `adam` on both hosts.
+The mapping passed native test activation and was persistently switched on both
+hosts on 2026-09-29, without a reboot. Checks verified the pinned CA, the single
+`adam` principal file, fresh recovery SSH connections, existing services, and
+unchanged kernel, initrd, mounts, and public pilot identity. Native guarded
+rollback was also exercised successfully on Mako. The subject comes from
 `kaiba-human-identity enroll-status`, never the username or email.
 
 Real workstation certificate login to both hosts and decryption of a backup
@@ -153,7 +157,7 @@ Host mako-human
     HostName mako
 ```
 
-After the host mapping is deployed, open fresh sessions with that profile:
+Open fresh sessions with that profile:
 
 ```sh
 ssh -F "$kaiba_config_dir/ssh_config" ace-human
@@ -174,7 +178,9 @@ Logout preserves unrelated agent keys and existing SSH/browser sessions. Use
 
 Preserve the running system generation, public pilot identity status, state-file
 metadata, and protected mount options before test deployment. The runtime record
-directory is `/var/tmp/kaiba-human-access-rollout` on each host. The pilot UID/GID
+directories are `/var/tmp/kaiba-human-access-rollout` for the identity service
+deployment and `/var/tmp/kaiba-human-owner-rollout` for the owner mapping on each
+host. The pilot UID/GID
 assignments remain Ace `994:988`, Mako `991:985`; private pilot state is excluded
 from human-access backups and is never read by this rollout.
 
