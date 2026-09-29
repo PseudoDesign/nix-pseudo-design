@@ -168,17 +168,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1790665558,
-        "narHash": "sha256-FWP7TFa0gLfkdV0xKA5dJbaaRAr4+odvuQlRt98VGn8=",
+        "lastModified": 1790693693,
+        "narHash": "sha256-2y9xkP+eFN2EAtZzy42p5+1TY5KMCWpGJVyiQyEkHX8=",
         "owner": "pd-codex",
         "repo": "nixos-kaiba-network",
-        "rev": "2edf05378b3b2c88773dc95044408a50a20229fc",
+        "rev": "67574bb1fe88a60118c680d823ac2ddb7656975b",
         "type": "github"
       },
       "original": {
         "owner": "pd-codex",
         "repo": "nixos-kaiba-network",
-        "rev": "2edf05378b3b2c88773dc95044408a50a20229fc",
+        "rev": "67574bb1fe88a60118c680d823ac2ddb7656975b",
         "type": "github"
       }
     },
@@ -191,17 +191,17 @@
         "provisioning": "provisioning"
       },
       "locked": {
-        "lastModified": 1790666393,
-        "narHash": "sha256-fd6BgQG+zjukU/yE8jIvgSHP+8JLdCQxqBm0reW+/FU=",
+        "lastModified": 1790694591,
+        "narHash": "sha256-zUfxDeoXaYRnssDM6+8ZYDNxrrcK6KR9AdUFRDUu4JA=",
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "66ee0d6aa6fa3747ad69566567f465af32c31580",
+        "rev": "8ac42e12aa4b9a1c0d0a7b80e03cbac3411ab672",
         "type": "github"
       },
       "original": {
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "66ee0d6aa6fa3747ad69566567f465af32c31580",
+        "rev": "8ac42e12aa4b9a1c0d0a7b80e03cbac3411ab672",
         "type": "github"
       }
     },

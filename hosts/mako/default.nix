@@ -15,6 +15,7 @@ in
   imports = [
     ../../modules/services/kaiba-pilot-device.nix
     ../../modules/services/kaiba-human-access.nix
+    ./pilot-agent.nix
     crtvar.nixosModules.default
     dogsitting.nixosModules.default
     kaiba-infra.nixosModules.hydra-proxy

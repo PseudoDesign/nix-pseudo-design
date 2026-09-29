@@ -1,0 +1,33 @@
+{
+  "schema_version": "kaiba.two-host-composition-check/v1alpha1",
+  "passed": true,
+  "evaluation_only": true,
+  "live_cutover": false,
+  "checks": [
+    "disabled-defaults",
+    "staging-always-denies-authority",
+    "staging-does-not-autostart",
+    "activation-requires-policy",
+    "mutually-exclusive-trial-profile",
+    "preserved-owner-identity",
+    "no-member-authority",
+    "current-admission-dependencies",
+    "distinct-issuer-and-dns-ports",
+    "real-remote-secondary",
+    "private-listeners-and-source-firewall",
+    "explicit-operator-grants",
+    "existing-applications-and-storage-preserved",
+    "member-memory-limits"
+  ],
+  "observed_at": "2026-09-29T15:12:57.201592+00:00",
+  "trust_domain": "pilot.kaiba.pseudo.design",
+  "fleet_revision": "8ac42e12aa4b9a1c0d0a7b80e03cbac3411ab672",
+  "dns_revision": "67574bb1fe88a60118c680d823ac2ddb7656975b",
+  "disabled_output_paths": {
+    "ace": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14",
+    "mako": "/nix/store/nf6pj4bqp2gp4j9rf4d23bfgsh6lcbjf-nixos-system-mako-26.05.20260807.ee48b14"
+  },
+  "matches_recorded_installed_baselines": true,
+  "native_profiles_activated": false,
+  "hardware_qualified": false
+}
