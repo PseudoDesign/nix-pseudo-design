@@ -12,6 +12,39 @@ and the backup SSH key were generated on Mako and remain in root-private runtime
 directories. The public transport-root fingerprint and SSH signing-key fingerprint
 are different and must both be pinned by the workstation client.
 
+## Workstation access from the LAN
+
+Public DNS resolves the identity domains to `204.8.14.108`. Connections from
+inside this LAN to that public address time out, as previously observed for
+Hydra, while direct HTTPS to Mako's reserved `192.168.8.247` works with the same
+hostnames and valid certificates. Configure the LAN resolver to return Mako's
+private address for both `auth.pseudo.design` and `ssh-ca.pseudo.design`.
+
+An alternative on a NixOS workstation is:
+
+```nix
+networking.hosts."192.168.8.247" = [
+  "auth.pseudo.design"
+  "ssh-ca.pseudo.design"
+];
+```
+
+Apply this through the workstation's normal `nixos-rebuild switch` procedure.
+On other Linux distributions using Nix, add this line to `/etc/hosts` instead:
+
+```text
+192.168.8.247 auth.pseudo.design ssh-ca.pseudo.design
+```
+
+A static workstation mapping must be removed or limited to the LAN network
+profile when roaming elsewhere. DHCP-distributed LAN DNS avoids that problem.
+Keep the original HTTPS enrollment URL: replacing its hostname with an IP or
+`.local` name breaks the expected TLS/origin configuration. The bare domain's
+`/` route deliberately returns 404; the public discovery and account routes are
+under `/realms/kaiba/`.
+
+## Deployment and qualification
+
 The reviewed infrastructure and host changes are merged and persistently deployed
 on both hosts. Mako has rebooted successfully into the approved configuration.
 Native checks passed HTTPS, blocked administrative routes, service restart
