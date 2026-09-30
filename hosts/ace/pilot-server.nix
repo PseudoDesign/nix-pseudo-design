@@ -72,7 +72,16 @@ in
     ];
     systemd.services.kaiba-pilot-import-present = {
       description = "Require the explicitly imported authority directory before mounting it";
-      before = [ "srv-kaiba\\x2dpilot.mount" ];
+      # This check precedes a local filesystem mount. A normal service's
+      # implicit After=basic.target/sysinit.target creates a cycle through
+      # local-fs.target and can cause PID1 to discard tmpfiles/startup jobs.
+      unitConfig.DefaultDependencies = false;
+      after = [ "systemd-remount-fs.service" ];
+      conflicts = [ "shutdown.target" ];
+      before = [
+        "srv-kaiba\\x2dpilot.mount"
+        "shutdown.target"
+      ];
       unitConfig.RequiresMountsFor = [ "/srv" ];
       serviceConfig = {
         Type = "oneshot";

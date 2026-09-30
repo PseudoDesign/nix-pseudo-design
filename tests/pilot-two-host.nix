@@ -203,6 +203,13 @@ assert mako.networking.firewall.allowedTCPPorts == makoBase.networking.firewall.
 assert lib.hasInfix "--dport 18444 -j DROP" ace.networking.firewall.extraCommands;
 assert lib.hasInfix "--dport 18444 -s 192.168.8.247/32" ace.networking.firewall.extraCommands;
 assert ace.systemd.units."srv-kaiba\\x2dpilot.mount".enable;
+assert ace.systemd.services.kaiba-pilot-import-present.unitConfig.DefaultDependencies == false;
+assert lib.elem "systemd-remount-fs.service" ace.systemd.services.kaiba-pilot-import-present.after;
+assert lib.elem "shutdown.target" ace.systemd.services.kaiba-pilot-import-present.conflicts;
+assert lib.all (unit: lib.elem unit ace.systemd.services.kaiba-pilot-import-present.before) [
+  "srv-kaiba\\x2dpilot.mount"
+  "shutdown.target"
+];
 assert lib.all (name: unchangedUnit aceBase ace name) [
   "hydra-server"
   "hydra-evaluator"
@@ -225,8 +232,13 @@ assert mako.system.build.kernel.outPath == makoBase.system.build.kernel.outPath;
 assert ace.fileSystems == aceBase.fileSystems && mako.fileSystems == makoBase.fileSystems;
 assert mako.systemd.services.spire-agent.serviceConfig.MemoryMax == "256M";
 assert mako.systemd.services.kaiba-lan-secondary.serviceConfig.MemoryMax == "256M";
-pkgs.runCommand "kaiba-two-host-composition" { } ''
+pkgs.runCommand "kaiba-two-host-composition" {
+  PREFLIGHT_UNIT = pkgs.writeText "kaiba-pilot-import-present.service" ace.systemd.units."kaiba-pilot-import-present.service".text;
+  PILOT_MOUNT_UNIT = pkgs.writeText "srv-kaiba-pilot.mount" ace.systemd.units."srv-kaiba\\x2dpilot.mount".text;
+} ''
   mkdir -p "$out"
+  cp "$PREFLIGHT_UNIT" "$out/kaiba-pilot-import-present.service"
+  cp "$PILOT_MOUNT_UNIT" "$out/pilot.mount"
   cat > "$out/report.json" <<'EOF'
   {"schema_version":"kaiba.two-host-composition-check/v1alpha1","passed":true,"evaluation_only":true,"live_cutover":false,"checks":["disabled-defaults","staging-always-denies-authority","staging-does-not-autostart","activation-requires-policy","mutually-exclusive-trial-profile","preserved-owner-identity","no-member-authority","current-admission-dependencies","distinct-issuer-and-dns-ports","real-remote-secondary","private-listeners-and-source-firewall","explicit-operator-grants","existing-applications-and-storage-preserved","member-memory-limits","explicit-active-profile-builder","guard-reference-context","online-boot-time-guard","persisted-member-bundle-no-rebootstrap"]}
   EOF

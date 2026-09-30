@@ -10,6 +10,12 @@ bounds; hardware qualification remains false. The dated rehearsal and boot-only
 installation records below are
 preserved separately from the later startup observations.
 
+The subsequent [clean PoE cold-start test](observations/2026-09-30-ace-cold-start-ordering-failure.json)
+failed automatic-startup acceptance on Ace generation 12. A mount-preflight
+ordering cycle caused PID1 to discard startup jobs. Identity and authority state
+survived, and affected services were restored explicitly. The source fix below
+still needs deployment as a new persistent generation and another attended test.
+
 ## Initial tested baseline and declarative selection
 
 The [explicit profile constructor](../deploy/pilot-profiles.nix) keeps the normal
@@ -353,12 +359,62 @@ The Pis were not power-cycled in this check. Cold/offline boot, power-loss safet
 rollback and physical recovery qualification remain open; the original
 `2026-10-03T02:06:35Z` deadline is unchanged and full qualification remains false.
 
+## Clean PoE cold-start: ordering failure
+
+The owner confirmed a completed console shutdown, removed Ace's sole PoE supply
+for 30 seconds, and reconnected it. Ace has no RTC backup battery; networking
+was available on reconnect. Exact power-transition wall times were not recorded.
+The [observation](observations/2026-09-30-ace-cold-start-ordering-failure.json)
+records a changed boot, accessible encrypted root, retained admitted node/device
+state, synchronized-clock authority startup, and primary DNS return.
+
+Automatic startup failed. `kaiba-pilot-import-present.service` inherited the
+normal service ordering after `basic.target` and `sysinit.target`, but runs
+before a mount ordered before `local-fs.target`. PID1 broke the resulting cycle
+by deleting startup jobs, including `systemd-tmpfiles-setup.service`. Avahi then
+failed to create its runtime directory, while the controller and publisher
+remained inactive. Initial `ace.local` checks failed; direct-IP SSH used the
+same pinned host key. A nonzero failed-unit count alone would also have missed
+the inactive controller and publisher.
+
+After preserving logs and protected-state evidence, explicit starts restored
+tmpfiles setup, Avahi, controller and publisher. The restored snapshot passed
+fresh exact-unit identity, installed-device access, DNS, profile and retained
+state checks. That recovery does not turn the cold-start result into a pass.
+Mako passed all 40 sampled six-query DNS matrices, including 12 bracketed by
+Ace SSH and primary DNS unavailability. Its observer is stopped. Malak's six
+authority services remain fenced and inactive, with no authority listeners.
+
+The source fix disables default dependencies only for the early directory
+preflight, orders it after root remount, and explicitly retains shutdown
+ordering/conflict. It preserves the directory/manifest checks and mount guard.
+Generation 12 remains installed: deploy the corrected profile, then repeat the
+attended test and require no ordering-cycle job deletion or manual startup.
+Offline time, abrupt power loss, rollback and full hardware qualification remain
+open under the unchanged pilot deadline.
+
 ## Checks
 
 ```sh
 nix build .#checks.x86_64-linux.pilot-two-host
 nix build .#checks.x86_64-linux.member-identity-guard
 ```
+
+The composition output includes rendered units for the boot-graph regression:
+
+```sh
+composition=$(nix build .#checks.x86_64-linux.pilot-two-host --no-link --print-out-paths)
+PREFLIGHT_UNIT="$composition/kaiba-pilot-import-present.service" \
+PILOT_MOUNT_UNIT="$composition/pilot.mount" \
+SYSTEMD_ANALYZE="$(command -v systemd-analyze)" \
+python3 tests/pilot_mount_order_test.py
+```
+
+Run this read-only graph verifier on a Linux host with systemd's runtime
+directory available; the Nix build sandbox lacks `/run/systemd`. It reproduces
+the old cycle and startup job deletion, then verifies the corrected rendered
+unit in an isolated fixture root. PID1 can return success after deleting jobs,
+so the regression also checks diagnostics rather than only the exit status.
 
 The first check includes explicit active-profile construction, refusal of a
 contextless guard, preserved unrelated units/kernel/initrd/filesystems, bootstrap
