@@ -17,7 +17,10 @@ survived, and affected services were restored explicitly. The fix is now install
 as generation 13. The [repeat clean PoE test](observations/2026-09-30-ace-clean-cold-start.json)
 passed automatic startup, retained identity/state and DNS without manual service
 starts. Mako passed all 73 DNS samples, including 55 while Ace was unavailable.
-The separate tmpfiles missing-`sudo`-group warning remains open.
+The later [tmpfiles cleanup](observations/2026-09-30-ace-tmpfiles-cleanup.json) is installed and active
+as generation 14. It preserves root-only debugfs permissions and all application
+processes. Ace has not rebooted again: generation 13 remains the cold-start-tested
+profile, and Mako's profile has not changed.
 
 ## Initial tested baseline and declarative selection
 
@@ -429,10 +432,39 @@ authority services remain fenced and inactive with absent listeners.
 Offline time, abrupt power loss, rollback and full hardware qualification remain
 open under the unchanged `2026-10-03T02:06:35Z` pilot deadline.
 
+## Tmpfiles cleanup and remaining physical gates
+
+The Raspberry Pi package supplied `d! /sys/kernel/debug 0750 root sudo -`,
+but these NixOS hosts have no `sudo` group. The shared Pi profile now replaces
+that exact file with `d! /sys/kernel/debug 0700 root root -`, preserving Ace's
+observed root-only permissions without creating a group or granting debugfs
+access to administrators. A real systemd-tmpfiles fixture reproduces exit 65
+with the original rule and passes with the replacement.
+
+The [cleanup observation](observations/2026-09-30-ace-tmpfiles-cleanup.json) records a native build,
+verified boot-only installation as generation 14, and subsequent activation
+without reboot. The rendered tmpfiles directory changes only that rule; the
+only unit change is the tmpfiles resetup restart trigger. Kernel/initrd/firmware
+inputs and application units are unchanged. Tmpfiles resetup and the native
+boot-rule dry-run now return zero. All protected application processes and
+identity/state checks are preserved, and all 12 cross-host DNS queries pass.
+The cold-start result still belongs to generation 13; generation 14 is active
+and selected for the next boot, while Mako remains on generation 15.
+
+No spare storage is available for interrupted-write experiments. Abrupt power
+cuts of the live authority disk are deferred until disposable media and a tested
+restoration route exist. Ace's pilot requires online synchronized time and has
+no RTC backup battery. The next physical test can observe refusal with
+untrusted time and recovery after networking returns, once the owner confirms
+independent console access and data isolation that retains PoE. It cannot
+establish autonomous offline operation. See the [remaining physical-test
+procedure](https://github.com/PseudoDesign/kaiba-infra/blob/codex/spiffe-spire-next-steps/docs/offline-qualification.md#current-pilot-remaining-physical-tests).
+
 ## Checks
 
 ```sh
 nix build .#checks.x86_64-linux.pilot-two-host
+nix build .#checks.x86_64-linux.rpi-tmpfiles
 nix build .#checks.x86_64-linux.member-identity-guard
 ```
 

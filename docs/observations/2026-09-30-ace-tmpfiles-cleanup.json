@@ -1,0 +1,53 @@
+{
+  "booted_generation": 13,
+  "full_qualification": false,
+  "host": "ace",
+  "observed_at": "2026-09-30T20:20:00.931781Z",
+  "persistent_generation": 14,
+  "physical_gates": {
+    "abrupt_power_loss": "blocked-pending-disposable-media-and-verified-restore",
+    "cold_start_qualified_generation": 13,
+    "generation14_cold_start_tested": false,
+    "network_isolation_with_poe_and_console": "awaiting-owner-setup-confirmation",
+    "offline_autonomous_startup": "unsupported-by-current-online-time-gated-pilot",
+    "spare_storage_available": false
+  },
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "reboot_performed": false,
+  "rule": {
+    "debugfs_root_only": true,
+    "native_dry_run_exit_code": 0,
+    "new_groups_created": false,
+    "previous": "d! /sys/kernel/debug 0750 root sudo -",
+    "replacement": "d! /sys/kernel/debug 0700 root root -",
+    "resetup_exit_code": 0
+  },
+  "running_generation": 14,
+  "schema": "kaiba.pilot-tmpfiles-cleanup/v1alpha1",
+  "scope": {
+    "application_processes_preserved": true,
+    "application_units_preserved": true,
+    "boot_components_preserved": true,
+    "device_admission_and_authority_configuration_preserved": true,
+    "dns_queries_passed": 12,
+    "fresh_current_boot_workload_probe": true,
+    "installed_device_access_passed": true,
+    "mako_profile_deployed": false,
+    "nix_generations_deleted": false,
+    "same_admitted_node": true
+  },
+  "source_commit": "a0b8ade9762eb28bb9e7edf1765d770848b50353",
+  "status": "installed-and-active",
+  "validation": {
+    "boot_installer_tests": 10,
+    "missing_group_regression": "passed",
+    "native_arm64_build": "passed",
+    "pilot_composition": "passed"
+  },
+  "verification": {
+    "activation-v2.result_sha256": "0d7a76674868791eeab6325428e401bacb4bff42f6a79f8b7aa574c4e7d5ddd6",
+    "candidate-review_sha256": "a39edb960afc96c7eb93af6e6baf00df64fcce2a9134528780d3d5ccba0e98cb",
+    "cleanup-health_sha256": "324ccab2098a70d220b2afa7b1c56b3e510a474c4538307e397ee0e2b8ac3bcc",
+    "status-2_sha256": "54ba00a0e1616bcfffaab46a16878ba2c2b58231808209861e760c497e96a0ab"
+  }
+}

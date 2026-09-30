@@ -109,7 +109,9 @@ hardware/offline qualification. Ace now runs generation 13 with the corrected
 early-mount preflight. Its [repeat clean PoE cold-start](observations/2026-09-30-ace-clean-cold-start.json)
 passed automatic startup, identity/state and DNS checks; all 73 Mako DNS samples
 passed, including 55 during Ace unavailability. The tmpfiles missing-group
-warning remains a separate cleanup item.
+warning was subsequently fixed in active/persistent Ace generation 14 without
+restarting applications. Generation 13 remains the cold-start-tested profile;
+Mako remains on generation 15.
 
 ## Install, then activate
 
