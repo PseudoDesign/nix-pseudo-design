@@ -3,9 +3,9 @@
 The selected target uses `pilot.kaiba.pseudo.design` on the LAN. It assigns Ace the
 complete pilot authority, SPIRE Server and Agent, workload registry, DNS update
 services and writable DNS origin. It assigns Mako a SPIRE Agent, an exact-unit
-identity probe and a read-only DNS replica. Malak becomes an operator workstation after
-the complete authority state has moved and normal operation has passed with
-Malak disconnected.
+identity probe and a read-only DNS replica. Malak now serves as the operator
+workstation: complete authority state has moved, its source is fenced, and the
+bounded attended workstation-power-off check has passed.
 
 The profiles default to disabled. On September 29, both hosts passed native
 builds and temporary test activation with `enable = true`, `activate = false`.
@@ -103,8 +103,9 @@ included fresh exact-unit probes and preserved admitted identities, device state
 and existing applications. Mako's
 retained DNS answers passed in nine Ace-unavailable-bracketed query rounds during
 Ace's reboot. The [persistence record](ace-mako-persistence.md) links the dated
-installation and later startup evidence. Workstation disconnection remains
-pending; these warm reboots do not establish hardware/offline qualification.
+installation and later startup evidence. The later attended workstation
+power-off also passed within its recorded bounds; neither check establishes
+hardware/offline qualification.
 
 ## Install, then activate
 
@@ -260,8 +261,7 @@ the restored state before its imported authority services started.
 
 Remaining native acceptance covers membership revocation and instance replacement,
 renewal with preserved issuer/scope/history, SPIRE/database outages,
-timed catch-up from new publication, and normal
-device, renewal and DNS operation while Malak is disconnected. The completed
+timed catch-up from new publication and longer unattended operation. The completed
 positive path, exact-unit probe, bounded wrong-unit observation, member restart
 and replica queries do not
 substitute for these checks; neither does the completed workload-grant quarantine
@@ -273,8 +273,8 @@ duration, remaining outage scenarios and load observations remain outstanding.
 
 Within the unchanged `2026-10-03T02:06:35Z` deadline, complete the remaining native
 acceptance checks. Persistent profile installation and controlled warm reboot
-passed for both hosts; attended workstation disconnection is the next prepared
-independence check.
+passed for both hosts, followed by bounded attended workstation-power-off
+acceptance.
 Public authority/delegation and outside-LAN DNS checks remain separate from this
 LAN profile. Cold/offline boot, clock policy and hardware
 rollback/recovery qualification remain separate work. Existing boot, firmware,
@@ -286,7 +286,13 @@ independent samplers passed the read-only
 [connected rehearsal](observations/2026-09-30-connected-collector-rehearsal.json), with Malak connected
 and no updater timer armed. OOM observations use Ace's unchanged kernel-global
 counter and Mako's unchanged per-cgroup counters; Ace has no per-cgroup memory
-controller. The attended 75-minute disconnection remains pending. One separately
-supervised updater restart will test a fresh update beyond the longest workload
-TTL; it is not ordinary six-hour periodic updater renewal. No disconnected result
-is claimed.
+controller. The later [attended power-off observation](observations/2026-09-30-attended-workstation-poweroff.json)
+records the owner-reported 16:45–18:00Z interval and network return about two
+minutes after power-on. Fresh exact-unit identities, installed-device access and
+DNS passed beyond the longest workload TTL. One separately supervised updater
+restart produced a fresh lease, without claiming ordinary six-hour renewal or
+same-process certificate rotation. Malak returned on a new boot; separate
+verification checked retained source fences, absent listeners and unset PID1
+execution metadata. Root journal visibility was unavailable, so empty journals
+were not used as proof. The Pis remained powered, and full qualification remains
+false.

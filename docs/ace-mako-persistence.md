@@ -5,8 +5,9 @@ physical recovery access. Ace now runs persistent generation 12 with an explicit
 clock waiter and ordered authority startup; Mako runs guarded generation 15.
 Post-boot checks preserve admitted identities, device state and existing
 applications. DNS remained available in bounded Mako samples during Ace's reboot.
-Attended workstation disconnection is still pending, and hardware qualification
-remains false. The dated rehearsal and boot-only installation records below are
+The later attended workstation-power-off check also passed within its recorded
+bounds; hardware qualification remains false. The dated rehearsal and boot-only
+installation records below are
 preserved separately from the later startup observations.
 
 ## Initial tested baseline and declarative selection
@@ -323,10 +324,34 @@ kernel lacks the memory cgroup controller. Mako uses unchanged per-cgroup
 `memory.events` counters. Neither source is silently substituted for the other.
 
 The packet passed 68 focused software tests, including client-lock ordering and
-sample/action coordination. The actual attended 75-minute disconnection and fresh
-update beyond the longest workload TTL remain pending. Cold/offline boot, power
-loss, rollback and physical recovery qualification remain open; the original
-`2026-10-03T02:06:35Z` deadline is unchanged.
+sample/action coordination.
+
+## Attended workstation power-off
+
+The [additive observation](observations/2026-09-30-attended-workstation-poweroff.json)
+records the later owner-reported Malak power-off from 16:45–18:00Z on September
+30. Ace, Mako and the router stayed powered. Network return was observed about
+two minutes after the reported power-on. Both independent samplers passed
+through the interval: fresh exact-unit credentials after the longest prior TTL,
+installed-device access, cross-host DNS and protected-state checks succeeded.
+Each host recorded 173 samples with zero failures, including 13 installed-device
+and DNS query matrices after the full TTL margin while Malak was still off.
+Ace recorded 18 fresh-probe samples in that period and Mako 15; these are sample
+counts, not distinct certificate counts. One separately supervised updater restart
+produced a fresh accepted lease after that TTL. This was an induced update, not
+ordinary six-hour periodic renewal or same-process certificate rotation.
+
+Malak returned on a new boot. The original unchanged-boot verifier was preserved,
+and a separate supplement checked the owner attestation, bounded network return
+and source fencing. All six source units retained their persistent fences and
+unset PID1 main-process execution metadata, with no authority listeners. Root
+journal visibility was unavailable; empty unit journals were not treated as proof
+of non-execution. Ace uses unchanged kernel-global OOM evidence and Mako uses
+unchanged per-cgroup counters.
+
+The Pis were not power-cycled in this check. Cold/offline boot, power-loss safety,
+rollback and physical recovery qualification remain open; the original
+`2026-10-03T02:06:35Z` deadline is unchanged and full qualification remains false.
 
 ## Checks
 
