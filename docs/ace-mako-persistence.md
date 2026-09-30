@@ -1,7 +1,7 @@
 # Persistent Ace/Mako pilot profiles
 
 Both controlled warm reboots passed on September 30 after the owner confirmed
-physical recovery access. Ace now runs persistent generation 12 with an explicit
+physical recovery access. Ace then ran persistent generation 12 with an explicit
 clock waiter and ordered authority startup; Mako runs guarded generation 15.
 Post-boot checks preserve admitted identities, device state and existing
 applications. DNS remained available in bounded Mako samples during Ace's reboot.
@@ -13,8 +13,11 @@ preserved separately from the later startup observations.
 The subsequent [clean PoE cold-start test](observations/2026-09-30-ace-cold-start-ordering-failure.json)
 failed automatic-startup acceptance on Ace generation 12. A mount-preflight
 ordering cycle caused PID1 to discard startup jobs. Identity and authority state
-survived, and affected services were restored explicitly. The source fix below
-still needs deployment as a new persistent generation and another attended test.
+survived, and affected services were restored explicitly. The fix is now installed
+as generation 13. The [repeat clean PoE test](observations/2026-09-30-ace-clean-cold-start.json)
+passed automatic startup, retained identity/state and DNS without manual service
+starts. Mako passed all 73 DNS samples, including 55 while Ace was unavailable.
+The separate tmpfiles missing-`sudo`-group warning remains open.
 
 ## Initial tested baseline and declarative selection
 
@@ -388,10 +391,43 @@ authority services remain fenced and inactive, with no authority listeners.
 The source fix disables default dependencies only for the early directory
 preflight, orders it after root remount, and explicitly retains shutdown
 ordering/conflict. It preserves the directory/manifest checks and mount guard.
-Generation 12 remains installed: deploy the corrected profile, then repeat the
-attended test and require no ordering-cycle job deletion or manual startup.
+The fix was subsequently built natively from host commit `579cca0` and installed
+as generation 13. Only the early-preflight unit changed; kernel, initrd,
+firmware inputs and the pinned Fleet runtime stayed unchanged. The boot writer
+succeeded, but the installer could not find `sync` in its service environment.
+Reconciliation verified the selected profile, full encrypted backup and expected
+firmware, then completed the final sync through an immutable executable alias.
+Neither the profile nor firmware writer was repeated; no Nix generation was deleted.
+
+## Repeat clean PoE cold-start: passed
+
+The owner again confirmed completed console shutdown and 30 seconds without
+Ace's sole PoE supply, then reconnected it. No RTC backup battery is fitted;
+LAN was available on return. The [dated observation](observations/2026-09-30-ace-clean-cold-start.json)
+records a new boot into generation 13, accessible encrypted root, retained
+node/device/admission state, fresh exact-unit identity, installed-device access
+and matching DNS. All 17 protected services started automatically. The early
+preflight completed before the state mount, tmpfiles and Avahi; current-boot
+PID1 evidence shows no ordering cycle or deleted startup jobs and no failed units.
+Clock synchronization preceded storage validation and authority startup.
+
+An initial snapshot reached a protected service before it was running; the later
+read-only snapshot passed without service starts or restarts. The early checker
+was corrected to request mount-specific fields and recognize tmpfiles' declared
+success exit statuses. Tmpfiles returned accepted exit 65 with a missing `sudo`
+group warning from `/etc/tmpfiles.d/sys-kernel-debug.conf`; retain this separate
+cleanup item rather than describing boot as warning-free. Original checker
+failures and corrected verification are retained in the private evidence manifest.
+
+Mako passed all 73 sampled UDP/TCP A/AAAA/SOA matrices, including 55 bracketed
+by Ace SSH and primary DNS unavailability. The first fully connected return
+sample ended about 578 seconds after the shutdown request, within the ten-minute
+return budget; this does not measure the exact physical off interval. The owner
+reported that interval as 30 seconds. The observer is stopped, and Malak's six
+authority services remain fenced and inactive with absent listeners.
+
 Offline time, abrupt power loss, rollback and full hardware qualification remain
-open under the unchanged pilot deadline.
+open under the unchanged `2026-10-03T02:06:35Z` pilot deadline.
 
 ## Checks
 

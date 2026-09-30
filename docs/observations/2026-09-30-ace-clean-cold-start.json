@@ -1,0 +1,80 @@
+{
+  "automatic_startup": {
+    "accepted": true,
+    "clock_gated_authority_started": true,
+    "device_admission_and_authority_configuration_preserved": true,
+    "dns_queries_passed": 12,
+    "early_mount_order_verified": true,
+    "encrypted_root_available": true,
+    "failed_units": false,
+    "fresh_exact_unit_workload_probe": true,
+    "installed_device_access_passed": true,
+    "installed_profile_booted": true,
+    "manual_service_starts": false,
+    "new_boot_observed": true,
+    "ordering_cycles_or_deleted_jobs": false,
+    "protected_services_running": 17,
+    "same_admitted_node": true,
+    "snapshot_completed_at": "2026-09-30T19:59:15.559296Z"
+  },
+  "full_qualification": false,
+  "generation": 13,
+  "host": "ace",
+  "installation": {
+    "default_and_numbered_boot_files_verified": true,
+    "fleet_runtime_commit": "0bd55c576536c29825aada2f7ce6fa052a877402",
+    "installer_final_sync_lookup_failure_reconciled": true,
+    "kernel_initrd_firmware_inputs_preserved": true,
+    "only_systemd_unit_changed": "kaiba-pilot-import-present.service",
+    "previous_nix_generations_retained": true,
+    "profile_or_firmware_writes_repeated": false,
+    "source_commit": "579cca0020488039b1956e0a02c493709839411e"
+  },
+  "mako_dns_continuity": {
+    "ace_unavailable_bracketed_samples": 55,
+    "continuous_every_instant_availability_proven": false,
+    "ended_at": "2026-09-30T20:00:07.670402Z",
+    "failed_samples": 0,
+    "first_fully_connected_return_sample_end": "2026-09-30T19:58:08.501188Z",
+    "observer_stopped": true,
+    "queries_per_sample": 6,
+    "samples": 73,
+    "shutdown_request_to_observed_return_seconds": 577.696,
+    "started_at": "2026-09-30T19:47:57.669401Z",
+    "ten_minute_return_observed": true
+  },
+  "next_steps": [
+    "Resolve the separate tmpfiles missing-group warning.",
+    "Complete remaining native credential-lifecycle, outage/replication and ordinary updater-renewal observations within the original deadline.",
+    "Keep offline time, abrupt power loss, rollback prevention, key isolation and full hardware qualification separate."
+  ],
+  "observed_at": "2026-09-30T20:01:20.613708Z",
+  "owner_attestation": {
+    "clean_console_shutdown_confirmed": true,
+    "exact_wall_clock_power_times_recorded": false,
+    "power_reconnected": true,
+    "power_removed_seconds": 30,
+    "rtc_backup_battery_present": false,
+    "sole_power_source": "PoE"
+  },
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "schema": "kaiba.ace-cold-start-observation/v1alpha1",
+  "scope": "One attended clean 30-second sole-PoE removal with LAN available on return; no offline or abrupt-power-loss qualification.",
+  "source_fences": {
+    "authority_listeners_absent": true,
+    "six_units_unchanged_and_inactive": true
+  },
+  "status": "clean-lan-assisted-cold-start-passed",
+  "verification": {
+    "comparison_sha256": "643f907eb1e87c6a5ac5d2bf856f9fc65d8614f920d10929a09c234e308c0d43",
+    "early_boot_sha256": "6fb4ab9bf38ac5c20dd7ee6a3a0ba1208980cfd1c1cc0905aa5db7ec158b01e5",
+    "mako_trace_sha256": "04edb46e80f0896f48cc53882d4c155be8140d7fe1bb72335d156c020e515853",
+    "private_evidence_manifest_sha256": "ba21272b2d08716eab48394a021ad49caeb7ecd3f5de2dc083c443ead5a348ca"
+  },
+  "verification_notes": {
+    "early_checker_correction": "Mount units do not expose service execution fields; tmpfiles declares accepted exit statuses 65 and 73. Original checker failures retained.",
+    "exact_power_transition_wall_times_known": false,
+    "initial_snapshot_during_startup": "Protected service was not yet running; preserved as unconfirmed. Later read-only snapshot passed without service changes.",
+    "tmpfiles_warning": "Missing sudo group referenced by /etc/tmpfiles.d/sys-kernel-debug.conf; exit 65 accepted by declared SuccessExitStatus, unit Result=success."
+  }
+}

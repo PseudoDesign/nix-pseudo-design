@@ -96,7 +96,7 @@ The pilot policy and temporary workload registrations retain the original
 deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
 After temporary activation and encrypted boot rehearsals, both tested profiles
 were installed persistently. The owner then confirmed physical recovery access,
-and both controlled warm reboots passed: Ace now runs generation 12 and Mako
+and both controlled warm reboots passed: Ace then ran generation 12 and Mako
 generation 15. Ace includes the upstream clock waiter before storage validation,
 private PostgreSQL, import validation and authority startup. Post-boot checks
 included fresh exact-unit probes and preserved admitted identities, device state
@@ -105,7 +105,11 @@ retained DNS answers passed in nine Ace-unavailable-bracketed query rounds durin
 Ace's reboot. The [persistence record](ace-mako-persistence.md) links the dated
 installation and later startup evidence. The later attended workstation
 power-off also passed within its recorded bounds; neither check establishes
-hardware/offline qualification.
+hardware/offline qualification. Ace now runs generation 13 with the corrected
+early-mount preflight. Its [repeat clean PoE cold-start](observations/2026-09-30-ace-clean-cold-start.json)
+passed automatic startup, identity/state and DNS checks; all 73 Mako DNS samples
+passed, including 55 during Ace unavailability. The tmpfiles missing-group
+warning remains a separate cleanup item.
 
 ## Install, then activate
 
