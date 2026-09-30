@@ -1,0 +1,23 @@
+{
+  "all_composite_initrd_materials_match": true,
+  "at": "2026-09-30T07:24:14.488957Z",
+  "collected_at": "2026-09-30T07:24:55.467088+00:00",
+  "encrypted_private_backup_created": true,
+  "full_qualification": false,
+  "hardware_qualified": false,
+  "host": "mako",
+  "original_applications_agent_replica_unchanged": true,
+  "persistent_profile_installed": false,
+  "persistent_profile_unchanged": true,
+  "physical_reboot_performed": false,
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "power_loss_safety_qualified": false,
+  "private_backup_retained_on_host": true,
+  "raw_secret_material_exported": false,
+  "real_firmware_unchanged": true,
+  "retained_entries_staged": 4,
+  "schema": "kaiba.mako-boot-rehearsal/v1alpha1",
+  "source_authority_units_inactive_with_loaded_fences": true,
+  "status": "passed",
+  "supervisor_completed_successfully": true
+}

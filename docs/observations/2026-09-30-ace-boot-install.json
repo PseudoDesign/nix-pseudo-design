@@ -1,0 +1,37 @@
+{
+  "schema": "kaiba.native-pilot-boot-install-observation/v1alpha1",
+  "observed_at": "2026-09-30T07:26:31.234594Z",
+  "host": "ace",
+  "trust_domain": "pilot.kaiba.pseudo.design",
+  "scope": "LAN pilot boot-only installation; no reboot",
+  "status": "passed",
+  "persistent_generation": 11,
+  "booted_generation": 10,
+  "firmware_numbered_generations": [
+    11,
+    10,
+    9,
+    8
+  ],
+  "firmware_generation_retired_from_active_set": 7,
+  "prior_firmware_backup": "verified and retained privately on Ace encrypted storage",
+  "nix_profile_generations_deleted": false,
+  "persistent_and_default_boot_profile_installed": true,
+  "installed_boot_files_match_rehearsed_stage": true,
+  "running_profile_preserved": true,
+  "existing_application_processes_preserved": true,
+  "device_identity_and_state_preserved": true,
+  "original_installation_journal_preserved": true,
+  "supervisor_completed_successfully": true,
+  "post_installation_lan_dns_and_source_fence_checks": "passed",
+  "physical_reboot_performed": false,
+  "workstation_disconnected": false,
+  "power_loss_safety_qualified": false,
+  "full_qualification": false,
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "limitations": [
+    "Persistent profile and boot files verified on the current boot; startup from them remains untested.",
+    "No physical console or recovery access is currently available.",
+    "Cold/offline boot, clock, rollback and hardware qualification remain separate."
+  ]
+}

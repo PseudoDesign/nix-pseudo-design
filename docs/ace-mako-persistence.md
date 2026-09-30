@@ -1,10 +1,11 @@
-# Persistent Ace/Mako pilot profiles — prepared, not installed
+# Persistent Ace/Mako pilot profiles
 
 The September 30 LAN, workload-grant and bounded service-outage checks passed on
-temporary profiles. This document prepares persistence without rebooting either
-host. There is currently no physical recovery access. No boot default, profile
-link, authority state or existing application is changed by the repository
-configuration or its evaluation checks.
+temporary profiles. Ace subsequently completed a verified boot-only installation
+as generation 11; Mako's guarded candidate completed boot-only installation as
+generation 15 after native activation and its encrypted rehearsal. Neither host
+was rebooted. There is currently no physical recovery access. Repository evaluation alone does not
+install a profile, create private admission state or activate services.
 
 ## Exact running baseline and declarative selection
 
@@ -42,8 +43,8 @@ actually booted closure. Existing application units and filesystem definitions
 also remain equal in the profile evaluation check.
 
 The admitted-state guard below deliberately changes Mako's service definition.
-The guarded candidate is **not** the previously tested `w3f…` closure. Build,
-review and temporarily test that new candidate before choosing it as persistent.
+The guarded candidate is **not** the previously tested `w3f…` closure. It required
+a separate native build, review and temporary activation before persistence.
 The false setting is retained for explicit bootstrap and historical comparison;
 it is not the selected admitted persistence mode.
 
@@ -155,6 +156,11 @@ The actual firmware FAT on each host is `/dev/nvme0n1p1`. Ace initially had abou
 11–14 plus default. Their encrypted roots had about141.8GB and207.3GB available.
 Those are observations, not fixed deployment requirements; recheck immediately
 before staging. The complete boot trees were about509.9MB and552.3MB respectively.
+The nested firmware automount can be inactive after its parent idles. Reading
+`/boot/firmware` then reaches a directory on the separate parent boot partition.
+Activate only the existing configured automount, verify the actual `p1` device,
+and hold a verified directory descriptor throughout staging and installation.
+A readable `config.txt` alone is insufficient; reject the parent partition.
 
 Ace's retained generations have no initrd-secret appenders. All retained Mako
 profiles and its active candidate have appenders; their existence is not proof
@@ -191,6 +197,25 @@ backup and report this retention change explicitly. Baseline10/14 and actually
 booted10/13 remain within the selected set. Do not silently increase retention
 or prune Nix profile generations.
 
+Mako completed the protected rehearsal at `2026-09-30T07:24:14Z`; the
+[native observation](observations/2026-09-30-mako-boot-rehearsal.json) records a
+successful supervisor completion and independent readback. A complete private
+firmware backup and a fresh staged default plus all four retained entries stayed
+on Mako's verified encrypted filesystem. The real firmware, profile links,
+running applications, SPIRE Agent and DNS replica were unchanged. The current
+admitted identity was validated with the startup guard; normal online key and
+certificate rotation was allowed. The source authorities remained stopped with
+their loaded migration fences.
+
+The Mako initrd check compared each immutable prefix and the exact required
+secret path, contents and mode privately, using bounded decoding of one appended
+zstd/newc archive. This checks the actual material despite possible archive
+timestamp differences. The appender's temporary directory also remained on the
+verified encrypted filesystem. No secret material or private backup was exported.
+The rehearsal installed no persistent profile or boot default and performed no
+reboot. It does not establish power-loss, offline, physical recovery or hardware
+qualification; the original `2026-10-03T02:06:35Z` deadline remains unchanged.
+
 ## Boot-only installation and ambiguous failure
 
 The root coordinator must first complete the guarded Mako candidate review and
@@ -200,7 +225,7 @@ exclusive durable intent recording the exact candidate, old profile link,
 selected generations and boot manifest. The intended final actions are:
 
 ```sh
-nix-env --profile /nix/var/nix/profiles/system --set "$pilot_candidate"
+"$pilot_candidate/sw/bin/nix-env" --profile /nix/var/nix/profiles/system --set "$pilot_candidate"
 "$pilot_candidate/bin/switch-to-configuration" boot
 ```
 
@@ -208,6 +233,9 @@ These are review instructions, not a request to rerun deployment. Use the exact
 already built and tested closure, not a flake rebuild with potentially different
 inputs. `boot` updates the next boot's files; do not substitute `switch`, `test`,
 `reboot` or an installer. Retain the previous generation links and native GC roots.
+Keep the `nix-env` executable name: it is a multi-command binary alias. Resolving
+that symlink and executing `nix --profile ... --set ...` selects the wrong CLI.
+Verify the immutable alias with `--version` before the recorded profile write.
 
 A profile-link update and bootloader update are two separate operations. If the
 process fails between them, the running system can remain healthy while the
@@ -225,6 +253,31 @@ running closure/processes and source fences, and healthy current pilot/DNS
 behavior. No reboot is part of this installation. Controlled warm-reboot and
 physical recovery acceptance remain pending physical access; a successful boot
 installation cannot establish them.
+
+## Recorded boot-only installation
+
+Ace's [boot installation observation](observations/2026-09-30-ace-boot-install.json)
+was independently reconciled at `2026-09-30T07:26:31Z`. Persistent generation 11
+and the default boot entry now select the exact running `jqhn…` candidate.
+Numbered firmware entries 11, 10, 9 and 8 remain available; entry 7 is retained
+in the verified encrypted backup and its Nix generation link remains intact.
+Actual firmware matched the encrypted stage, the booted generation stayed at
+10, and existing applications and device state were preserved. Fresh LAN DNS
+and Malak source-fence checks passed afterward. Startup from the new boot entry
+has not been tested.
+
+Mako's [boot installation observation](observations/2026-09-30-mako-boot-install.json)
+was independently reconciled at `2026-09-30T07:36:30.208904Z`. Persistent generation 15
+and default boot now select the guarded `k5xi…` candidate. Firmware entries
+15, 14, 13 and 12 remain; entry 11 remains in the verified encrypted backup and
+its Nix profile link is intact. The previous persistent generation 14 and
+actually booted generation 13 retain their kernel/configuration/DTB bytes and
+verified equivalent initrd contents. Exact immutable prefixes and private
+appended material were checked; temporary appender material was absent after
+completion. Both admission receipts, source material, Agent, replica and other
+application processes, and device state were preserved. Final both-host health,
+UDP/TCP DNS, unsigned AXFR denial and Malak source-fence checks passed.
+No reboot or workstation disconnection was performed.
 
 ## Checks
 

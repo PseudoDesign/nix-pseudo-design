@@ -44,9 +44,9 @@ after a same-user wrong-unit request timed out after 5.057 seconds with no
 identity; this was not an explicit denial response. Existing applications,
 operational device state, the current candidate, persistent baseline and source
 fences were preserved, and the probe timer resumed. The native positive path and
-member restart passed. Broader lifecycle/outage acceptance, persistent deployment
-and hardware qualification remain separate work. The earlier bounded same-host
-DNS trial remains expired.
+member restart passed. Remaining acceptance covers broader lifecycle/outage
+checks, startup from the installed profiles and hardware qualification. The
+earlier bounded same-host DNS trial remains expired.
 The [sanitized native observation](observations/2026-09-30-ace-mako-lan-acceptance.json)
 records these results and their remaining limits.
 
@@ -93,12 +93,12 @@ operational-credential renewal remain separate checks.
 
 The pilot policy and temporary workload registrations retain the original
 deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
-The active profiles are temporary test activations; persistent boot baselines
-remain unchanged.
-The [persistence preparation](ace-mako-persistence.md) records exact profile
-construction, protected boot rehearsal and the separate admitted-member startup
-guard required before selecting a new persistent Mako candidate. No reboot is
-part of that preparation.
+After temporary activation and encrypted boot rehearsals, both tested profiles
+were installed persistently: Ace generation 11 and guarded Mako generation 15.
+Boot files and retained recovery entries were verified, with unchanged running
+applications, admission and device state. Fresh LAN DNS and source-fence checks
+passed. The [persistence record](ace-mako-persistence.md) links the dated evidence.
+Neither host was rebooted; startup acceptance waits for physical recovery access.
 
 ## Install, then activate
 
@@ -265,8 +265,9 @@ reported approximately 753.5 MiB available, 17.4 MB for the Agent and 13.3 MB fo
 the replica, with no OOM events and existing applications preserved. Longer
 duration, remaining outage scenarios and load observations remain outstanding.
 
-Within the unchanged `2026-10-03T02:06:35Z` deadline, complete native acceptance
-before separately verifying persistent configuration and controlled warm reboot.
+Within the unchanged `2026-10-03T02:06:35Z` deadline, complete the remaining native
+acceptance checks. Persistent profile and boot-file installation passed; verify
+controlled warm reboot separately when physical recovery access is available.
 Public authority/delegation and outside-LAN DNS checks remain separate from this
 LAN profile. Cold/offline boot, clock policy and hardware
 rollback/recovery qualification remain separate work. Existing boot, firmware,
@@ -275,5 +276,5 @@ backup services must retain their reviewed behavior.
 
 The owner currently has no physical access. Do not reboot, power-cycle or
 disconnect networking for qualification until console and recovery access are
-available. Remote service checks and protected persistence preparation continue
-without claiming those physical observations.
+available. Remote service checks and boot-only persistence completed without
+claiming those physical observations.
