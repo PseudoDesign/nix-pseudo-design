@@ -1,0 +1,184 @@
+{
+  "acceptance_scope": "dated first-positive LAN and member-restart acceptance",
+  "ace_identity_boundary": {
+    "exact_registered_unit_identity_observed": true,
+    "negative_observation": "no identity before five-second client deadline; not explicit PermissionDenied",
+    "same_user_wrong_unit_identity_issued": false
+  },
+  "device_endpoints": {
+    "devices": {
+      "ace": {
+        "installed_client_self_passed": true,
+        "observed_at": "2026-09-30T04:43:46Z",
+        "only_fleet_url_changed": true,
+        "private_original_backup_verified": true
+      },
+      "mako": {
+        "installed_client_self_passed": true,
+        "observed_at": "2026-09-30T04:44:13Z",
+        "only_fleet_url_changed": true,
+        "private_original_backup_verified": true
+      }
+    },
+    "fleet_url": "https://192.168.8.214:18444"
+  },
+  "dns": {
+    "aaaa": "authoritative NOERROR with no answer on both hosts",
+    "endpoints": {
+      "primary": "192.168.8.214:15352",
+      "secondary": "192.168.8.247:15353"
+    },
+    "observed_at": "2026-09-30T05:07:51.028596Z",
+    "publisher": {
+      "desired_generation": 1,
+      "lease_current": true,
+      "observed_at": "2026-09-30T05:07:50.488471Z",
+      "origin_applied_generation": 1,
+      "public_observed_generation": 1,
+      "sqlite_read_as_service_user": true
+    },
+    "record": {
+      "name": "pi-001.pilot.kaiba.pseudo.design",
+      "type": "A",
+      "value": "192.168.8.214"
+    },
+    "replica_has_transfer_key_only": true,
+    "replica_update_key_absent": true,
+    "soa_consistent": true,
+    "soa_serial": 2,
+    "udp_and_tcp_verified_both": true,
+    "unsigned_axfr_denied_both": true,
+    "workload_grant": {
+      "dns_device_id": "001",
+      "grant_attempts": 1,
+      "initial_grant_readback_at": "2026-09-30T04:48:34.320139Z",
+      "initial_grant_revision": 1,
+      "issued_at": "2026-09-30T04:45:49.23377Z",
+      "permissions_at_initial_readback": [
+        "dns:update"
+      ],
+      "state_at_initial_readback": "active"
+    },
+    "zone": "pilot.kaiba.pseudo.design"
+  },
+  "limitations": {
+    "cold_boot_qualified": false,
+    "full_qualification": false,
+    "hardware_provisioning_qualified": false,
+    "note": "Native current-session LAN checks; temporary test profiles retain the original persistent boot profiles. Malak remains connected as operator/query client. Existing scope and expiry remain in force.",
+    "persistent_deployment": false,
+    "post_admission_grant_revocation_tested": false,
+    "power_loss_or_full_volume_rollback_qualified": false,
+    "public_dns": false,
+    "workstation_disconnected": false
+  },
+  "mako_resources": {
+    "host_memory_bytes": {
+      "MemAvailable": 790085632,
+      "MemTotal": 2088779776,
+      "SwapFree": 0,
+      "SwapTotal": 0
+    },
+    "new_service_limits_and_usage": {
+      "kaiba-lan-secondary": {
+        "MemoryCurrent": "13287424",
+        "MemoryHigh": "134217728",
+        "MemoryMax": "268435456",
+        "TasksCurrent": "7",
+        "TasksMax": "128",
+        "memory_events": {
+          "oom": 0,
+          "oom_kill": 0
+        },
+        "memory_events_available": true
+      },
+      "spire-agent": {
+        "MemoryCurrent": "17416192",
+        "MemoryHigh": "134217728",
+        "MemoryMax": "268435456",
+        "TasksCurrent": "10",
+        "TasksMax": "128",
+        "memory_events": {
+          "oom": 0,
+          "oom_kill": 0
+        },
+        "memory_events_available": true
+      }
+    },
+    "scope": "current point-in-time headroom and cgroup counters; not performance or long-duration qualification"
+  },
+  "member_admission": {
+    "consumed_grant_removed": true,
+    "exact_workload_identity_observed": true,
+    "existing_spire_entries_preserved": true,
+    "explicit_single_use_grant": true,
+    "host": "mako",
+    "initial_grant_expired_unused": true,
+    "observed_at": "2026-09-30T05:17:27.704248Z",
+    "operational_device_state_preserved": true,
+    "positive_control_after_negative": true,
+    "pre_admission_parent_permissions_corrected": true,
+    "same_node_and_key_after_agent_restart": true,
+    "same_operation_continuation": true,
+    "same_user_wrong_unit_no_identity": true,
+    "wrong_unit_result": "bounded-five-second-no-identity"
+  },
+  "migration": {
+    "authority_or_device_key_rotation": false,
+    "import_finalization_verified_before_activation": true,
+    "original_scope_and_deadline_preserved": true,
+    "source_authority_services_fenced": true,
+    "target_policy_guard_passed": true
+  },
+  "observed_at": "2026-09-30T05:19:36.474422Z",
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "profiles": {
+    "ace": {
+      "activation_mode": "test",
+      "active": "/nix/store/jqhncbfidhni7896ds8y74m4k8qnikc5-nixos-system-ace-26.05.20260807.ee48b14",
+      "original_application_pids_preserved": true,
+      "persistent_baseline": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14"
+    },
+    "mako": {
+      "activation_mode": "test",
+      "active": "/nix/store/w3fpk6jc50xmwy76b48ycjhfj6b4iira-nixos-system-mako-26.05.20260807.ee48b14",
+      "original_application_pids_preserved": true,
+      "persistent_baseline": "/nix/store/nf6pj4bqp2gp4j9rf4d23bfgsh6lcbjf-nixos-system-mako-26.05.20260807.ee48b14"
+    }
+  },
+  "remaining_native_gates": [
+    "workload-grant quarantine and exact restoration with fresh request evidence",
+    "actual Malak-disconnected application and DNS observation"
+  ],
+  "roles": {
+    "ace": [
+      "migrated pilot control plane",
+      "SPIRE server and local agent",
+      "DNS controller and primary"
+    ],
+    "mako": [
+      "explicitly admitted SPIRE member",
+      "DNS secondary"
+    ],
+    "malak": [
+      "operator and query client; former authority services fenced"
+    ]
+  },
+  "runtime_pins": {
+    "dns_commit": "67574bb1fe88a60118c680d823ac2ddb7656975b",
+    "fleet_commit": "0bd55c576536c29825aada2f7ce6fa052a877402",
+    "fleet_package": "/nix/store/fxcc0y4h7sz7sa7qil20xm6lwbpwwp63-kaiba-fleet-0.1.0",
+    "spire_version": "1.15.2",
+    "target_policy_guard": "/nix/store/pym28jjza2k3fdpqbinaqi0fmm13xyfa-kaiba-pilot-ace-policy-recovered-20260929"
+  },
+  "schema": "kaiba.ace-mako-lan-observation/v1alpha1",
+  "source_fence": {
+    "authority_tcp_listeners_absent": true,
+    "loaded_fence_conditions_unchanged": true,
+    "observed_at": "2026-09-30T05:03:58.205903Z",
+    "private_fence_bytes_reread": false,
+    "six_authority_units_inactive": true
+  },
+  "status": "bounded-lan-checks-passed",
+  "trust_domain": "pilot.kaiba.pseudo.design"
+}

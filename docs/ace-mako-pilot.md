@@ -9,22 +9,51 @@ Malak disconnected.
 
 The profiles default to disabled. On September 29, both hosts passed native
 builds and temporary test activation with `enable = true`, `activate = false`.
-The new pilot units remain nonrunning, and both persistent boot profiles retain
-their previous baselines. Ace's existing standalone SPIRE identity continues.
-No authority migration, Mako agent admission or native end-to-end acceptance has
-occurred. Malak still holds the live pilot control plane. The earlier bounded
-same-host DNS trial has expired.
+That dormant staging preserved both persistent boot baselines. Mako's same-key
+credential recovery subsequently passed on September 29 local time, preserving
+its identity, key and history with credential revision 2 and one successor.
+Installed-key proof, fresh-process access and access after authority restart
+passed. The source inventory was refreshed, Ace's original prepared keys were
+retained, and policy continuity and transport signing passed without extending
+the deadline. The earlier transport-signing command remains superseded.
 
-The reviewed September 29 inventory confirms the complete source authority.
-Ace's transfer recipient and transport CSR were prepared on encrypted storage;
-its private keys stayed on Ace. Native preflight authenticated Ace, but Mako's
-installed credential expired at `2026-09-28T08:03:32Z`. Its local `verified` phase
-does not establish current admission. Supported same-key recovery must preserve
-Mako's logical identity, instance, key and history before two-host qualification.
-That recovery needs exact Fleet/issuer grants and a new serving-policy baseline,
-followed by fresh migration inventory and transport/target-policy bindings. The
-earlier transport-signing command is superseded; Malak remains serving while the
-read-only recovery preflight is reviewed.
+On September 30 local time, Malak's fenced encrypted export succeeded. Import on
+Ace verified complete content, schema and sequence equivalence for both
+databases, and finalization passed. Ace then passed temporary activation on the
+same boot, preserving its persistent baseline and existing Hydra, regular
+PostgreSQL and SSH processes. Its promoted SPIRE services, imported authorities,
+workload registry, DNS controller, primary and publisher are active. Four Ace
+workload registrations bind exact units and users with the original deadline.
+Authenticated native Reader resolution passed for both retained devices, and
+independent active-binding checks matched device state. Malak's fences remain
+loaded and match the sealed archive.
+
+Both native device endpoint transfers to Ace are accepted. Fresh installed Go
+client access passed with the exact retained bindings and false full-qualification
+status; private backup comparison confirmed only `config.fleet_url` changed.
+The explicit DNS workload grant is accepted with authenticated active-binding
+readback. Ace's updater is healthy, and its assigned address record is
+authoritative on both hosts. Twelve native UDP/TCP queries matched, including
+matching serials; unsigned AXFR was explicitly rejected. Desired, origin and
+observed publication generations agree.
+
+Mako's temporary active profile and SPIRE admission passed. At
+`2026-09-30T05:17:27Z`, acceptance confirmed the same node and key after Agent
+restart with its consumed grant removed. Exact-unit probes succeeded before and
+after a same-user wrong-unit request timed out after 5.057 seconds with no
+identity; this was not an explicit denial response. Existing applications,
+operational device state, the current candidate, persistent baseline and source
+fences were preserved, and the probe timer resumed. The native positive path and
+member restart passed. Broader lifecycle/outage acceptance, persistent deployment
+and hardware qualification remain separate work. The earlier bounded same-host
+DNS trial remains expired.
+The [sanitized native observation](observations/2026-09-30-ace-mako-lan-acceptance.json)
+records these results and their remaining limits.
+
+The pilot policy and temporary workload registrations retain the original
+deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
+The active profiles are temporary test activations; persistent boot baselines
+remain unchanged.
 
 ## Install, then activate
 
@@ -99,7 +128,15 @@ The publisher checks Ace and Mako as distinct endpoints.
    `/srv/kaiba-pilot/workload/config.json` and `registry.env`, plus credentials
    loaded privately from the imported Fleet directory. No private key or live
    database belongs in Git, a Nix derivation, chat or a public build output.
-6. Confirm Mako's current Fleet admission and approve its SPIRE bootstrap grant.
+6. Before issuing a SPIRE bootstrap grant, confirm Mako's current Fleet admission
+   and validate Agent traversal through `/var/lib/kaiba` and
+   `/var/lib/kaiba/identity`. Explicitly set these shared root-owned parents to
+   `0755`: `mkdir(mode=0755)` alone becomes `0700` under umask `0077`.
+   Keep `member-bootstrap` root-owned `0700` and the Agent's private local state
+   `0700`, owned by its service account. Missing traversal must stop preparation
+   before any grant. If a grant has already expired, reconcile its use and actual
+   node/state evidence before considering one explicit successor grant; do not
+   automatically retry admission.
    Provision its trusted bundle at
    `/var/lib/kaiba/identity/member-bootstrap/trust-bundle.pem`, a one-time grant
    at `/run/kaiba-member-admission/join-token`, and only the DNS transfer secret at
@@ -130,10 +167,13 @@ Ace and Mako baselines. This check provides evaluation evidence.
 The [composition receipt](observations/2026-09-29-ace-mako-composition.json)
 records the final published dependency revisions and unchanged baseline paths.
 
-The current Fleet runtime pin is `0bd55c5`, including encrypted export/restore,
+The host's Fleet runtime pin remains `0bd55c5`, including encrypted export/restore,
 restricted registry finalization and an issuer-only callback dial override that
-preserves canonical URLs, TLS identity and all retained scope pins. Its 76
-migration checks pass with real encryption and disposable PG18 clusters. The
+preserves canonical URLs, TLS identity and all retained scope pins. That revision
+passed 76 migration checks with real encryption and disposable PG18 clusters.
+The separately reviewed migration helpers now pass **135 tests with zero skips**,
+including recovered-policy continuity and exact membership/issuer-scope checks
+before fencing. These helper updates do not repin the host runtime. The
 host composition check also passes against this pin and both disabled closures
 still match the persistent baselines. Independent staging evaluation found no
 existing unit that starts a new pilot unit, unchanged application/SPIRE units
@@ -141,7 +181,8 @@ and unchanged existing user/group assignments. Expected staging effects include
 new accounts, firewall/DBus reloads and Ace's empty controller SQLite placeholder;
 there is no authority database initialization.
 The [migration preparation receipt](observations/2026-09-29-migration-preparation.json)
-records this pin and Mako's observed recovery prerequisite.
+records this pin and the recovery prerequisite as observed before Mako's
+subsequently completed recovery.
 
 Native dormant staging then passed on Mako at `2026-09-29T19:31:24Z` and Ace at
 `2026-09-29T19:31:54Z`, using native builds of the reviewed candidates and
@@ -154,25 +195,33 @@ with no main process, and imported authority state was absent. This does not
 mean every service and mount was unchanged: both activations reloaded DBus and
 the firewall; Ace also restarted tmpfiles setup and started
 `boot-firmware.automount`, `boot.mount`, `local-fs.target` and
-`systemd-timedated`. No source export, target import or authority activation
-occurred.
+`systemd-timedated`. That dormant staging did not export source state, import
+target state or activate authorities; the later migration and temporary active
+profile are recorded above.
 
 The DNS dependency has a passing two-host VM covering real AXFR/NOTIFY, updates,
 credential/source separation, outages, journal recovery and missing imported
 credentials. The Fleet dependency passed its eight-group imported-authority VM,
 including authenticated memberships, restart, and policy withdrawal/expiry with
-synthetic state. These checks do not establish source
-export consistency or native migration.
+synthetic state. These software checks are separate from the native verified
+export/import. Ace's immutable target policy guard and import guard passed on
+the restored state before its imported authority services started.
 
-Native acceptance still requires authenticated current admission and denial,
-renewal with preserved issuer/scope/history, exact workload identity and wrong-unit
-denial, real update publication and queries on Mako, service restart, and normal
-operation while Malak is disconnected. Mako's added Agent and replica each have
-`MemoryHigh = 128M`, `MemoryMax = 256M` and `TasksMax = 128`; verify headroom while
-its existing applications remain healthy.
+Remaining native acceptance covers authorization denial and revocation/replacement,
+renewal with preserved issuer/scope/history, authority and replica outages with
+fail-closed updates and replication recovery, and normal device, renewal and DNS
+operation while Malak is disconnected. The completed positive path, exact-unit
+probe, bounded wrong-unit observation, member restart and replica queries do not
+substitute for these checks. Mako's added Agent and replica each have
+`MemoryHigh = 128M`, `MemoryMax = 256M` and `TasksMax = 128`. The native sample
+reported approximately 753.5 MiB available, 17.4 MB for the Agent and 13.3 MB for
+the replica, with no OOM events and existing applications preserved. Longer
+duration and outage/load observations remain outstanding.
 
-After a successful runtime activation and acceptance, verify persistent
-configuration and controlled warm reboot separately. Cold/offline boot, clock policy and hardware
+Within the unchanged `2026-10-03T02:06:35Z` deadline, complete native acceptance
+before separately verifying persistent configuration and controlled warm reboot.
+Public authority/delegation and outside-LAN DNS checks remain separate from this
+LAN profile. Cold/offline boot, clock policy and hardware
 rollback/recovery qualification remain separate work. Existing boot, firmware,
 OTP/TPM, encrypted storage layout, Hydra, PostgreSQL, human identity, SSH CA and
 backup services must retain their reviewed behavior.
