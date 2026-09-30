@@ -50,6 +50,21 @@ let
         }
       ];
     }).config;
+  # A real store dependency is required so the exact reviewed guard and its
+  # closure survive system-profile GC. This denying script is evaluation-only.
+  profileGuard = pkgs.writeShellScript "pilot-profile-evaluation-only-deny" "exit 1";
+  profiles = import ../deploy/pilot-profiles.nix {
+    inherit hosts;
+    policyGuard = profileGuard;
+    guardAdmittedMember = true;
+  };
+  missingGuardContext = builtins.tryEval (
+    import ../deploy/pilot-profiles.nix {
+      inherit hosts;
+      policyGuard = "/nix/store/00000000000000000000000000000000-contextless-guard";
+      guardAdmittedMember = true;
+    }
+  );
   valid = c: lib.all (entry: entry.assertion) c.assertions;
   unchangedUnit =
     before: after: name:
@@ -67,6 +82,39 @@ let
     }).config;
 in
 assert !aceBase.kaiba.pilotServer.enable && !makoBase.kaiba.pilotAgent.enable;
+assert !missingGuardContext.success;
+assert profiles.configurations.ace.config.kaiba.pilotServer.activate;
+assert profiles.configurations.mako.config.kaiba.pilotAgent.admittedState.enable;
+assert lib.any (
+  command: lib.hasPrefix "+" command && lib.hasInfix "member-identity-guard.py" command
+) profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.ExecStartPre;
+assert
+  profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.TimeoutStartSec
+  == 90;
+assert
+  profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.TimeoutStartFailureMode
+  == "kill";
+assert
+  profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.KillMode
+  == "control-group";
+assert profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.SendSIGKILL;
+assert
+  builtins.length profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.ExecStartPost
+  == 1;
+assert !mako.kaiba.pilotAgent.admittedState.enable;
+assert profiles.configurations.mako.config.kaiba.pilotAgent.activate;
+assert profiles.configurations.ace.config.services.kaiba.pilotControlPlane.autoStart;
+assert lib.elem "multi-user.target"
+  profiles.configurations.ace.config.systemd.targets.kaiba-pilot-control-plane.wantedBy;
+assert lib.elem "systemd-time-wait-sync.service"
+  profiles.configurations.ace.config.systemd.services.kaiba-pilot-storage-guard.after;
+assert lib.elem "timers.target"
+  profiles.configurations.mako.config.systemd.timers.kaiba-member-identity-probe.wantedBy;
+assert
+  profiles.configurations.mako.config.services.kaiba.identity.trustBundleFile
+  == "/var/lib/kaiba/identity/member-bootstrap/trust-bundle.pem";
+assert
+  profiles.configurations.mako.config.services.spire.agent.settings.agent.rebootstrap_mode == "never";
 assert valid ace && valid mako;
 assert valid stagedAce && valid stagedMako;
 assert stagedAce.services.kaiba.identity.role == "standalone";
@@ -159,6 +207,6 @@ assert mako.systemd.services.kaiba-lan-secondary.serviceConfig.MemoryMax == "256
 pkgs.runCommand "kaiba-two-host-composition" { } ''
   mkdir -p "$out"
   cat > "$out/report.json" <<'EOF'
-  {"schema_version":"kaiba.two-host-composition-check/v1alpha1","passed":true,"evaluation_only":true,"live_cutover":false,"checks":["disabled-defaults","staging-always-denies-authority","staging-does-not-autostart","activation-requires-policy","mutually-exclusive-trial-profile","preserved-owner-identity","no-member-authority","current-admission-dependencies","distinct-issuer-and-dns-ports","real-remote-secondary","private-listeners-and-source-firewall","explicit-operator-grants","existing-applications-and-storage-preserved","member-memory-limits"]}
+  {"schema_version":"kaiba.two-host-composition-check/v1alpha1","passed":true,"evaluation_only":true,"live_cutover":false,"checks":["disabled-defaults","staging-always-denies-authority","staging-does-not-autostart","activation-requires-policy","mutually-exclusive-trial-profile","preserved-owner-identity","no-member-authority","current-admission-dependencies","distinct-issuer-and-dns-ports","real-remote-secondary","private-listeners-and-source-firewall","explicit-operator-grants","existing-applications-and-storage-preserved","member-memory-limits","explicit-active-profile-builder","guard-reference-context","online-boot-time-guard","persisted-member-bundle-no-rebootstrap"]}
   EOF
 ''

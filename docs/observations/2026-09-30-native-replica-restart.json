@@ -1,0 +1,98 @@
+{
+  "checks": {
+    "assignment_and_generations_unchanged": true,
+    "both_endpoints_restored": true,
+    "both_guards_armed_before_mutation": true,
+    "both_supervisors_inactive_success": true,
+    "clock_and_timeline_validated": true,
+    "controller_intent_converged": true,
+    "credential_bytes_and_scope_unchanged": true,
+    "credential_units_not_restarted": true,
+    "device_state_unchanged": true,
+    "grant_active_revision_three": true,
+    "no_grant_or_key_changes": true,
+    "no_new_publication": true,
+    "original_applications_unchanged": true,
+    "profiles_and_boot_unchanged": true,
+    "retained_state_identity_unchanged": true,
+    "source_fence_unchanged": true
+  },
+  "limits": {
+    "full_qualification": false,
+    "new_publication_catchup_tested": false,
+    "offline_recovery_tested": false,
+    "physical_reboot_tested": false,
+    "spire_or_database_outage_tested": false,
+    "workstation_disconnected": false
+  },
+  "observed_at": "2026-09-30T06:42:28.564319Z",
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "primary_absence": {
+    "listener_absence_confirmed": true,
+    "sampled_local_absence": true,
+    "since": "2026-09-30T06:42:02.424656Z",
+    "until": "2026-09-30T06:42:04.932162Z"
+  },
+  "primary_host": "ace",
+  "replica": {
+    "new_process_and_invocation": true,
+    "new_started_at": "2026-09-30T06:42:03.726281Z",
+    "queries_completed_at": "2026-09-30T06:42:04.057558Z",
+    "restart_requested_at": "2026-09-30T06:42:03.613920Z",
+    "retained_answers": {
+      "tcp-A": [
+        [
+          "pi-001.pilot.kaiba.pseudo.design.",
+          "A",
+          [
+            "192.168.8.214"
+          ]
+        ]
+      ],
+      "tcp-AAAA": [],
+      "tcp-SOA": [
+        [
+          "pilot.kaiba.pseudo.design.",
+          "SOA",
+          [
+            "ns-primary.pilot.kaiba.pseudo.design.",
+            "hostmaster.pilot.kaiba.pseudo.design.",
+            "2",
+            "300",
+            "5",
+            "3600",
+            "60"
+          ]
+        ]
+      ],
+      "udp-A": [
+        [
+          "pi-001.pilot.kaiba.pseudo.design.",
+          "A",
+          [
+            "192.168.8.214"
+          ]
+        ]
+      ],
+      "udp-AAAA": [],
+      "udp-SOA": [
+        [
+          "pilot.kaiba.pseudo.design.",
+          "SOA",
+          [
+            "ns-primary.pilot.kaiba.pseudo.design.",
+            "hostmaster.pilot.kaiba.pseudo.design.",
+            "2",
+            "300",
+            "5",
+            "3600",
+            "60"
+          ]
+        ]
+      ]
+    }
+  },
+  "replica_host": "mako",
+  "schema": "kaiba.native-replica-retained-restart/v1alpha1",
+  "status": "passed"
+}

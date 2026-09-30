@@ -72,10 +72,33 @@ original applications and profiles were preserved. This does not cover
 SPIRE/database outages, replica restart while the primary is absent, or timed
 catch-up from new publication.
 
+The later [retained-replica restart](observations/2026-09-30-native-replica-restart.json)
+passed at `2026-09-30T06:42:28Z`: Mako started a new replica process while Ace's
+primary was stopped, then served the same authoritative A/AAAA/SOA answers over
+UDP/TCP. Independent restoration guards were armed on both hosts before the
+service changes. Fresh primary-stopped observations bracketed the queries and
+agreed with the primary's local absence samples. Both supervisors completed
+successfully, services recovered, and credentials, device state, applications,
+profiles and active revision-3 grant were preserved. This covers retained state
+through a brief restart, not timed catch-up from a new publication.
+
+[Passive identity observations](observations/2026-09-30-native-identity-observations.json)
+confirmed Mako's node identity renewed beyond its earlier certificate expiry,
+with its current cached trust bundle. Its existing exact-unit probe obtained a
+different current workload certificate after the earlier certificate expired.
+Ace's fresh exact-unit fetch passed, but rotation was not observed during that
+sampling interval. No service was restarted for these observations; Fleet device
+credentials/state remained unchanged. Same-process workload rotation and Fleet
+operational-credential renewal remain separate checks.
+
 The pilot policy and temporary workload registrations retain the original
 deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
 The active profiles are temporary test activations; persistent boot baselines
 remain unchanged.
+The [persistence preparation](ace-mako-persistence.md) records exact profile
+construction, protected boot rehearsal and the separate admitted-member startup
+guard required before selecting a new persistent Mako candidate. No reboot is
+part of that preparation.
 
 ## Install, then activate
 
@@ -230,8 +253,8 @@ export/import. Ace's immutable target policy guard and import guard passed on
 the restored state before its imported authority services started.
 
 Remaining native acceptance covers membership revocation and instance replacement,
-renewal with preserved issuer/scope/history, SPIRE/database outages, replica
-restart without the primary and timed catch-up from new publication, and normal
+renewal with preserved issuer/scope/history, SPIRE/database outages,
+timed catch-up from new publication, and normal
 device, renewal and DNS operation while Malak is disconnected. The completed
 positive path, exact-unit probe, bounded wrong-unit observation, member restart
 and replica queries do not
@@ -249,3 +272,8 @@ LAN profile. Cold/offline boot, clock policy and hardware
 rollback/recovery qualification remain separate work. Existing boot, firmware,
 OTP/TPM, encrypted storage layout, Hydra, PostgreSQL, human identity, SSH CA and
 backup services must retain their reviewed behavior.
+
+The owner currently has no physical access. Do not reboot, power-cycle or
+disconnect networking for qualification until console and recovery access are
+available. Remote service checks and protected persistence preparation continue
+without claiming those physical observations.

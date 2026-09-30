@@ -98,6 +98,19 @@
         kaiba-pilot-device = import ./tests/kaiba-pilot-device.nix {
           pkgs = import nixpkgs { inherit system; };
         };
+        member-identity-guard =
+          let
+            pkgs = import nixpkgs { inherit system; };
+            python = pkgs.python3.withPackages (p: [ p.cryptography ]);
+          in
+          pkgs.runCommand "kaiba-member-identity-guard-tests" { nativeBuildInputs = [ python ]; } ''
+            cp -r ${./hosts/mako} host
+            cp ${./tests/member_identity_guard_test.py} member_identity_guard_test.py
+            export KAIBA_MEMBER_GUARD="$PWD/host/member-identity-guard.py"
+            python3 -B -m unittest discover -s . -p 'member_identity_guard_test.py' -v
+            mkdir -p "$out"
+            echo 'read-only admitted state guard fixture checks passed' > "$out/result"
+          '';
         pilot-two-host = import ./tests/pilot-two-host.nix {
           pkgs = import nixpkgs { inherit system; };
           hosts = self.nixosConfigurations;
