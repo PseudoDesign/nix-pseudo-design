@@ -111,6 +111,10 @@
             mkdir -p "$out"
             echo 'read-only admitted state guard fixture checks passed' > "$out/result"
           '';
+        rpi-tmpfiles = import ./tests/rpi-tmpfiles.nix {
+          pkgs = import nixpkgs { inherit system; };
+          hosts = self.nixosConfigurations;
+        };
         pilot-two-host = import ./tests/pilot-two-host.nix {
           pkgs = import nixpkgs { inherit system; };
           hosts = self.nixosConfigurations;
