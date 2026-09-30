@@ -1,0 +1,60 @@
+{
+  "evidence_handling": {
+    "additive_observation": true,
+    "initial_and_quarantine_receipts_unchanged": true,
+    "private_identifiers_bindings_process_ids_paths_and_secrets_omitted": true
+  },
+  "observation_date": "2026-09-30",
+  "preserved": {
+    "active_and_persistent_profiles": true,
+    "all_six_source_authority_fences": true,
+    "existing_host_applications": true,
+    "grant_identity_assignment_and_permissions_unchanged": true,
+    "grant_revision": 3,
+    "grant_state": "active",
+    "source_authority_listeners_absent": true
+  },
+  "primary_dns_gate": {
+    "authorities_agree_after_restoration": true,
+    "live_intent_publication_converged_after_restoration": true,
+    "observation_interval_utc": {
+      "accepted": "2026-09-30T05:55:48.779358Z",
+      "after": "2026-09-30T05:56:31.153626Z",
+      "before": "2026-09-30T05:55:44.543066Z",
+      "outage_confirmed": "2026-09-30T05:55:47.840341Z",
+      "restoration_confirmed": "2026-09-30T05:55:48.777864Z"
+    },
+    "primary_confirmed_inactive": true,
+    "primary_restored": true,
+    "replica_retained_A_AAAA_SOA_verified_over_udp_and_tcp_during_outage": true
+  },
+  "qualification_limits": {
+    "database_outage_tested": false,
+    "full_qualification_completed": false,
+    "hardware_qualification_completed": false,
+    "offline_or_rollback_protection_qualified": false,
+    "persistent_deployment_qualified": false,
+    "physical_reboot_tested": false,
+    "replica_catch_up_during_new_publication_tested": false,
+    "replica_restart_tested": false,
+    "scope": "bounded service tests only",
+    "spire_outage_tested": false,
+    "workstation_disconnection_tested": false
+  },
+  "registry_gate": {
+    "all_nine_desired_intent_fields_unchanged_while_denied": true,
+    "fresh_actual_updater_http503_authorization_unavailable": true,
+    "fresh_registry_response_and_accepted_lease_after_resume": true,
+    "method": "brief pause and resume of the existing registry process",
+    "observation_interval_utc": {
+      "accepted": "2026-09-30T05:54:49.599253Z",
+      "after": "2026-09-30T05:55:27.032357Z",
+      "before": "2026-09-30T05:54:39.626594Z",
+      "outage_confirmed": "2026-09-30T05:54:48.242805Z",
+      "restoration_confirmed": "2026-09-30T05:54:49.597539Z"
+    },
+    "same_registry_process_resumed": true
+  },
+  "schema": "kaiba.native-service-outage-observation/v1alpha1",
+  "status": "passed"
+}

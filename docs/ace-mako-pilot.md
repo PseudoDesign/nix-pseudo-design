@@ -50,6 +50,28 @@ DNS trial remains expired.
 The [sanitized native observation](observations/2026-09-30-ace-mako-lan-acceptance.json)
 records these results and their remaining limits.
 
+The subsequent native workload-grant check passed: active revision 1 became
+quarantined revision 2, then returned to active revision 3 on the same binding.
+A fresh request from the actual updater received HTTP 403 during quarantine;
+the complete intent tuple, including lease and `updated_at`, stayed unchanged.
+Restoration allowed a fresh accepted lease. Both authoritative DNS endpoints,
+Malak's source fence and original applications were preserved. This is
+fresh-request enforcement evidence, not a reused-TLS-connection check.
+The [additive grant observation](observations/2026-09-30-native-workload-quarantine.json)
+records this later gate without changing the initial acceptance receipt.
+
+Two [bounded native service-outage checks](observations/2026-09-30-native-service-outages.json)
+then passed. The existing registry process was paused and resumed: a fresh actual
+updater request received HTTP 503 `authorization_unavailable` while all nine
+intent fields stayed unchanged, then authenticated registry access and a newer
+accepted lease succeeded after resume. Separately, only `kaiba-lan-primary` was
+stopped; Mako retained authoritative A/AAAA/SOA answers over UDP/TCP. Primary
+restart restored matching endpoints and converged controller intent. Both check
+units ended inactive with successful status; grant revision 3, source fencing,
+original applications and profiles were preserved. This does not cover
+SPIRE/database outages, replica restart while the primary is absent, or timed
+catch-up from new publication.
+
 The pilot policy and temporary workload registrations retain the original
 deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
 The active profiles are temporary test activations; persistent boot baselines
@@ -207,16 +229,18 @@ synthetic state. These software checks are separate from the native verified
 export/import. Ace's immutable target policy guard and import guard passed on
 the restored state before its imported authority services started.
 
-Remaining native acceptance covers authorization denial and revocation/replacement,
-renewal with preserved issuer/scope/history, authority and replica outages with
-fail-closed updates and replication recovery, and normal device, renewal and DNS
-operation while Malak is disconnected. The completed positive path, exact-unit
-probe, bounded wrong-unit observation, member restart and replica queries do not
-substitute for these checks. Mako's added Agent and replica each have
+Remaining native acceptance covers membership revocation and instance replacement,
+renewal with preserved issuer/scope/history, SPIRE/database outages, replica
+restart without the primary and timed catch-up from new publication, and normal
+device, renewal and DNS operation while Malak is disconnected. The completed
+positive path, exact-unit probe, bounded wrong-unit observation, member restart
+and replica queries do not
+substitute for these checks; neither does the completed workload-grant quarantine
+and restoration. Mako's added Agent and replica each have
 `MemoryHigh = 128M`, `MemoryMax = 256M` and `TasksMax = 128`. The native sample
 reported approximately 753.5 MiB available, 17.4 MB for the Agent and 13.3 MB for
 the replica, with no OOM events and existing applications preserved. Longer
-duration and outage/load observations remain outstanding.
+duration, remaining outage scenarios and load observations remain outstanding.
 
 Within the unchanged `2026-10-03T02:06:35Z` deadline, complete native acceptance
 before separately verifying persistent configuration and controlled warm reboot.
