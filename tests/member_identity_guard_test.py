@@ -70,7 +70,7 @@ class MemberGuardTests(unittest.TestCase):
         self.leaf=leaf(self.key,self.ca,self.ca_key)
         self.config={'host':'mako','trust_domain':DOMAIN,'server_address':'192.168.8.214',
             'server_port':8081,'state_directory':'/var/lib/kaiba/identity/local',
-            'receipt_file':'/var/lib/kaiba/identity/member-bootstrap/admitted.json',
+            'receipt_file':'/var/lib/kaiba/identity/member-bootstrap/admitted-startup.json',
             'join_token_file':'/run/kaiba-member-admission/join-token',
             'timedatectl':'/run/current-system/sw/bin/timedatectl',
             'not_after':'2026-10-03T02:06:35Z'}
@@ -167,7 +167,7 @@ class MemberGuardTests(unittest.TestCase):
             hard=base/'hard';os.link(p,hard)
             with self.assertRaises(ValueError):guard.private_read(p,os.getuid())
 
-    def test_inspect_failure_preserves_actual_files_and_never_invokes_commands(self):
+    def test_inspect_preserves_both_receipts_and_actual_state_without_commands(self):
         # Only synthetic temporary files. Root/daemon ownership is mapped to the
         # current test UID; production ownership remains enforced by the helper.
         class Clock(dt.datetime):
@@ -177,12 +177,16 @@ class MemberGuardTests(unittest.TestCase):
             base=Path(directory);state=base/'local';keysdir=state/'keys';receipt_dir=base/'bootstrap'
             state.mkdir(mode=0o700);keysdir.mkdir(mode=0o700);receipt_dir.mkdir(mode=0o700)
             config=copy.deepcopy(self.config);config['state_directory']=str(state)
-            config['receipt_file']=str(receipt_dir/'admitted.json');config['join_token_file']=str(base/'absent-token')
+            config['receipt_file']=str(receipt_dir/'admitted-startup.json');config['join_token_file']=str(base/'absent-token')
             receipt=copy.deepcopy(self.receipt);receipt['state_directory']=str(state)
             cachepath=state/'agent-data.json';keypath=keysdir/'keys.json';receiptpath=Path(config['receipt_file'])
             def save(path,value):
                 path.write_text(json.dumps(value));path.chmod(0o600)
             save(cachepath,self.cache);save(keypath,self.keys);save(receiptpath,receipt)
+            original_receipt=receipt_dir/'admitted.json'
+            save(original_receipt,{'parent_alias':'spiffe://'+DOMAIN+'/node/synthetic/member',
+                'agent_uri_sha256':self.receipt['node_id_sha256'],'authority_verified':True})
+            original_bytes=original_receipt.read_bytes()
             expired=copy.deepcopy(self.cache)
             expired['svid']=[pem(leaf(self.key,self.ca,self.ca_key,after=NOW-dt.timedelta(seconds=1)))]
             original_read=guard.private_read
@@ -194,7 +198,7 @@ class MemberGuardTests(unittest.TestCase):
                 self.assertIn(uid,(0,os.getuid()))
                 guard.need(stat.S_ISDIR(metadata.st_mode) and not stat.S_ISLNK(metadata.st_mode)
                     and metadata.st_uid==os.getuid() and stat.S_IMODE(metadata.st_mode)==mode,'test-directory')
-            def snapshot():return {str(p):p.read_bytes() for p in (cachepath,keypath,receiptpath)}
+            def snapshot():return {str(p):p.read_bytes() for p in (cachepath,keypath,receiptpath,original_receipt)}
             with mock.patch.object(guard.socket,'gethostname',return_value='mako'), \
                  mock.patch.object(guard.pwd,'getpwnam',return_value=types.SimpleNamespace(pw_uid=os.getuid())), \
                  mock.patch.object(guard,'directory',side_effect=checked_directory), \
@@ -202,12 +206,18 @@ class MemberGuardTests(unittest.TestCase):
                  mock.patch.object(guard.dt,'datetime',Clock), \
                  mock.patch.object(guard.subprocess,'run',side_effect=AssertionError('no commands during inspect')):
                 before=snapshot();self.assertEqual(guard.inspect(config)['status'],'passed');self.assertEqual(before,snapshot())
+                # The historical receipt coexists untouched; it cannot satisfy
+                # the separate startup guard if its dedicated receipt is lost.
+                receiptpath.unlink()
+                with self.assertRaises(OSError):guard.inspect(config)
+                self.assertFalse(receiptpath.exists());self.assertEqual(original_receipt.read_bytes(),original_bytes)
+                save(receiptpath,receipt)
                 save(cachepath,expired);before=snapshot()
                 with self.assertRaises(ValueError):guard.inspect(config)
                 self.assertEqual(before,snapshot())
-                save(cachepath,self.cache);keypath.unlink();before=snapshot() if keypath.exists() else {str(p):p.read_bytes() for p in (cachepath,receiptpath)}
+                save(cachepath,self.cache);keypath.unlink();before=snapshot() if keypath.exists() else {str(p):p.read_bytes() for p in (cachepath,receiptpath,original_receipt)}
                 with self.assertRaises(OSError):guard.inspect(config)
-                self.assertFalse(keypath.exists());self.assertEqual(before,{str(p):p.read_bytes() for p in (cachepath,receiptpath)})
+                self.assertFalse(keypath.exists());self.assertEqual(before,{str(p):p.read_bytes() for p in (cachepath,receiptpath,original_receipt)})
                 save(keypath,self.keys);Path(config['join_token_file']).write_bytes(b'synthetic-not-a-grant')
                 before=snapshot()
                 with self.assertRaisesRegex(ValueError,'unexpected-admission-grant'):guard.inspect(config)

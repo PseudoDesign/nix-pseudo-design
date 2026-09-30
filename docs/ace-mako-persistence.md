@@ -47,13 +47,23 @@ review and temporarily test that new candidate before choosing it as persistent.
 The false setting is retained for explicit bootstrap and historical comparison;
 it is not the selected admitted persistence mode.
 
+The corrected guarded candidate
+`/nix/store/k5xi0bjwxfqm4nzgpm43k8ijam1n2j9w-nixos-system-mako-26.05.20260807.ee48b14`
+built natively and passed temporary activation at `2026-09-30T07:07:29Z`.
+The [native startup observation](observations/2026-09-30-mako-startup-guard.json)
+records successful pre-start validation, Workload API readiness, a new Agent
+invocation, a fresh exact-unit identity probe and authenticated installed-client
+access. The same admitted node, original admission receipt, device state,
+applications and running DNS replica were preserved. Its persistent selection
+was unchanged by that test.
+
 ## Already-admitted Mako startup
 
 `kaiba.pilotAgent.admittedState.enable` defaults to false, preserving the explicit
 initial admission workflow. The persistence profile explicitly sets it true.
 Before SPIRE starts, a root read-only guard requires:
 
-- an existing root-private `member-bootstrap/admitted.json` receipt matching host,
+- an existing root-private `member-bootstrap/admitted-startup.json` receipt matching host,
   trust domain, server address/port, local state directory and original deadline;
 - the receipt's digest of the previously verified node URI, without publishing
   that internal URI in Nix, logs or documentation;
@@ -69,6 +79,10 @@ current private state; activation never creates it. Missing, expired or
 mismatched state fails before the SPIRE process can generate or replace a key.
 The guard does not recover state, extend admission, issue a grant or edit files.
 Its parser is explicitly tied to SPIRE1.15.2; an upgrade needs a format review.
+The historical `member-bootstrap/admitted.json` remains a separate, unchanged
+admission record. Startup uses `admitted-startup.json`; a missing startup receipt
+does not fall back to or replace the historical one. Native preparation verified
+the historical authority-confirmed node before creating the new receipt.
 
 The cached node leaf must have **more than 120 seconds** remaining at validation.
 Systemd bounds each pre-start and readiness phase to 90 seconds. The guard

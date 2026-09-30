@@ -1,0 +1,27 @@
+{
+  "candidate": "/nix/store/k5xi0bjwxfqm4nzgpm43k8ijam1n2j9w-nixos-system-mako-26.05.20260807.ee48b14",
+  "fresh_device_self": {
+    "binding_matches": true,
+    "full_qualification": false,
+    "passed": true
+  },
+  "fresh_exact_unit_probe_passed": true,
+  "full_qualification": false,
+  "guard_passed": true,
+  "host": "mako",
+  "host_rebooted": false,
+  "new_agent_invocation": true,
+  "new_join_grant_issued": false,
+  "observed_at": "2026-09-30T07:07:29.643837Z",
+  "operational_device_state_unchanged": true,
+  "original_admission_receipt_preserved": true,
+  "original_applications_and_replica_unchanged": true,
+  "persistent_profile_unchanged": true,
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "pre_start_guard_and_post_start_healthcheck_passed": true,
+  "private_state_exported": false,
+  "schema": "kaiba.native-member-startup-guard/v1alpha1",
+  "stable_admitted_node_preserved": true,
+  "status": "passed",
+  "test_activated": true
+}

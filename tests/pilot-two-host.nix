@@ -85,6 +85,9 @@ assert !aceBase.kaiba.pilotServer.enable && !makoBase.kaiba.pilotAgent.enable;
 assert !missingGuardContext.success;
 assert profiles.configurations.ace.config.kaiba.pilotServer.activate;
 assert profiles.configurations.mako.config.kaiba.pilotAgent.admittedState.enable;
+assert
+  profiles.configurations.mako.config.kaiba.pilotAgent.admittedState.receiptFile
+  == "/var/lib/kaiba/identity/member-bootstrap/admitted-startup.json";
 assert lib.any (
   command: lib.hasPrefix "+" command && lib.hasInfix "member-identity-guard.py" command
 ) profiles.configurations.mako.config.systemd.services.spire-agent.serviceConfig.ExecStartPre;
