@@ -281,8 +281,12 @@ rollback/recovery qualification remain separate work. Existing boot, firmware,
 OTP/TPM, encrypted storage layout, Hydra, PostgreSQL, human identity, SSH CA and
 backup services must retain their reviewed behavior.
 
-The owner has confirmed physical recovery access at all three hosts. Independent
-samplers and their connected rehearsal are being prepared for an attended Malak
-disconnection spanning the longest workload TTL. A separately supervised,
-once-only updater restart will test a fresh update after that TTL; it is not
-ordinary six-hour periodic updater renewal. No disconnected result is claimed.
+The owner has confirmed physical recovery access at all three hosts. Both
+independent samplers passed the read-only
+[connected rehearsal](observations/2026-09-30-connected-collector-rehearsal.json), with Malak connected
+and no updater timer armed. OOM observations use Ace's unchanged kernel-global
+counter and Mako's unchanged per-cgroup counters; Ace has no per-cgroup memory
+controller. The attended 75-minute disconnection remains pending. One separately
+supervised updater restart will test a fresh update beyond the longest workload
+TTL; it is not ordinary six-hour periodic updater renewal. No disconnected result
+is claimed.

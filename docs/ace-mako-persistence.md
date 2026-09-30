@@ -312,10 +312,21 @@ service PIDs, invocation IDs and unit contents. Ace's return was observed.
 This establishes sampled replica continuity during the controlled reboot, not
 continuous availability at every instant or a second replica restart.
 
-Malak remained connected during these warm reboots. The separately prepared
-attended disconnection and connected rehearsal have no accepted disconnected
-result yet. Cold/offline boot, power loss, rollback and physical recovery
-qualification remain open; the original `2026-10-03T02:06:35Z` deadline is unchanged.
+Malak remained connected during these warm reboots. The subsequent
+[connected sampler rehearsal](observations/2026-09-30-connected-collector-rehearsal.json) passed with
+11 complete Ace samples and 10 Mako samples, with zero failures. The longest
+samples took 683.5 ms and 409.44 ms respectively; maximum sample gaps were
+30.008 and 30.006 seconds. Installed-client, identity-probe, DNS and protected-state
+checks passed; no updater timer was armed.
+Ace's OOM evidence is the unchanged kernel-global `oom_kill` counter because its
+kernel lacks the memory cgroup controller. Mako uses unchanged per-cgroup
+`memory.events` counters. Neither source is silently substituted for the other.
+
+The packet passed 68 focused software tests, including client-lock ordering and
+sample/action coordination. The actual attended 75-minute disconnection and fresh
+update beyond the longest workload TTL remain pending. Cold/offline boot, power
+loss, rollback and physical recovery qualification remain open; the original
+`2026-10-03T02:06:35Z` deadline is unchanged.
 
 ## Checks
 
