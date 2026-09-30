@@ -70,6 +70,10 @@ let
     before: after: name:
     before.systemd.units."${name}.service".text == after.systemd.units."${name}.service".text;
   guarded = name: lib.elem "kaiba-pilot-import-guard.service" ace.systemd.services.${name}.bindsTo;
+  follows =
+    service: dependency:
+    lib.elem dependency ace.systemd.services.${service}.requires
+    && lib.elem dependency ace.systemd.services.${service}.after;
   conflicts =
     (hosts.ace.extendModules {
       modules = [
@@ -111,6 +115,20 @@ assert lib.elem "multi-user.target"
   profiles.configurations.ace.config.systemd.targets.kaiba-pilot-control-plane.wantedBy;
 assert lib.elem "systemd-time-wait-sync.service"
   profiles.configurations.ace.config.systemd.services.kaiba-pilot-storage-guard.after;
+assert lib.elem "systemd-time-wait-sync.service" ace.systemd.additionalUpstreamSystemUnits;
+assert !(lib.elem "systemd-time-wait-sync.service" ace.systemd.suppressedSystemUnits);
+assert !(lib.elem "systemd-time-wait-sync.service" aceBase.systemd.additionalUpstreamSystemUnits);
+assert !(lib.elem "systemd-time-wait-sync.service" stagedAce.systemd.additionalUpstreamSystemUnits);
+assert lib.elem "systemd-time-wait-sync.service"
+  ace.systemd.services.kaiba-pilot-storage-guard.wants;
+assert follows "kaiba-pilot-postgres" "kaiba-pilot-storage-guard.service";
+assert follows "kaiba-pilot-import-guard" "kaiba-pilot-postgres.service";
+assert lib.all (name: follows name "kaiba-pilot-import-guard.service") [
+  "kaiba-pilot-observation"
+  "kaiba-pilot-admission"
+  "kaiba-pilot-issuer"
+  "kaiba-pilot-fleet"
+];
 assert lib.elem "timers.target"
   profiles.configurations.mako.config.systemd.timers.kaiba-member-identity-probe.wantedBy;
 assert

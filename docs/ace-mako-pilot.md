@@ -45,7 +45,8 @@ identity; this was not an explicit denial response. Existing applications,
 operational device state, the current candidate, persistent baseline and source
 fences were preserved, and the probe timer resumed. The native positive path and
 member restart passed. Remaining acceptance covers broader lifecycle/outage
-checks, startup from the installed profiles and hardware qualification. The
+checks and hardware qualification. The later warm-reboot observations below
+cover startup from the installed profiles. The
 earlier bounded same-host DNS trial remains expired.
 The [sanitized native observation](observations/2026-09-30-ace-mako-lan-acceptance.json)
 records these results and their remaining limits.
@@ -94,11 +95,16 @@ operational-credential renewal remain separate checks.
 The pilot policy and temporary workload registrations retain the original
 deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
 After temporary activation and encrypted boot rehearsals, both tested profiles
-were installed persistently: Ace generation 11 and guarded Mako generation 15.
-Boot files and retained recovery entries were verified, with unchanged running
-applications, admission and device state. Fresh LAN DNS and source-fence checks
-passed. The [persistence record](ace-mako-persistence.md) links the dated evidence.
-Neither host was rebooted; startup acceptance waits for physical recovery access.
+were installed persistently. The owner then confirmed physical recovery access,
+and both controlled warm reboots passed: Ace now runs generation 12 and Mako
+generation 15. Ace includes the upstream clock waiter before storage validation,
+private PostgreSQL, import validation and authority startup. Post-boot checks
+included fresh exact-unit probes and preserved admitted identities, device state
+and existing applications. Mako's
+retained DNS answers passed in nine Ace-unavailable-bracketed query rounds during
+Ace's reboot. The [persistence record](ace-mako-persistence.md) links the dated
+installation and later startup evidence. Workstation disconnection remains
+pending; these warm reboots do not establish hardware/offline qualification.
 
 ## Install, then activate
 
@@ -266,15 +272,17 @@ the replica, with no OOM events and existing applications preserved. Longer
 duration, remaining outage scenarios and load observations remain outstanding.
 
 Within the unchanged `2026-10-03T02:06:35Z` deadline, complete the remaining native
-acceptance checks. Persistent profile and boot-file installation passed; verify
-controlled warm reboot separately when physical recovery access is available.
+acceptance checks. Persistent profile installation and controlled warm reboot
+passed for both hosts; attended workstation disconnection is the next prepared
+independence check.
 Public authority/delegation and outside-LAN DNS checks remain separate from this
 LAN profile. Cold/offline boot, clock policy and hardware
 rollback/recovery qualification remain separate work. Existing boot, firmware,
 OTP/TPM, encrypted storage layout, Hydra, PostgreSQL, human identity, SSH CA and
 backup services must retain their reviewed behavior.
 
-The owner currently has no physical access. Do not reboot, power-cycle or
-disconnect networking for qualification until console and recovery access are
-available. Remote service checks and boot-only persistence completed without
-claiming those physical observations.
+The owner has confirmed physical recovery access at all three hosts. Independent
+samplers and their connected rehearsal are being prepared for an attended Malak
+disconnection spanning the longest workload TTL. A separately supervised,
+once-only updater restart will test a fresh update after that TTL; it is not
+ordinary six-hour periodic updater renewal. No disconnected result is claimed.

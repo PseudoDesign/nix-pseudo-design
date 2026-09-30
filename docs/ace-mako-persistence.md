@@ -1,13 +1,15 @@
 # Persistent Ace/Mako pilot profiles
 
-The September 30 LAN, workload-grant and bounded service-outage checks passed on
-temporary profiles. Ace subsequently completed a verified boot-only installation
-as generation 11; Mako's guarded candidate completed boot-only installation as
-generation 15 after native activation and its encrypted rehearsal. Neither host
-was rebooted. There is currently no physical recovery access. Repository evaluation alone does not
-install a profile, create private admission state or activate services.
+Both controlled warm reboots passed on September 30 after the owner confirmed
+physical recovery access. Ace now runs persistent generation 12 with an explicit
+clock waiter and ordered authority startup; Mako runs guarded generation 15.
+Post-boot checks preserve admitted identities, device state and existing
+applications. DNS remained available in bounded Mako samples during Ace's reboot.
+Attended workstation disconnection is still pending, and hardware qualification
+remains false. The dated rehearsal and boot-only installation records below are
+preserved separately from the later startup observations.
 
-## Exact running baseline and declarative selection
+## Initial tested baseline and declarative selection
 
 The [explicit profile constructor](../deploy/pilot-profiles.nix) keeps the normal
 host configurations disabled and requires the reviewed guard with Nix reference
@@ -35,7 +37,8 @@ closures exactly:
 | Ace | `/nix/store/jqhncbfidhni7896ds8y74m4k8qnikc5-nixos-system-ace-26.05.20260807.ee48b14` | 10: `/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14` |
 | Mako | `/nix/store/w3fpk6jc50xmwy76b48ycjhfj6b4iira-nixos-system-mako-26.05.20260807.ee48b14` | 14: `/nix/store/nf6pj4bqp2gp4j9rf4d23bfgsh6lcbjf-nixos-system-mako-26.05.20260807.ee48b14` |
 
-Ace booted generation10; Mako booted generation13, whose closure is
+Before the initial persistent installations, Ace had booted generation10 and
+Mako generation13, whose closure is
 `/nix/store/f0k23wljli44yqrf4mz6n530w9af5k6k-nixos-system-mako-26.05.20260807.ee48b14`.
 Read-only native comparison found identical kernel, initrd, DTB, kernel-module
 and firmware targets between each tested candidate, persistent baseline and
@@ -250,26 +253,26 @@ volume; resetting a symlink alone does not repair the boot volume.
 Final readback must show the intended persistent profile and default boot entry,
 all required retained recovery entries, correct protected boot hashes, unchanged
 running closure/processes and source fences, and healthy current pilot/DNS
-behavior. No reboot is part of this installation. Controlled warm-reboot and
-physical recovery acceptance remain pending physical access; a successful boot
-installation cannot establish them.
+behavior. No reboot is part of this installation. Controlled warm reboot is a
+separate acceptance step, recorded below; boot installation alone does not prove
+startup, physical recovery or power-loss safety.
 
 ## Recorded boot-only installation
 
 Ace's [boot installation observation](observations/2026-09-30-ace-boot-install.json)
 was independently reconciled at `2026-09-30T07:26:31Z`. Persistent generation 11
-and the default boot entry now select the exact running `jqhn…` candidate.
-Numbered firmware entries 11, 10, 9 and 8 remain available; entry 7 is retained
+and the default boot entry selected the exact running `jqhn…` candidate.
+At that point, numbered firmware entries 11, 10, 9 and 8 were available; entry 7 was retained
 in the verified encrypted backup and its Nix generation link remains intact.
 Actual firmware matched the encrypted stage, the booted generation stayed at
 10, and existing applications and device state were preserved. Fresh LAN DNS
-and Malak source-fence checks passed afterward. Startup from the new boot entry
-has not been tested.
+and Malak source-fence checks passed afterward. That installation did not test
+startup; Ace's later generation-12 warm reboot is recorded separately below.
 
 Mako's [boot installation observation](observations/2026-09-30-mako-boot-install.json)
 was independently reconciled at `2026-09-30T07:36:30.208904Z`. Persistent generation 15
-and default boot now select the guarded `k5xi…` candidate. Firmware entries
-15, 14, 13 and 12 remain; entry 11 remains in the verified encrypted backup and
+and default boot selected the guarded `k5xi…` candidate. Firmware entries
+15, 14, 13 and 12 were retained; entry 11 remains in the verified encrypted backup and
 its Nix profile link is intact. The previous persistent generation 14 and
 actually booted generation 13 retain their kernel/configuration/DTB bytes and
 verified equivalent initrd contents. Exact immutable prefixes and private
@@ -277,7 +280,42 @@ appended material were checked; temporary appender material was absent after
 completion. Both admission receipts, source material, Agent, replica and other
 application processes, and device state were preserved. Final both-host health,
 UDP/TCP DNS, unsigned AXFR denial and Malak source-fence checks passed.
-No reboot or workstation disconnection was performed.
+No reboot or workstation disconnection was part of those installation operations.
+
+## Controlled warm reboots
+
+With physical recovery access confirmed, Mako passed a controlled warm reboot
+into its persistent generation 15. Its admitted-state guard accepted the retained
+node without a join grant. Existing applications, SPIRE Agent and DNS replica
+started automatically; installed device access and a fresh exact-unit probe
+passed. The [Mako observation](observations/2026-09-30-mako-warm-reboot.json)
+records the new boot and preserved private state.
+
+Ace then passed a controlled warm reboot into persistent generation 12. The
+[Ace observation](observations/2026-09-30-ace-warm-reboot.json) records final
+acceptance at `2026-09-30T15:29:30Z`, including a fresh automatic exact-unit probe
+on the new boot, current installed-device access, converged publication,
+both-host DNS queries and unsigned AXFR denial. That candidate includes the
+upstream `systemd-time-wait-sync.service`, which was
+missing from the earlier active profile despite an existing ordering dependency.
+Actual monotonic startup timestamps verify clock wait before the storage guard,
+private PostgreSQL, import guard and Fleet; all four authority APIs passed their
+post-boot checks. Current, persistent and booted
+profiles agree; the imported authorities, registry, DNS services and original
+applications started automatically. Identity, device and static private state
+were preserved, and no failed units remained.
+
+During Ace's reboot, all 34 Mako observations passed; nine complete A/AAAA/SOA
+UDP/TCP query rounds had fresh Ace SSH/primary-DNS unavailability observations
+before and after the queries. Mako retained the same boot, profiles and seven
+service PIDs, invocation IDs and unit contents. Ace's return was observed.
+This establishes sampled replica continuity during the controlled reboot, not
+continuous availability at every instant or a second replica restart.
+
+Malak remained connected during these warm reboots. The separately prepared
+attended disconnection and connected rehearsal have no accepted disconnected
+result yet. Cold/offline boot, power loss, rollback and physical recovery
+qualification remain open; the original `2026-10-03T02:06:35Z` deadline is unchanged.
 
 ## Checks
 

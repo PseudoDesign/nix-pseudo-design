@@ -50,6 +50,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # NixOS includes timesyncd but not its optional clock waiter by default.
+    # The storage guard already orders after this unit; include the upstream
+    # implementation so a fresh boot waits for synchronization before checking
+    # the imported policy. PostgreSQL, import validation and APIs follow it.
+    systemd.additionalUpstreamSystemUnits = lib.optional cfg.activate "systemd-time-wait-sync.service";
     assertions = [
       {
         assertion = !config.kaiba.lanQualification.enable;
