@@ -490,3 +490,26 @@ versus admitted member selection and boot dependencies. The second exercises
 synthetic retained identity/key/bundle rotation, malformed/expired/missing state
 and read-only refusal. These checks are separate from native candidate testing
 and do not provision receipts or install boot files.
+
+## Prepared owner-term continuation (not activated)
+
+`kaiba.pilotAgent.admittedState.continuity` defaults to `null`. An explicit
+continuation requires the existing startup guard, separate root-private receipt
+and reader configuration with immutable SHA-256 pins, a reviewed Fleet package
+providing `kaiba-pilot-host-term`, and the exact revision-one delegation and
+retained enrollment ID. Both files must stay beside the original startup receipt;
+the original receipt and its deadline remain unchanged historical evidence.
+
+At startup the reader authenticates with the enrollment's confined service
+identity and checks the latest delegation and membership on Ace. Revocation,
+expiry, changed identity/key/issuer/permissions, unreachable authority or a stale
+response blocks startup. A retained delegation file alone cannot authorize it.
+The continuation must have been approved before the original cutoff and must
+end exactly thirty days after activation. The cached admitted node certificate
+must remain valid through startup and cannot outlast that term. No bootstrap,
+replacement identity, automatic recovery or receipt creation is performed.
+
+This option has synthetic tests but is not enabled in the pilot profiles. It
+requires Ace's compatible authority transition and coordinated SPIRE issuance
+bounds before live deployment. It is not a substitute for continuous expiry and
+revocation enforcement, and it does not start the twenty-four-hour observation.

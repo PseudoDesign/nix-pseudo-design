@@ -65,6 +65,34 @@ let
       guardAdmittedMember = true;
     }
   );
+  continuation = {
+    receiptFile = "/var/lib/kaiba/identity/member-bootstrap/continuation.json";
+    receiptSha256 = lib.concatStrings (lib.replicate 64 "1");
+    readerConfigFile = "/var/lib/kaiba/identity/member-bootstrap/term-reader.json";
+    readerConfigSha256 = lib.concatStrings (lib.replicate 64 "2");
+    readerPackage = pkgs.writeShellScriptBin "kaiba-pilot-host-term" "exit 1";
+    enrollmentId = "evaluation-only-member";
+    delegationRef = {
+      record_id = "evaluation-only-term";
+      revision = 1;
+      digest = "sha256:" + lib.concatStrings (lib.replicate 64 "3");
+    };
+  };
+  continuedMako =
+    (profiles.configurations.mako.extendModules {
+      modules = [ { kaiba.pilotAgent.admittedState.continuity = continuation; } ];
+    }).config;
+  unsafeContinuation =
+    (hosts.mako.extendModules {
+      modules = [
+        {
+          kaiba.pilotAgent = {
+            enable = true;
+            admittedState.continuity = continuation;
+          };
+        }
+      ];
+    }).config;
   valid = c: lib.all (entry: entry.assertion) c.assertions;
   unchangedUnit =
     before: after: name:
@@ -87,6 +115,11 @@ let
 in
 assert !aceBase.kaiba.pilotServer.enable && !makoBase.kaiba.pilotAgent.enable;
 assert !missingGuardContext.success;
+assert profiles.configurations.mako.config.kaiba.pilotAgent.admittedState.continuity == null;
+assert valid continuedMako && !valid unsafeContinuation;
+assert
+  continuedMako.kaiba.pilotAgent.admittedState.receiptFile
+  == profiles.configurations.mako.config.kaiba.pilotAgent.admittedState.receiptFile;
 assert profiles.configurations.ace.config.kaiba.pilotServer.activate;
 assert profiles.configurations.mako.config.kaiba.pilotAgent.admittedState.enable;
 assert
@@ -232,14 +265,20 @@ assert mako.system.build.kernel.outPath == makoBase.system.build.kernel.outPath;
 assert ace.fileSystems == aceBase.fileSystems && mako.fileSystems == makoBase.fileSystems;
 assert mako.systemd.services.spire-agent.serviceConfig.MemoryMax == "256M";
 assert mako.systemd.services.kaiba-lan-secondary.serviceConfig.MemoryMax == "256M";
-pkgs.runCommand "kaiba-two-host-composition" {
-  PREFLIGHT_UNIT = pkgs.writeText "kaiba-pilot-import-present.service" ace.systemd.units."kaiba-pilot-import-present.service".text;
-  PILOT_MOUNT_UNIT = pkgs.writeText "srv-kaiba-pilot.mount" ace.systemd.units."srv-kaiba\\x2dpilot.mount".text;
-} ''
-  mkdir -p "$out"
-  cp "$PREFLIGHT_UNIT" "$out/kaiba-pilot-import-present.service"
-  cp "$PILOT_MOUNT_UNIT" "$out/pilot.mount"
-  cat > "$out/report.json" <<'EOF'
-  {"schema_version":"kaiba.two-host-composition-check/v1alpha1","passed":true,"evaluation_only":true,"live_cutover":false,"checks":["disabled-defaults","staging-always-denies-authority","staging-does-not-autostart","activation-requires-policy","mutually-exclusive-trial-profile","preserved-owner-identity","no-member-authority","current-admission-dependencies","distinct-issuer-and-dns-ports","real-remote-secondary","private-listeners-and-source-firewall","explicit-operator-grants","existing-applications-and-storage-preserved","member-memory-limits","explicit-active-profile-builder","guard-reference-context","online-boot-time-guard","persisted-member-bundle-no-rebootstrap"]}
-  EOF
-''
+pkgs.runCommand "kaiba-two-host-composition"
+  {
+    PREFLIGHT_UNIT =
+      pkgs.writeText "kaiba-pilot-import-present.service"
+        ace.systemd.units."kaiba-pilot-import-present.service".text;
+    PILOT_MOUNT_UNIT =
+      pkgs.writeText "srv-kaiba-pilot.mount"
+        ace.systemd.units."srv-kaiba\\x2dpilot.mount".text;
+  }
+  ''
+    mkdir -p "$out"
+    cp "$PREFLIGHT_UNIT" "$out/kaiba-pilot-import-present.service"
+    cp "$PILOT_MOUNT_UNIT" "$out/pilot.mount"
+    cat > "$out/report.json" <<'EOF'
+    {"schema_version":"kaiba.two-host-composition-check/v1alpha1","passed":true,"evaluation_only":true,"live_cutover":false,"checks":["disabled-defaults","staging-always-denies-authority","staging-does-not-autostart","activation-requires-policy","mutually-exclusive-trial-profile","preserved-owner-identity","no-member-authority","current-admission-dependencies","distinct-issuer-and-dns-ports","real-remote-secondary","private-listeners-and-source-firewall","explicit-operator-grants","existing-applications-and-storage-preserved","member-memory-limits","explicit-active-profile-builder","guard-reference-context","online-boot-time-guard","persisted-member-bundle-no-rebootstrap"]}
+    EOF
+  ''

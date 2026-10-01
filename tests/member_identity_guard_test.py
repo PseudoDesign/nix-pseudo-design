@@ -83,6 +83,125 @@ class MemberGuardTests(unittest.TestCase):
         self.keys={'keys':{'agent-svid-A':der(self.key)}}
     def check(self):
         return guard.validate(self.receipt,self.cache,self.keys,self.config,NOW)
+    def continuation_fixture(self):
+        # Owner approval predates the original cutoff; current time may follow it.
+        self.config['not_after']=self.receipt['not_after']=utc(NOW-dt.timedelta(hours=1))
+        original=hashlib.sha256(json.dumps(self.receipt).encode()).hexdigest()
+        ref={'record_id':'term-1','revision':1,'digest':'sha256:'+'1'*64}
+        base=str(Path(self.config['receipt_file']).parent)
+        c={'receipt_file':base+'/continuation.json','receipt_sha256':'2'*64,
+            'term_reader_config':base+'/term-reader.json','term_reader_config_sha256':'3'*64,
+            'term_reader':'/nix/store/00000000000000000000000000000000-test/bin/kaiba-pilot-host-term',
+            'enrollment_id':'retained-mako','delegation_ref':ref}
+        self.config['continuity']=c
+        start=NOW-dt.timedelta(days=1)
+        continuation={'schema':'kaiba.admitted-spire-member-continuation/v1alpha1',
+            'host':'mako','enrollment_id':c['enrollment_id'],'original_receipt_sha256':original,
+            'delegation_ref':ref,'owner_approval_ref':{'uri':'urn:owner:approved','digest':'sha256:'+'4'*64},
+            'member_scope_digest':'sha256:'+'5'*64,'node_id_sha256':self.receipt['node_id_sha256'],
+            'activated_at':utc(start),'expires_at':utc(start+dt.timedelta(days=30)),'full_qualification':False}
+        term={'schema_version':'kaiba.host-term-observation/v1alpha1',
+            **{k:continuation[k] for k in ('enrollment_id','delegation_ref','owner_approval_ref',
+                'member_scope_digest','activated_at','expires_at','full_qualification')},
+            'enrollment_ids':['retained-mako','retained-ace'],'checked_at':utc(NOW),'current_authority_read':True}
+        return {'continuation':continuation,'term':term,'original_sha256':original}
+
+    def test_continuation_preserves_original_and_requires_live_authority(self):
+        kwargs=self.continuation_fixture()
+        before=copy.deepcopy((self.receipt,self.cache,self.keys,self.config,kwargs))
+        result=guard.validate(self.receipt,self.cache,self.keys,self.config,NOW,**kwargs)
+        self.assertEqual(result['status'],'passed')
+        self.assertEqual(before,(self.receipt,self.cache,self.keys,self.config,kwargs))
+        for field,value in [('current_authority_read',False),('checked_at',utc(NOW-dt.timedelta(seconds=31))),
+            ('checked_at',utc(NOW+dt.timedelta(seconds=1))),('enrollment_id','replacement'),
+            ('enrollment_ids',['retained-ace']),('member_scope_digest','sha256:'+'6'*64),
+            ('full_qualification',True),('delegation_ref',{'record_id':'other','revision':1,'digest':'sha256:'+'1'*64})]:
+            with self.subTest(field=field,value=value):
+                bad=copy.deepcopy(kwargs);bad['term'][field]=value
+                with self.assertRaises(ValueError):
+                    guard.validate(self.receipt,self.cache,self.keys,self.config,NOW,**bad)
+        with self.assertRaises(ValueError):guard.validate(self.receipt,self.cache,self.keys,self.config,NOW)
+
+    def test_continuation_cannot_revive_expired_admission_or_extend_term(self):
+        kwargs=self.continuation_fixture()
+        for start,end in [(NOW-dt.timedelta(minutes=30),NOW-dt.timedelta(minutes=30)+dt.timedelta(days=30)),
+                          (NOW-dt.timedelta(days=1),NOW+dt.timedelta(days=30)),
+                          (NOW-dt.timedelta(days=30),NOW)]:
+            with self.subTest(start=start,end=end):
+                bad=copy.deepcopy(kwargs)
+                for record in (bad['continuation'],bad['term']):
+                    record['activated_at']=utc(start);record['expires_at']=utc(end)
+                with self.assertRaises(ValueError):guard.validate(self.receipt,self.cache,self.keys,self.config,NOW,**bad)
+        for field in ('original_receipt_sha256','node_id_sha256'):
+            bad=copy.deepcopy(kwargs);bad['continuation'][field]='0'*64
+            with self.assertRaises(ValueError):guard.validate(self.receipt,self.cache,self.keys,self.config,NOW,**bad)
+
+    def test_continuation_denies_certificate_outlasting_term(self):
+        kwargs=self.continuation_fixture()
+        start=NOW-dt.timedelta(days=30)+dt.timedelta(minutes=30)
+        for record in (kwargs['continuation'],kwargs['term']):
+            record['activated_at']=utc(start);record['expires_at']=utc(start+dt.timedelta(days=30))
+        with self.assertRaisesRegex(ValueError,'node-certificate-outlasts-term'):
+            guard.validate(self.receipt,self.cache,self.keys,self.config,NOW,**kwargs)
+
+    def test_term_reader_pins_artifacts_and_never_falls_back(self):
+        kwargs=self.continuation_fixture();c=self.config['continuity']
+        receipt_raw=json.dumps(self.receipt).encode()
+        continuation_raw=json.dumps(kwargs['continuation']).encode()
+        reader_raw=json.dumps({'delegation_ref':c['delegation_ref'],'enrollment_id':c['enrollment_id']}).encode()
+        c['receipt_sha256']=hashlib.sha256(continuation_raw).hexdigest()
+        c['term_reader_config_sha256']=hashlib.sha256(reader_raw).hexdigest()
+        def read(path,uid):
+            self.assertEqual(uid,0)
+            return {c['receipt_file']:continuation_raw,c['term_reader_config']:reader_raw}[path]
+        with mock.patch.object(guard,'private_read',side_effect=read), \
+             mock.patch.object(guard.subprocess,'run') as command:
+            command.return_value=types.SimpleNamespace(returncode=0,stdout=json.dumps(kwargs['term']).encode())
+            self.assertEqual(guard.load_continuation(self.config,receipt_raw),
+                (kwargs['continuation'],kwargs['term'],kwargs['original_sha256']))
+            self.assertEqual(command.call_args.args[0],[c['term_reader'],'--config',c['term_reader_config'],'current'])
+            self.assertEqual(command.call_args.kwargs['timeout'],20)
+            for response in [types.SimpleNamespace(returncode=1,stdout=b''),
+                             types.SimpleNamespace(returncode=0,stdout=b'x'*16385)]:
+                command.return_value=response
+                with self.assertRaisesRegex(ValueError,'current-term-unavailable'):
+                    guard.load_continuation(self.config,receipt_raw)
+            command.side_effect=guard.subprocess.TimeoutExpired('reader',20)
+            with self.assertRaises(guard.subprocess.TimeoutExpired):guard.load_continuation(self.config,receipt_raw)
+            command.reset_mock();c['receipt_sha256']='0'*64
+            with self.assertRaisesRegex(ValueError,'continuation-artifact-changed'):
+                guard.load_continuation(self.config,receipt_raw)
+            command.assert_not_called()
+
+    def test_inspect_uses_fresh_continuation_and_preserves_state(self):
+        kwargs=self.continuation_fixture()
+        class Clock(dt.datetime):
+            @classmethod
+            def now(cls,tz=None):return NOW
+        with tempfile.TemporaryDirectory() as tmp:
+            state=Path(tmp)/'state';state.mkdir(mode=0o700)
+            (state/'keys').mkdir(mode=0o700)
+            self.config['state_directory']=self.receipt['state_directory']=str(state)
+            raw=json.dumps(self.receipt).encode()
+            kwargs['original_sha256']=hashlib.sha256(raw).hexdigest()
+            kwargs['continuation']['original_receipt_sha256']=kwargs['original_sha256']
+            files={self.config['receipt_file']:raw,str(state/'agent-data.json'):json.dumps(self.cache).encode(),
+                str(state/'keys/keys.json'):json.dumps(self.keys).encode()}
+            def read(path,uid):return files[str(path)]
+            with mock.patch.object(guard.socket,'gethostname',return_value='mako'), \
+                 mock.patch.object(guard.pwd,'getpwnam',return_value=types.SimpleNamespace(pw_uid=os.getuid())), \
+                 mock.patch.object(guard,'directory'), \
+                 mock.patch.object(guard,'private_read',side_effect=read), \
+                 mock.patch.object(guard.dt,'datetime',Clock), \
+                 mock.patch.object(guard,'load_continuation',return_value=(kwargs['continuation'],kwargs['term'],kwargs['original_sha256'])) as load:
+                before=copy.deepcopy((self.receipt,self.cache,self.keys,files))
+                self.assertEqual(guard.inspect(self.config)['status'],'passed')
+                load.assert_called_once_with(self.config,raw)
+                self.assertEqual(before,(self.receipt,self.cache,self.keys,files))
+                load.side_effect=ValueError('current-term-unavailable')
+                with self.assertRaisesRegex(ValueError,'current-term-unavailable'):guard.inspect(self.config)
+                self.assertEqual(before,(self.receipt,self.cache,self.keys,files))
+
     def test_valid_admitted_member(self):
         self.check()
     def test_rotated_leaf_and_alternate_key_slot_accepted(self):
