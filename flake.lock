@@ -53,6 +53,23 @@
         "type": "github"
       }
     },
+    "deploymentProvisioning": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790873859,
+        "narHash": "sha256-09xA8KnMM1GY79bVUpB7nze438NX4H++FUHYQKqO8yo=",
+        "owner": "PseudoDesign",
+        "repo": "kaiba-provisioning",
+        "rev": "5f40fbbf4dae1d9328ad440addfd65143e3ebd18",
+        "type": "github"
+      },
+      "original": {
+        "owner": "PseudoDesign",
+        "repo": "kaiba-provisioning",
+        "rev": "5f40fbbf4dae1d9328ad440addfd65143e3ebd18",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -168,40 +185,43 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1790693693,
+        "lastModified": 1790828196,
         "narHash": "sha256-2y9xkP+eFN2EAtZzy42p5+1TY5KMCWpGJVyiQyEkHX8=",
         "owner": "pd-codex",
         "repo": "nixos-kaiba-network",
-        "rev": "67574bb1fe88a60118c680d823ac2ddb7656975b",
+        "rev": "e1f18fbc355b70b2d87245288d4ebb837434cbdd",
         "type": "github"
       },
       "original": {
         "owner": "pd-codex",
         "repo": "nixos-kaiba-network",
-        "rev": "67574bb1fe88a60118c680d823ac2ddb7656975b",
+        "rev": "e1f18fbc355b70b2d87245288d4ebb837434cbdd",
         "type": "github"
       }
     },
     "kaiba-fleet": {
       "inputs": {
         "contracts": "contracts",
+        "deploymentProvisioning": "deploymentProvisioning",
         "dnsIntegration": "dnsIntegration",
         "enrollmentRunner": "enrollmentRunner",
         "nixpkgs": "nixpkgs_2",
-        "provisioning": "provisioning"
+        "provisioning": "provisioning",
+        "renewalContracts": "renewalContracts",
+        "renewalProvisioning": "renewalProvisioning"
       },
       "locked": {
-        "lastModified": 1790707797,
-        "narHash": "sha256-FycLZ0EDlTrUWa4cpxPi981QqGm79s3+HPi3238BJtg=",
+        "lastModified": 1790875699,
+        "narHash": "sha256-L7UfPVucmD46H9NSS/HhkOYMNTrl35GqIgi7xJ46gLA=",
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "0bd55c576536c29825aada2f7ce6fa052a877402",
+        "rev": "424d147dba78fe2ff3eabf58dda98d9928824a5c",
         "type": "github"
       },
       "original": {
         "owner": "PseudoDesign",
         "repo": "kaiba-fleet",
-        "rev": "0bd55c576536c29825aada2f7ce6fa052a877402",
+        "rev": "424d147dba78fe2ff3eabf58dda98d9928824a5c",
         "type": "github"
       }
     },
@@ -353,6 +373,40 @@
         "owner": "PseudoDesign",
         "repo": "kaiba-provisioning",
         "rev": "aae1a0fec103011fea00b224017ff450e0555f25",
+        "type": "github"
+      }
+    },
+    "renewalContracts": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790827150,
+        "narHash": "sha256-h3pfWCn+foMTeFkpVtpWTXL9VGmddk3iYEFAMOeWfSk=",
+        "owner": "pd-codex",
+        "repo": "kaiba-contracts",
+        "rev": "8bf0dc6822805b151ad29c459896f85119f87e0b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pd-codex",
+        "repo": "kaiba-contracts",
+        "rev": "8bf0dc6822805b151ad29c459896f85119f87e0b",
+        "type": "github"
+      }
+    },
+    "renewalProvisioning": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790844932,
+        "narHash": "sha256-u3XQUyxg9DjYtIVZcrtAJuW7cyaxFlvcCfoltc1MsB8=",
+        "owner": "PseudoDesign",
+        "repo": "kaiba-provisioning",
+        "rev": "4da4de1c5895ac99e93aefb8bc036449f82a58bd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "PseudoDesign",
+        "repo": "kaiba-provisioning",
+        "rev": "4da4de1c5895ac99e93aefb8bc036449f82a58bd",
         "type": "github"
       }
     },

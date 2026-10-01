@@ -11,9 +11,9 @@
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
 
-    kaiba-dns.url = "github:pd-codex/nixos-kaiba-network/67574bb1fe88a60118c680d823ac2ddb7656975b";
+    kaiba-dns.url = "github:pd-codex/nixos-kaiba-network/e1f18fbc355b70b2d87245288d4ebb837434cbdd";
 
-    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/0bd55c576536c29825aada2f7ce6fa052a877402";
+    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/424d147dba78fe2ff3eabf58dda98d9928824a5c";
 
     disko = {
       url = "github:nix-community/disko";

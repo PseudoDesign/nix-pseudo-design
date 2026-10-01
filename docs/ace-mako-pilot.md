@@ -7,6 +7,17 @@ identity probe and a read-only DNS replica. Malak now serves as the operator
 workstation: complete authority state has moved, its source is fenced, and the
 bounded attended workstation-power-off check has passed.
 
+The current candidate selects merged Fleet `424d147dba78fe2ff3eabf58dda98d9928824a5c`
+and DNS `e1f18fbc355b70b2d87245288d4ebb837434cbdd`. Ace's observation reader uses
+Fleet's explicit `authorities-lan` package, backed by merged provisioning
+`5f40fbbf4dae1d9328ad440addfd65143e3ebd18`. Historical fixture inputs, Raspberry Pi
+hardware inputs and regular service inputs remain pinned. This is a candidate
+source update, not an installation receipt: Ace generation 14 and Mako generation
+15 remain the recorded running deployment. The thirty-day delegation and
+unattended renewal are not active. Follow the
+[LAN closeout gates](https://github.com/PseudoDesign/kaiba-infra/blob/codex/spiffe-spire-next-steps/docs/lan-closeout.md)
+before activation; `full_qualification` remains false.
+
 The profiles default to disabled. On September 29, both hosts passed native
 builds and temporary test activation with `enable = true`, `activate = false`.
 That dormant staging preserved both persistent boot baselines. Mako's same-key

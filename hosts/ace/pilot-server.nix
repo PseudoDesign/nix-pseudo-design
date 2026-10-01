@@ -132,7 +132,7 @@ in
     services.kaiba.pilotControlPlane = {
       enable = true;
       fleetPackage = fleet;
-      observationPackage = kaiba-fleet.packages.aarch64-linux.authorities;
+      observationPackage = kaiba-fleet.packages.aarch64-linux.authorities-lan;
       postgresPackage = runtime.postgresql_18;
       stateDirectory = "/srv/kaiba-pilot";
       storageMount = "/srv/kaiba-pilot";
