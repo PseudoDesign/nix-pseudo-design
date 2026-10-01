@@ -4,6 +4,14 @@ set -euo pipefail
 candidate=$1
 previous=$2
 mode=$3
+# systemctl with several units succeeds when any one is active. Each required
+# service must pass independently before and after activation.
+require_active() {
+  local unit
+  for unit in "$@"; do
+    systemctl is-active --quiet "$unit" || return 1
+  done
+}
 test "$(id -u)" = 0
 case "$candidate" in /nix/store/*-nixos-system-ace-*) ;; *) exit 2;; esac
 case "$previous" in /nix/store/*-nixos-system-ace-*) ;; *) exit 2;; esac
@@ -34,7 +42,7 @@ for entry in etc/fstab etc/crypttab \
 done
 test "$(stat -c '%u:%g:%a:%h' /var/lib/kaiba-pilot-device/state.json)" = 994:988:600:1
 test -z "$(swapon --show --noheadings)"
-systemctl is-active --quiet hydra-server postgresql sshd
+require_active hydra-server postgresql sshd
 
 # Preserve this exact current-layout system for recovery before activation.
 nix-store --add-root /nix/var/nix/gcroots/kaiba-identity-pilot-before \
@@ -43,12 +51,12 @@ nix-store --add-root /nix/var/nix/gcroots/kaiba-identity-pilot-before \
 # Keep both automounts active, with this shell holding the actual firmware FS.
 systemctl start boot.automount
 cd /boot
-systemctl is-active --quiet boot.automount
+require_active boot.automount
 firmware_source=$(findmnt --fstab -n -o SOURCE --mountpoint /boot/firmware)
 test -b "$firmware_source"
 systemctl start boot-firmware.automount
 cd /boot/firmware
-systemctl is-active --quiet boot.automount boot-firmware.automount
+require_active boot.automount boot-firmware.automount
 test "$(findmnt -n -t vfat -o SOURCE --mountpoint /boot/firmware)" = \
   "$(readlink -f "$firmware_source")"
 
@@ -57,7 +65,7 @@ if test "$mode" = switch; then
 fi
 "$candidate/bin/switch-to-configuration" "$mode"
 test "$(readlink -f /run/current-system)" = "$candidate"
-systemctl is-active --quiet hydra-server postgresql sshd
+require_active hydra-server postgresql sshd
 test "$(stat -c '%u:%g:%a:%h' /var/lib/kaiba-pilot-device/state.json)" = 994:988:600:1
 test "$(systemctl --failed --no-legend --plain | wc -l)" = 0
 echo "identity-pilot activation completed: $mode"
