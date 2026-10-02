@@ -23,6 +23,7 @@ in
     kaiba-infra.nixosModules.human-identity
     kaiba-infra.nixosModules.ssh-user-ca
     kaiba-infra.nixosModules.human-access-backup
+    kaiba-infra.nixosModules.forgejo
   ];
 
   networking = {
@@ -45,6 +46,21 @@ in
   };
   services.kaibaHydraBackupReceiver.enable = true;
 
+  services.kaibaForgejo = {
+    enable = true;
+    package = kaiba-infra.packages.aarch64-linux.forgejo;
+    # Imported workflows remain inert until runner and CI qualification passes.
+    actionsEnable = false;
+    sso = {
+      enable = true;
+      inherit (humanAccessTrust) ownerSubject;
+    };
+    backup = {
+      enable = true;
+      recipients = humanAccessTrust.backupRecipients;
+    };
+  };
+
   services.kaibaHumanIdentity = {
     enable = true;
     domain = "auth.pseudo.design";
@@ -55,7 +71,10 @@ in
   };
   services.kaibaSSHUserCA.enable = true;
   systemd.services.kaiba-ssh-ca = {
-    after = [ "nginx.service" "kaiba-human-identity-configure.service" ];
+    after = [
+      "nginx.service"
+      "kaiba-human-identity-configure.service"
+    ];
     requires = [ "kaiba-human-identity-configure.service" ];
     partOf = [ "kaiba-human-identity-configure.service" ];
   };
@@ -67,7 +86,12 @@ in
   };
   # Server-to-server OIDC and CA traffic stays local while preserving the
   # public HTTPS names and certificate verification.
-  networking.hosts."127.0.0.1" = [ "auth.pseudo.design" "ssh-ca.pseudo.design" ];
+  networking.hosts."127.0.0.1" = [
+    "auth.pseudo.design"
+    "ssh-ca.pseudo.design"
+    "git.pseudo.design"
+    "docs.kaiba.pseudo.design"
+  ];
 
   services.kaibaPilotDevice = {
     enable = true;

@@ -179,6 +179,22 @@
         "type": "github"
       }
     },
+    "forgejo-nixpkgs": {
+      "locked": {
+        "lastModified": 1790822859,
+        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
+        "type": "github"
+      }
+    },
     "kaiba-dns": {
       "inputs": {
         "dns": "dns",
@@ -227,23 +243,24 @@
     },
     "kaiba-infra": {
       "inputs": {
+        "forgejo-nixpkgs": "forgejo-nixpkgs",
         "nixpkgs": [
           "nixos-raspberrypi",
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1790650425,
-        "narHash": "sha256-MEHBAjlcaX/0cWEzfOnBay57vSMwPbKR8sJ7PnKlssI=",
+        "lastModified": 1790979221,
+        "narHash": "sha256-bjwFgP6ErAuiwjz16gFChu8XCFwT3EeevzmcZlSQyxY=",
         "owner": "PseudoDesign",
         "repo": "kaiba-infra",
-        "rev": "ef8e41b97c8d7668aadd4f385e2daa0ccba383be",
+        "rev": "47347c03e7738051e221a2c60ec828131fa1c1fb",
         "type": "github"
       },
       "original": {
         "owner": "PseudoDesign",
         "repo": "kaiba-infra",
-        "rev": "ef8e41b97c8d7668aadd4f385e2daa0ccba383be",
+        "rev": "47347c03e7738051e221a2c60ec828131fa1c1fb",
         "type": "github"
       }
     },

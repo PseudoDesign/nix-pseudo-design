@@ -8,6 +8,7 @@
     ./pilot-server.nix
     kaiba-infra.nixosModules.hydra
     kaiba-infra.nixosModules.human-access-backup-receiver
+    kaiba-infra.nixosModules.forgejo-backup-receiver
   ];
 
   services.kaibaHydra = {
@@ -32,6 +33,7 @@
   # rebuilds Hydra's Rust/Node toolchains solely to specialize the allocator.
   services.hydra.package = (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).hydra;
   services.kaibaHumanAccessBackupReceiver.enable = true;
+  services.kaibaForgejoBackupReceiver.enable = true;
   services.kaibaHydra.cachePublish.package =
     (import kaiba-infra.inputs.nixpkgs { system = "aarch64-linux"; }).cachix;
 
