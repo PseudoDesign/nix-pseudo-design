@@ -112,7 +112,9 @@ credentials/state remained unchanged. Same-process workload rotation and Fleet
 operational-credential renewal remain separate checks.
 
 The pilot policy and temporary workload registrations retain the original
-deadline, `2026-10-03T02:06:35Z`. No extension is authorized or implemented.
+deadline, `2026-10-03T02:06:35Z`. The owner-approved thirty-day successor is
+planned but has not been activated; approval of the plan does not extend this
+deadline.
 After temporary activation and encrypted boot rehearsals, both tested profiles
 were installed persistently. The owner then confirmed physical recovery access,
 and both controlled warm reboots passed: Ace then ran generation 12 and Mako
@@ -301,8 +303,9 @@ acceptance checks. Persistent profile installation and controlled warm reboot
 passed for both hosts, followed by bounded attended workstation-power-off
 acceptance.
 Public authority/delegation and outside-LAN DNS checks remain separate from this
-LAN profile. Cold/offline boot, clock policy and hardware
-rollback/recovery qualification remain separate work. Existing boot, firmware,
+LAN profile. The bounded cold/offline and disposable-storage physical campaign
+is complete with its documented limitations; autonomous offline operation and
+hardware rollback protection remain separate work. Existing boot, firmware,
 OTP/TPM, encrypted storage layout, Hydra, PostgreSQL, human identity, SSH CA and
 backup services must retain their reviewed behavior.
 
