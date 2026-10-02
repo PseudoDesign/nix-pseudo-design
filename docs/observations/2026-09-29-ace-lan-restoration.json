@@ -1,0 +1,28 @@
+{
+  "dns_controller_listeners_absent": true,
+  "end_to_end_lan_qualified": false,
+  "hardware_qualified": false,
+  "manifest_preserved": true,
+  "observed_at": "2026-09-29T14:26:10.629592+00:00",
+  "original_probe_valid": true,
+  "original_services_healthy": true,
+  "passed": true,
+  "persistent_generation": 10,
+  "post_window_stop": {
+    "authority_still_lan_bound_before_manual_restoration": true,
+    "observed_at": "2026-09-29T14:23:30.962325+00:00",
+    "seven_new_dns_units_inactive": true,
+    "timer_success": true
+  },
+  "public_enrollment_preserved": true,
+  "schema_version": "kaiba.ace-lan-restoration/v1alpha1",
+  "spire_listener": "127.0.0.1:8081",
+  "station_apply_receipt_received": false,
+  "systems": {
+    "/nix/var/nix/profiles/system": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14",
+    "/run/booted-system": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14",
+    "/run/current-system": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14"
+  },
+  "trial_closed": true,
+  "unexpected_failed_units": false
+}

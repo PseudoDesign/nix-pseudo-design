@@ -1,0 +1,96 @@
+{
+  "schema_version": "kaiba.dormant-pilot-stage-observation/v1alpha1",
+  "observed_at": "2026-09-29T19:31:54.490715+00:00",
+  "evaluation_only": false,
+  "temporary_test_activation": true,
+  "fleet_revision": "0bd55c576536c29825aada2f7ce6fa052a877402",
+  "dns_revision": "67574bb1fe88a60118c680d823ac2ddb7656975b",
+  "source_export_performed": false,
+  "target_import_performed": false,
+  "live_cutover": false,
+  "authority_activated": false,
+  "mako_agent_admitted": false,
+  "end_to_end_lan_qualified": false,
+  "hardware_qualified": false,
+  "hosts": {
+    "ace": {
+      "observed_at": "2026-09-29T19:31:54.490715+00:00",
+      "native_build": true,
+      "test_activated_system": "/nix/store/x8sn0nyc9a5kpkr33zbnx2z4q3lyh18v-nixos-system-ace-26.05.20260807.ee48b14",
+      "persistent_system": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14",
+      "persisted": false,
+      "boot_unchanged": true,
+      "selected_existing_service_processes_preserved": true,
+      "selected_existing_services": [
+        "hydra-evaluator",
+        "hydra-queue-runner",
+        "hydra-server",
+        "postgresql",
+        "spire-agent",
+        "spire-server",
+        "sshd"
+      ],
+      "device_state_preserved": true,
+      "device_directory_preserved": true,
+      "device_account": {
+        "uid": 994,
+        "gid": 988
+      },
+      "new_pilot_units_stopped": true,
+      "authority_state_absent": true
+    },
+    "mako": {
+      "observed_at": "2026-09-29T19:31:24.810197+00:00",
+      "native_build": true,
+      "test_activated_system": "/nix/store/33i98wxqnvfwbxjjzkv9nk03ily9x77d-nixos-system-mako-26.05.20260807.ee48b14",
+      "persistent_system": "/nix/store/nf6pj4bqp2gp4j9rf4d23bfgsh6lcbjf-nixos-system-mako-26.05.20260807.ee48b14",
+      "persisted": false,
+      "boot_unchanged": true,
+      "selected_existing_service_processes_preserved": true,
+      "selected_existing_services": [
+        "kaiba-ssh-ca",
+        "keycloak",
+        "nginx",
+        "postgresql",
+        "sshd"
+      ],
+      "device_state_preserved": true,
+      "device_directory_preserved": true,
+      "device_account": {
+        "uid": 991,
+        "gid": 985
+      },
+      "new_pilot_units_stopped": true,
+      "authority_state_absent": true
+    }
+  },
+  "observed_activation_changes": {
+    "ace": {
+      "reloaded": [
+        "dbus",
+        "firewall"
+      ],
+      "restarted": [
+        "systemd-tmpfiles-resetup"
+      ],
+      "started": [
+        "boot-firmware.automount",
+        "boot.mount",
+        "local-fs.target",
+        "systemd-timedated"
+      ]
+    },
+    "mako": {
+      "reloaded": [
+        "dbus",
+        "firewall"
+      ]
+    }
+  },
+  "scope_notes": [
+    "Preservation checks cover the selected services, device state and directory, boot identity and persistent system profile; they do not assert that every host service or mount was unchanged.",
+    "New pilot units were nonrunning with no main process; the receipt permits inactive or failed states.",
+    "Profiles are enabled with activate=false and were applied using switch-to-configuration test; persistent boot profiles retain their prior baselines.",
+    "Malak remains the serving authority. Mako credential recovery, fresh source bindings, fenced transfer, target activation and native end-to-end qualification remain outstanding."
+  ]
+}

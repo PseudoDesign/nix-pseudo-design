@@ -1,0 +1,47 @@
+{
+  "no_host_reboot_or_service_mutation": true,
+  "observations": [
+    {
+      "cached_trust_validates_current_node": true,
+      "current_workload_valid": true,
+      "existing_exact_unit_fresh_fetch": true,
+      "full_qualification": false,
+      "host": "ace",
+      "host_restart_tested": false,
+      "node_daemon_unchanged_between_samples": true,
+      "node_identity_preserved": true,
+      "node_renewed_past_historical_expiry": false,
+      "observed_at": "2026-09-30T06:22:57.270972Z",
+      "offline_recovery_tested": false,
+      "old_workload_expired": false,
+      "operational_credential_and_state_unchanged": true,
+      "operational_credential_not_after": "2026-10-03T02:06:35Z",
+      "read_only": true,
+      "same_process_workload_rotation_tested": false,
+      "schema": "kaiba.native-identity-observation/v1alpha1",
+      "workload_certificate_changed": false
+    },
+    {
+      "cached_trust_validates_current_node": true,
+      "current_workload_valid": true,
+      "existing_exact_unit_fresh_fetch": true,
+      "full_qualification": false,
+      "host": "mako",
+      "host_restart_tested": false,
+      "node_daemon_unchanged_between_samples": true,
+      "node_identity_preserved": true,
+      "node_renewed_past_historical_expiry": true,
+      "observed_at": "2026-09-30T06:25:57.633700Z",
+      "offline_recovery_tested": false,
+      "old_workload_expired": true,
+      "operational_credential_and_state_unchanged": true,
+      "operational_credential_not_after": "2026-10-03T02:06:35Z",
+      "read_only": true,
+      "same_process_workload_rotation_tested": false,
+      "schema": "kaiba.native-identity-observation/v1alpha1",
+      "workload_certificate_changed": true
+    }
+  ],
+  "schema": "kaiba.native-identity-observations/v1alpha1",
+  "source": "passive existing service receipts and public certificate metadata"
+}

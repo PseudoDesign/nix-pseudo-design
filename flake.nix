@@ -11,7 +11,9 @@
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
 
-    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/c7d13f8ecd3e8d98108a2c6eb4787c550405e7c2";
+    kaiba-dns.url = "github:pd-codex/nixos-kaiba-network/e1f18fbc355b70b2d87245288d4ebb837434cbdd";
+
+    kaiba-fleet.url = "github:PseudoDesign/kaiba-fleet/d7027c24b523a1030b855ec8fe1b6582ad2ce1aa";
 
     disko = {
       url = "github:nix-community/disko";
@@ -37,6 +39,7 @@
       dogsitting,
       kaiba-infra,
       kaiba-fleet,
+      kaiba-dns,
       nixos-raspberrypi,
       nixpkgs,
       ...
@@ -54,6 +57,7 @@
           dogsitting
           kaiba-infra
           kaiba-fleet
+          kaiba-dns
           nixos-raspberrypi
           self
           ;
@@ -93,6 +97,27 @@
         };
         kaiba-pilot-device = import ./tests/kaiba-pilot-device.nix {
           pkgs = import nixpkgs { inherit system; };
+        };
+        member-identity-guard =
+          let
+            pkgs = import nixpkgs { inherit system; };
+            python = pkgs.python3.withPackages (p: [ p.cryptography ]);
+          in
+          pkgs.runCommand "kaiba-member-identity-guard-tests" { nativeBuildInputs = [ python ]; } ''
+            cp -r ${./hosts/mako} host
+            cp ${./tests/member_identity_guard_test.py} member_identity_guard_test.py
+            export KAIBA_MEMBER_GUARD="$PWD/host/member-identity-guard.py"
+            python3 -B -m unittest discover -s . -p 'member_identity_guard_test.py' -v
+            mkdir -p "$out"
+            echo 'read-only admitted state guard fixture checks passed' > "$out/result"
+          '';
+        rpi-tmpfiles = import ./tests/rpi-tmpfiles.nix {
+          pkgs = import nixpkgs { inherit system; };
+          hosts = self.nixosConfigurations;
+        };
+        pilot-two-host = import ./tests/pilot-two-host.nix {
+          pkgs = import nixpkgs { inherit system; };
+          hosts = self.nixosConfigurations;
         };
       });
 

@@ -1,4 +1,4 @@
-{ kaiba-fleet, ... }:
+{ kaiba-fleet, lib, ... }:
 let
   # Keep the host kernel, initrd and existing application packages on their
   # reviewed pins. Only the identity runtime uses Fleet's tested SPIRE pin.
@@ -9,7 +9,7 @@ in
 
   services.kaiba.identity = {
     enable = true;
-    role = "standalone";
+    role = lib.mkDefault "standalone";
     trustDomain = "pilot.kaiba.pseudo.design";
     serverPackage = identityPkgs.spire.server;
     agentPackage = identityPkgs.spire.agent;

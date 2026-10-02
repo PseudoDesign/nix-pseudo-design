@@ -1,0 +1,82 @@
+{
+  "automatic_startup": {
+    "accepted": false,
+    "authority_configuration_preserved": true,
+    "cause": "Mount preflight inherited After=basic.target/sysinit.target, closing a cycle through local-fs.target; PID1 deleted startup jobs.",
+    "clock_gated_authority_started": true,
+    "device_and_admission_preserved": true,
+    "encrypted_root_available": true,
+    "failed_service": "avahi-daemon.service",
+    "new_boot_observed": true,
+    "primary_dns_started": true,
+    "same_admitted_node": true,
+    "skipped_services": [
+      "systemd-tmpfiles-setup.service",
+      "kaiba-controller.service",
+      "kaiba-publisher.service"
+    ],
+    "spire_and_fleet_started": true
+  },
+  "full_qualification": false,
+  "generation": 12,
+  "host": "ace",
+  "mako_dns_continuity": {
+    "ace_unavailable_bracketed_samples": 12,
+    "continuous_every_instant_availability_proven": false,
+    "ended_at": "2026-09-30T18:54:52.355061Z",
+    "failed_samples": 0,
+    "observer_stopped": true,
+    "queries_per_sample": 6,
+    "samples": 40,
+    "started_at": "2026-09-30T18:48:12.354164Z"
+  },
+  "next_steps": [
+    "Deploy reviewed early-mount-preflight ordering fix as a new persistent generation.",
+    "Repeat attended clean PoE cold-start and require no deleted startup jobs or manual service starts.",
+    "Keep offline time, abrupt power loss, rollback, key isolation and full hardware qualification separate."
+  ],
+  "observed_at": "2026-09-30T19:03:14.870761+00:00",
+  "owner_attestation": {
+    "clean_console_shutdown_confirmed": true,
+    "exact_wall_clock_power_times_recorded": false,
+    "power_reconnected": true,
+    "power_removed_seconds": 30,
+    "rtc_backup_battery_present": false,
+    "sole_power_source": "PoE"
+  },
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "recovery": {
+    "counts_as_automatic_startup_acceptance": false,
+    "explicit_normal_service_starts": [
+      [
+        "systemd-tmpfiles-setup.service"
+      ],
+      [
+        "avahi-daemon.service"
+      ],
+      [
+        "kaiba-controller.service",
+        "kaiba-publisher.service"
+      ]
+    ],
+    "fresh_exact_unit_workload_probe": true,
+    "new_enrollment_or_authority_reinitialization": false,
+    "persistent_configuration_changed": false,
+    "protected_state_and_profiles_preserved": true,
+    "restored_snapshot_completed_at": "2026-09-30T18:58:00.619548Z",
+    "services_restored": true
+  },
+  "schema": "kaiba.ace-cold-start-observation/v1alpha1",
+  "scope": "One clean power removal with LAN available on reconnect; no offline or abrupt-power-loss qualification.",
+  "source_fences": {
+    "authority_listeners_absent": true,
+    "six_units_unchanged_and_inactive": true
+  },
+  "status": "automatic-startup-failed-services-restored",
+  "verification": {
+    "failure_diagnostic_sha256": "7d2511181fe228f1f702a123200f094010385a9dca781320711e26b804df1048",
+    "mako_trace_sha256": "53e7121dd51fe64257f9b6e11df988913f6968ff41514bd7faeaafb1858e7e6d",
+    "private_evidence_manifest_sha256": "50e488649a8e00eedfef6b2d87f5c4cc33e24e3f572feb3f63fa326ca6987bc6",
+    "restored_state_comparison_sha256": "d931d34ba856d8bcdd01460ac890fdbdf3a5b48a4b9a3d35b752cd7d19c420b3"
+  }
+}

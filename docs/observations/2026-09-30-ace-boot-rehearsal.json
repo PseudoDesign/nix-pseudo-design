@@ -1,0 +1,15 @@
+{
+  "application_processes_unchanged": true,
+  "at": "2026-09-30T06:36:21.832613Z",
+  "builder_exit": 0,
+  "encrypted_private_backup_created": true,
+  "host": "ace",
+  "persistent_profile_installed": false,
+  "physical_reboot_performed": false,
+  "real_firmware_unchanged": true,
+  "retained_profile_entries_staged": 4,
+  "schema": "kaiba.boot-rehearsal/v1alpha1",
+  "staged_default_matches_running_profile": true,
+  "status": "passed",
+  "system_profile_unchanged": true
+}

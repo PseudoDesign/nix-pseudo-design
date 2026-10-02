@@ -1,0 +1,64 @@
+{
+  "checks": {
+    "active_and_persistent_system_profiles_unchanged": true,
+    "actual_updater_request_received_fresh_http403_forbidden": true,
+    "all_nine_desired_intent_fields_unchanged_during_denial": true,
+    "all_six_source_authority_services_still_fenced_and_inactive": true,
+    "both_authoritative_dns_endpoints_verified_over_udp_and_tcp": true,
+    "dns_name_addresses_and_generation_preserved": true,
+    "each_grant_write_attempted_once_with_expected_revision": true,
+    "existing_host_applications_preserved": true,
+    "fresh_authenticated_initial_grant_get": true,
+    "lease_and_updated_at_unchanged_during_denial": true,
+    "restoration_owned_by_remote_systemd": true,
+    "restored_updater_received_fresh_accepted_lease_and_updated_at": true,
+    "source_authority_tcp_listeners_absent": true,
+    "supervised_gate_exited_successfully": true,
+    "unsigned_zone_transfers_explicitly_denied_by_both_authorities": true,
+    "workload_identity_assignment_and_permissions_preserved": true
+  },
+  "evidence_handling": {
+    "additive_observation": true,
+    "initial_acceptance_artifact_unchanged": true,
+    "private_bindings_device_identifiers_boot_identifiers_and_secrets_omitted": true
+  },
+  "grant_after_gate": {
+    "revision": 3,
+    "state": "active"
+  },
+  "grant_transitions": [
+    {
+      "revision": 1,
+      "state": "active"
+    },
+    {
+      "revision": 2,
+      "state": "quarantined"
+    },
+    {
+      "revision": 3,
+      "state": "active"
+    }
+  ],
+  "observation_date": "2026-09-30",
+  "observation_interval_utc": {
+    "after": "2026-09-30T05:35:16.455265Z",
+    "before": "2026-09-30T05:34:42.717254Z",
+    "denial_confirmed": "2026-09-30T05:34:46.982124Z",
+    "fresh_accepted_lease_confirmed": "2026-09-30T05:34:51.977962Z",
+    "restoration_confirmed": "2026-09-30T05:34:47.835876Z"
+  },
+  "qualification_limits": {
+    "dns_lease_semantics": "Previously accepted DNS answers may remain during their valid lease while new updates are denied.",
+    "hardware_qualification_completed": false,
+    "immediate_dns_withdrawal_claimed": false,
+    "offline_or_rollback_protection_qualified": false,
+    "persistent_deployment_qualified": false,
+    "physical_reboot_or_power_loss_tested": false,
+    "reused_tls_connection_denial_tested": false,
+    "workstation_disconnection_tested": false
+  },
+  "schema": "kaiba.native-workload-quarantine-observation/v1alpha1",
+  "scope": "Native Ace workload-grant quarantine and restoration, with Ace/Mako LAN DNS readback",
+  "status": "passed"
+}

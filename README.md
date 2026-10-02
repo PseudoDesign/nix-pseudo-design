@@ -88,6 +88,10 @@ ssh adam@mako.local sudo nixos-rebuild switch --rollback
 See [Ace's persistent identity pilot](docs/ace-identity-pilot.md) for the
 `pilot.kaiba.pseudo.design` SPIRE installation and its deployment checks.
 
+See [the Ace/Mako pilot composition](docs/ace-mako-pilot.md) for the disabled
+server/member profiles, separate staging and activation, authority migration
+requirements, and remaining LAN qualification.
+
 See [Hydra host integration](docs/hydra.md) for Ace's builder, Mako's HTTPS and
 backup receiver, and the required deployment-baseline comparison.
 
@@ -194,3 +198,5 @@ cold boot and recovery test.
 Ace's existing pilot account and protected credential mount are declared in its
 host configuration. See [the persistence and deployment notes](docs/ace-pilot-persistence.md)
 for the focused VM check and the separate real-host acceptance procedure.
+
+The next disabled pilot composition is documented in [Ace LAN DNS qualification preparation](docs/ace-dns-lan-qualification.md).

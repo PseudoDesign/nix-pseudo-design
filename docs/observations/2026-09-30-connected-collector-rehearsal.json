@@ -1,0 +1,37 @@
+{
+  "current_time_servers_independent_of_malak": true,
+  "fresh_credentials_after_disconnection_ttl": false,
+  "full_qualification": false,
+  "induced_fresh_update": false,
+  "local_regression_tests": 68,
+  "native_metrics": {
+    "ace": {
+      "ended_at": "2026-09-30T16:00:31.499010Z",
+      "failed_samples": 0,
+      "max_sample_gap_seconds": 30.008,
+      "max_sample_milliseconds": 683.5,
+      "samples": 11,
+      "started_at": "2026-09-30T15:55:21.683868Z"
+    },
+    "mako": {
+      "ended_at": "2026-09-30T16:00:31.245830Z",
+      "failed_samples": 0,
+      "max_sample_gap_seconds": 30.006,
+      "max_sample_milliseconds": 409.44,
+      "samples": 10,
+      "started_at": "2026-09-30T15:55:36.412828Z"
+    }
+  },
+  "observed_at": "2026-09-30T16:00:57.565414Z",
+  "oom_evidence_sources": {
+    "ace": "kernel-global-oom-kill",
+    "mako": "cgroup-v2-events"
+  },
+  "per_cgroup_oom_evidence_for_ace": false,
+  "policy_not_after": "2026-10-03T02:06:35Z",
+  "schema": "kaiba.disconnection-verification/v1alpha1",
+  "source_authorities_remain_fenced": true,
+  "status": "connected-rehearsal-passed",
+  "updater_action_scheduled": false,
+  "workstation_disconnected": false
+}

@@ -1,0 +1,71 @@
+{
+  "controller_dependency_failure": {
+    "expected_server_identity_verified": true,
+    "http_status": 503,
+    "observed_at": "2026-09-29T08:23:23.780183+00:00",
+    "passed": true,
+    "real_updater_restored": true
+  },
+  "end_to_end_lan_qualified": false,
+  "hardware_qualified": false,
+  "persistent_and_booted_system": "/nix/store/ylpbjk8jzr195l7yn7f713sgjfimicbs-nixos-system-ace-26.05.20260807.ee48b14",
+  "persistent_generation": 10,
+  "publication_observed": false,
+  "readiness": {
+    "authenticated_public_bundle_unchanged": true,
+    "dns_answers": {
+      "15352": {
+        "A": [],
+        "AAAA": []
+      },
+      "15353": {
+        "A": [],
+        "AAAA": []
+      },
+      "15354": {
+        "A": [],
+        "AAAA": []
+      }
+    },
+    "dns_intent_count": 0,
+    "manifest_preserved": true,
+    "observed_at": "2026-09-29T08:22:35.667309+00:00",
+    "original_agent_alias_preserved": true,
+    "original_probe_not_after": "2026-09-29T09:18:42Z",
+    "original_probe_spiffe_id": "spiffe://pilot.kaiba.pseudo.design/device/ace/instance/ace-pilot-20260929/workload/identity-probe",
+    "passed": true,
+    "public_pilot_status_preserved": true,
+    "registration_expiry_unix": 1790671957,
+    "registrations_verified": 4,
+    "services_active": {
+      "hydra-evaluator.service": true,
+      "hydra-queue-runner.service": true,
+      "hydra-server.service": true,
+      "kaiba-agent.service": true,
+      "kaiba-controller.service": true,
+      "kaiba-identity-pilot-probe.timer": true,
+      "kaiba-lan-dns-credentials.service": true,
+      "kaiba-lan-dns-primary.service": true,
+      "kaiba-lan-dns-replica-a.service": true,
+      "kaiba-lan-dns-replica-b.service": true,
+      "kaiba-publisher.service": true,
+      "postgresql.service": true,
+      "spire-agent.service": true,
+      "spire-server.service": true,
+      "sshd.service": true
+    },
+    "spire_listener": "192.168.8.214:8081",
+    "station_admitted": false
+  },
+  "schema_version": "kaiba.ace-lan-pre-station-receipt/v1alpha1",
+  "station_application_pending": true,
+  "target": "ace",
+  "test_activated_system": "/nix/store/ipk6rwq7h1rk4zpxyyym9s550f5i0ka7-nixos-system-ace-26.05.20260807.ee48b14",
+  "workload_selector": {
+    "observed_at": "2026-09-29T08:22:24.977239+00:00",
+    "passed": true,
+    "same_uid_unregistered_unit_denied": true,
+    "transient_failure_cleared": true,
+    "workload_api_error_kind": "deadline-exceeded"
+  }
+}
